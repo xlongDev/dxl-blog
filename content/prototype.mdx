@@ -1,0 +1,110 @@
+---
+title: "深入理解 JavaScript 原型与原型链"
+date: "2021-03-18"
+description: "探索 JavaScript 原型与原型链的概念、工作原理及其在开发中的应用"
+tags: ["JavaScript", "原型", "前端开发"]
+---
+
+## 什么是原型？
+
+在 JavaScript 中，每个对象都有一个隐藏的属性，称为 `[[Prototype]]`，它指向另一个对象。这个被指向的对象就是该对象的原型。通过原型，JavaScript 实现了一种强大的继承机制。
+
+你可以通过 `Object.getPrototypeOf(obj)` 获取对象的原型，或者通过 `obj.__proto__`（不推荐）直接访问。
+
+```javascript
+const obj = {};
+console.log(Object.getPrototypeOf(obj)); // 输出: {}
+```
+
+### `prototype` 属性
+
+除了普通对象，函数对象有一个特殊的属性，叫做 `prototype`。它是用来实现构造函数继承的关键。
+
+```javascript
+function Person(name) {
+  this.name = name;
+}
+
+console.log(Person.prototype); // 输出: {constructor: ƒ}
+```
+
+- `Person.prototype` 是一个对象，它包含一个默认的 `constructor` 属性，指向函数本身。
+- 所有通过 `new Person()` 创建的实例，其原型都会指向 `Person.prototype`。
+
+```javascript
+const person1 = new Person("Alice");
+console.log(Object.getPrototypeOf(person1) === Person.prototype); // true
+```
+
+## 什么是原型链？
+
+当访问对象的某个属性时，JavaScript 会沿着原型链查找该属性。如果对象本身没有这个属性，它会继续查找对象的原型，直到找到该属性或到达原型链的末端（即 `null`）。
+
+```javascript
+const obj = { a: 1 };
+const parentObj = { b: 2 };
+Object.setPrototypeOf(obj, parentObj);
+
+console.log(obj.a); // 输出: 1（自身属性）
+console.log(obj.b); // 输出: 2（从原型继承）
+console.log(obj.c); // 输出: undefined（未找到）
+```
+
+原型链的末端是 `Object.prototype`，它的原型为 `null`。
+
+```javascript
+console.log(Object.getPrototypeOf(Object.prototype)); // 输出: null
+```
+
+## 原型与原型链的实际应用
+
+### 类的模拟实现
+
+在 ES6 之前，我们可以使用原型链模拟类继承。
+
+```javascript
+function Animal(name) {
+  this.name = name;
+}
+
+Animal.prototype.speak = function () {
+  console.log(`${this.name} makes a noise.`);
+};
+
+function Dog(name) {
+  Animal.call(this, name); // 调用父类构造函数
+}
+
+Dog.prototype = Object.create(Animal.prototype); // 设置原型链
+Dog.prototype.constructor = Dog; // 修复 constructor
+
+Dog.prototype.speak = function () {
+  console.log(`${this.name} barks.`);
+};
+
+const dog = new Dog("Buddy");
+dog.speak(); // 输出: Buddy barks.
+```
+
+### 检查属性来源
+
+可以通过 `hasOwnProperty` 判断某个属性是对象本身的还是从原型继承的。
+
+```javascript
+const obj = { a: 1 };
+const parentObj = { b: 2 };
+Object.setPrototypeOf(obj, parentObj);
+
+console.log(obj.hasOwnProperty("a")); // true
+console.log(obj.hasOwnProperty("b")); // false
+```
+
+## 注意事项
+
+1. **避免过深的原型链**：原型链过长会导致性能问题。
+2. **避免滥用 `__proto__`**：虽然可以直接访问，但建议使用 `Object.getPrototypeOf` 和 `Object.setPrototypeOf`。
+3. **理解与调试工具结合**：熟悉 Chrome DevTools 中的原型链展示，可以帮助你更快定位问题。
+
+## 总结
+
+JavaScript 的原型与原型链提供了一种简单但强大的继承机制。理解它们的工作原理有助于编写更高效的代码，同时也为更深入的 JavaScript 学习打下坚实基础。

@@ -2,20 +2,83 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 0 0% 100%;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  body {
+    @apply antialiased;
+  }
+}
+
+/* 代码块样式 */
+pre {
+  @apply p-4 rounded-lg overflow-x-auto;
+}
+
+code {
+  @apply font-mono text-sm;
+}
+
+/* 链接样式 */
+.prose a {
+  @apply transition-colors duration-200;
+}
+
+/* 标题样式 */
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+  @apply font-bold scroll-mt-20;
+}
+
+/* 列表样式 */
+.prose ul,
+.prose ol {
+  @apply my-6;
+}
+
+/* 引用块样式 */
+.prose blockquote {
+  @apply italic border-l-4 pl-4 my-6;
+}
+
+/* 表格样式 */
+.prose table {
+  @apply w-full my-6;
+}
+
+.prose table th {
+  @apply bg-gray-100 dark:bg-gray-800 p-2;
+}
+
+.prose table td {
+  @apply p-2 border-t border-gray-200 dark:border-gray-700;
+}
+
+/* 图片样式 */
+.prose img {
+  @apply rounded-lg my-6;
+}
+
+/* 代码行号样式 */
+.prose pre code {
+  @apply grid;
+  counter-reset: line;
+}
+
+.prose pre code > .line::before {
+  counter-increment: line;
+  content: counter(line);
+  @apply inline-block w-6 mr-4 text-gray-500;
 }
