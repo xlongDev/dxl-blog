@@ -1,0 +1,166 @@
+---
+title: "全面解析 JavaScript 的作用域"
+date: "2021-05-03"
+description: "深入解析 JavaScript 的作用域规则，包括全局作用域、函数作用域、块级作用域、动态作用域等，以及它们在实际开发中的应用。"
+tags: ["JavaScript", "作用域", "开发"]
+---
+
+作用域是 JavaScript 核心概念之一，决定了变量、函数、对象的可访问性。理解作用域是编写高效、无 Bug 代码的基础。本文将全面解析 JavaScript 的作用域规则及其实际应用场景。
+
+## 什么是作用域？
+
+作用域（Scope）是指程序中定义变量的上下文环境，决定了变量的可见性和生命周期。JavaScript 中主要有以下几种作用域：
+
+- **全局作用域**
+- **函数作用域**
+- **块级作用域**
+- **动态作用域（仅作为对比）**
+
+## 全局作用域
+
+全局作用域中的变量可以在程序的任何地方访问。在浏览器环境中，全局作用域的顶层对象是 `window`，而在 Node.js 中是 `global`。
+
+### 示例
+
+```javascript
+var globalVar = "I am global";
+
+function showGlobalVar() {
+  console.log(globalVar); // 输出：I am global
+}
+
+showGlobalVar();
+console.log(window.globalVar); // 在浏览器中有效
+```
+
+### 注意事项
+
+- 全局变量会污染全局命名空间，容易导致命名冲突。
+- 使用 `const` 或 `let` 定义变量可以避免变量被挂载到全局对象。
+
+## 函数作用域
+
+函数作用域意味着在函数内部定义的变量只能在该函数内部访问。
+
+### 示例
+
+```javascript
+function foo() {
+  var functionScoped = "I am function scoped";
+  console.log(functionScoped); // 输出：I am function scoped
+}
+
+foo();
+console.log(functionScoped); // 报错：functionScoped is not defined
+```
+
+### `var` 的函数作用域
+
+`var` 定义的变量只在当前函数内有效，而不会受到块的限制。
+
+```javascript
+function testVar() {
+  if (true) {
+    var x = 10;
+  }
+  console.log(x); // 输出：10
+}
+
+testVar();
+```
+
+## 块级作用域
+
+ES6 引入了 `let` 和 `const`，使得变量可以拥有块级作用域。
+
+### 示例
+
+```javascript
+{
+  let blockScoped = "I am block scoped";
+  console.log(blockScoped); // 输出：I am block scoped
+}
+
+console.log(blockScoped); // 报错：blockScoped is not defined
+```
+
+### 重定义问题
+
+`let` 和 `const` 不允许在同一作用域内重复声明。
+
+```javascript
+let a = 10;
+let a = 20; // 报错：Identifier 'a' has already been declared
+```
+
+## 词法作用域（Lexical Scope）
+
+JavaScript 使用词法作用域（静态作用域），变量的作用域在代码书写时就已经确定。
+
+### 示例
+
+```javascript
+function outer() {
+  const outerVar = "I am outer";
+
+  function inner() {
+    console.log(outerVar); // 输出：I am outer
+  }
+
+  return inner;
+}
+
+const innerFunc = outer();
+innerFunc();
+```
+
+### 闭包的作用域
+
+闭包是 JavaScript 中依赖词法作用域的强大特性。
+
+```javascript
+function makeCounter() {
+  let count = 0;
+  return function () {
+    count++;
+    return count;
+  };
+}
+
+const counter = makeCounter();
+console.log(counter()); // 输出：1
+console.log(counter()); // 输出：2
+```
+
+## 动态作用域（对比）
+
+动态作用域与 JavaScript 的词法作用域不同，变量的值取决于函数的调用位置，而不是声明位置。JavaScript 不支持动态作用域。
+
+## 作用域链
+
+当访问变量时，JavaScript 引擎会沿着作用域链查找变量。
+
+### 示例
+
+```javascript
+const globalVar = "global";
+
+function outer() {
+  const outerVar = "outer";
+
+  function inner() {
+    const innerVar = "inner";
+    console.log(innerVar); // 输出：inner
+    console.log(outerVar); // 输出：outer
+    console.log(globalVar); // 输出：global
+  }
+
+  inner();
+}
+
+outer();
+```
+
+## 小结
+
+理解 JavaScript 的作用域规则可以帮助开发者更好地控制变量的生命周期和可见性，从而编写更优雅的代码。

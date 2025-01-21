@@ -1,0 +1,132 @@
+---
+title: "深入解析 JavaScript 事件循环 (Event Loop)"
+date: "2021-05-01"
+description: "全面了解 JavaScript 的事件循环机制，包括任务队列、微任务、宏任务，以及浏览器与 Node.js 中的实现区别。"
+tags: ["JavaScript", "Event Loop", "异步编程"]
+---
+
+JavaScript 的事件循环（Event Loop）是其异步编程模型的核心，它确保了代码的执行顺序和非阻塞特性。为了更好地理解事件循环，本文将从以下几个方面展开：
+
+1. **事件循环的基本概念**
+2. **任务队列与任务分类**
+3. **浏览器中的事件循环**
+4. **Node.js 中的事件循环**
+5. **常见问题与深入解析**
+
+## 什么是事件循环
+
+事件循环是 JavaScript 的运行时环境中用于协调代码执行、事件处理和任务调度的机制。它通过一个简单的循环模型实现：
+
+1. 从任务队列中取出任务。
+2. 执行任务。
+3. 检查是否有其他任务需要执行。
+4. 重复上述步骤。
+
+这是一个单线程的模型，保证了 JavaScript 的非阻塞特性。
+
+## 任务分类
+
+JavaScript 中的任务分为两类：**宏任务（Macro Task）** 和 **微任务（Micro Task）**。
+
+### 宏任务
+
+宏任务通常包括以下内容：
+
+- `setTimeout`
+- `setInterval`
+- `setImmediate`（Node.js 专有）
+- I/O 操作
+- UI 渲染任务（浏览器）
+
+### 微任务
+
+微任务的优先级高于宏任务，主要包括：
+
+- `Promise.then` 和 `Promise.catch`
+- `MutationObserver`
+- `queueMicrotask`
+
+## 浏览器中的事件循环
+
+浏览器中的事件循环包含以下步骤：
+
+1. **执行全局上下文中的同步代码。**
+2. **检查微任务队列，并执行所有微任务。**
+3. **执行一个宏任务（如果有）。**
+4. **检查并执行微任务队列中的所有任务。**
+5. **更新渲染。**
+6. 重复上述过程。
+
+### 示例代码
+
+```javascript
+console.log('start');
+
+setTimeout(() => {
+  console.log('macro task');
+}, 0);
+
+Promise.resolve().then(() => {
+  console.log('micro task');
+});
+
+console.log('end');
+```
+
+输出结果为：
+
+```
+start
+end
+micro task
+macro task
+```
+
+## Node.js 中的事件循环
+
+Node.js 的事件循环在实现上与浏览器类似，但由于其基于 `libuv` 的架构，增加了更多细节。
+
+Node.js 的事件循环分为以下阶段：
+
+1. **Timers**：处理 `setTimeout` 和 `setInterval`。
+2. **Pending Callbacks**：处理延迟的 I/O 回调。
+3. **Idle, Prepare**：仅供内部使用。
+4. **Poll**：检索新的 I/O 事件。
+5. **Check**：执行 `setImmediate`。
+6. **Close Callbacks**：关闭回调。
+
+### 示例代码
+
+```javascript
+const fs = require('fs');
+
+fs.readFile(__filename, () => {
+  setTimeout(() => console.log('timeout'), 0);
+  setImmediate(() => console.log('immediate'));
+});
+```
+
+输出结果为：
+
+```
+immediate
+timeout
+```
+
+## 常见问题与深入解析
+
+### 为什么微任务优先于宏任务？
+
+微任务优先执行的原因是为了提高效率，减少不必要的延迟。例如，`Promise` 的回调往往依赖于同步代码的执行结果，如果延迟到下一个事件循环会导致性能下降。
+
+### 如何调试事件循环？
+
+可以通过以下方式调试事件循环：
+
+- 使用 `console.log` 输出代码执行顺序。
+- 借助浏览器开发者工具中的任务队列面板。
+- 在 Node.js 中使用 `--trace-async-hooks`。
+
+## 总结
+
+JavaScript 的事件循环机制是理解异步编程的核心。通过掌握宏任务与微任务的执行顺序，以及浏览器和 Node.js 中的实现细节，可以更高效地编写非阻塞的异步代码。希望本文能帮助你全面理解事件循环并在实际开发中得心应手。
