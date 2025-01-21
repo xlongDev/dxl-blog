@@ -21,12 +21,14 @@ export default function BackToTop() {
     });
   };
 
-  if (!isVisible) return null;
-
   return (
     <button
       onClick={scrollToTop}
-      className="fixed bottom-8 right-8 p-2 rounded-full bg-blue-500 text-white shadow-lg hover:bg-blue-600 transition-colors"
+      className={`fixed bottom-8 right-8 p-2 rounded-full bg-blue-500 text-white shadow-lg hover:bg-blue-600 transition-all duration-300 ${
+        isVisible
+          ? "opacity-100 translate-y-0"
+          : "opacity-0 translate-y-10 pointer-events-none"
+      }`}
       aria-label="返回顶部"
     >
       <svg

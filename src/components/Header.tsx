@@ -4,26 +4,14 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useTheme } from "next-themes";
-import {
-  ChevronDownIcon,
-  MoonIcon,
-  SunIcon,
-} from "@heroicons/react/24/outline";
+import { MoonIcon, SunIcon } from "@heroicons/react/24/outline";
 import Search from "@/components/Search";
 import { allPosts } from "contentlayer/generated";
 
 export default function Header() {
   const [mounted, setMounted] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const { theme, setTheme } = useTheme();
-
-  const categories = [
-    { name: "React", slug: "react" },
-    { name: "Next.js", slug: "nextjs" },
-    { name: "TypeScript", slug: "typescript" },
-    { name: "Node.js", slug: "nodejs" },
-  ];
 
   useEffect(() => {
     setMounted(true);
@@ -45,34 +33,44 @@ export default function Header() {
               <span className="text-xl font-bold">晓龙的前端笔记</span>
             </Link>
             <div className="flex items-center space-x-6">
-              {/* 文章分类下拉菜单 */}
-              <div className="relative">
-                <button
-                  onClick={() => setIsCategoriesOpen(!isCategoriesOpen)}
-                  className="flex items-center hover:text-blue-500"
-                >
-                  分类
-                  <ChevronDownIcon className="w-4 h-4 ml-1" />
-                </button>
-                {isCategoriesOpen && (
-                  <div className="absolute top-full mt-2 w-48 rounded-lg shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                    {categories.map((category) => (
-                      <Link
-                        key={category.slug}
-                        href={`/category/${category.slug}`}
-                        className="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
-                        onClick={() => setIsCategoriesOpen(false)}
-                      >
-                        {category.name}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-
               <Link href="/blog" className="hover:text-blue-500">
                 博客
               </Link>
+              <div className="relative group">
+                <button className="hover:text-blue-500">分类</button>
+                <div className="absolute left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-in-out transform group-hover:translate-y-0 translate-y-1">
+                  <Link
+                    href="/blog?category=JavaScript"
+                    className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    JavaScript
+                  </Link>
+                  <Link
+                    href="/blog?category=React"
+                    className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    React
+                  </Link>
+                  <Link
+                    href="/blog?category=Vue"
+                    className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    Vue
+                  </Link>
+                  <Link
+                    href="/blog?category=Node.js"
+                    className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    Node.js
+                  </Link>
+                  <Link
+                    href="/blog?category=TypeScript"
+                    className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    TypeScript
+                  </Link>
+                </div>
+              </div>
               <Link href="/about" className="hover:text-blue-500">
                 关于
               </Link>
@@ -98,24 +96,11 @@ export default function Header() {
                 </svg>
               </a>
 
-              {/* 主题切换按钮 */}
-              <button
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              >
-                {mounted && theme === "dark" ? (
-                  <SunIcon className="w-5 h-5 text-yellow-400" />
-                ) : (
-                  <MoonIcon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-                )}
-              </button>
-
               {/* 搜索按钮 */}
               <button
-                className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
                 onClick={() => setIsSearchOpen(true)}
+                className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
               >
-                <span className="sr-only">搜索</span>
                 <svg
                   className="w-5 h-5"
                   fill="none"
@@ -130,16 +115,28 @@ export default function Header() {
                   />
                 </svg>
               </button>
+
+              {/* 主题切换按钮 */}
+              <button
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+              >
+                {mounted && theme === "dark" ? (
+                  <SunIcon className="w-5 h-5" />
+                ) : (
+                  <MoonIcon className="w-5 h-5" />
+                )}
+              </button>
             </div>
           </div>
         </nav>
       </header>
 
-      {/* 搜索组件 */}
+      {/* 搜索对话框 */}
       <Search
-        posts={allPosts}
         isOpen={isSearchOpen}
         setIsOpen={setIsSearchOpen}
+        posts={allPosts}
       />
     </>
   );

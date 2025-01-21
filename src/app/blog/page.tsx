@@ -1,6 +1,6 @@
 import { allPosts } from "contentlayer/generated";
 import { compareDesc } from "date-fns";
-import BlogFilter from "@/components/BlogFilter";
+import CategoryFilter from "@/components/CategoryFilter";
 import FadeIn from "@/components/FadeIn";
 
 export default function BlogPage() {
@@ -9,11 +9,11 @@ export default function BlogPage() {
   );
 
   return (
-    <div className="space-y-8 container mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="space-y-8 container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <FadeIn>
-        <h1 className="text-3xl font-bold">所有文章</h1>
+        <h1 className="text-3xl font-bold mb-8">所有文章</h1>
       </FadeIn>
-      <BlogFilter posts={posts} />
+      <CategoryFilter posts={posts} />
     </div>
   );
 }
