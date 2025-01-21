@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useTheme } from "next-themes";
 import {
   ChevronDownIcon,
@@ -33,8 +34,15 @@ export default function Header() {
       <header className="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
         <nav className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="text-xl font-bold">
-              晓龙的前端笔记
+            <Link href="/" className="flex items-center gap-3">
+              <Image
+                src="/ava.jpg"
+                alt="晓龙"
+                width={32}
+                height={32}
+                className="rounded-full"
+              />
+              <span className="text-xl font-bold">晓龙的前端笔记</span>
             </Link>
             <div className="flex items-center space-x-6">
               {/* 文章分类下拉菜单 */}
