@@ -71,12 +71,14 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
             <ul className="max-h-[60vh] overflow-auto p-2">
               {results.map((post) => {
                 const titleHighlight = post.title.replace(
-                  new RegExp(query, 'gi'),
-                  (match) => `<mark class="bg-yellow-200 dark:bg-yellow-800">${match}</mark>`
+                  new RegExp(query, "gi"),
+                  (match) =>
+                    `<mark class="bg-yellow-200 dark:bg-yellow-800">${match}</mark>`
                 );
                 const descriptionHighlight = post.description.replace(
-                  new RegExp(query, 'gi'),
-                  (match) => `<mark class="bg-yellow-200 dark:bg-yellow-800">${match}</mark>`
+                  new RegExp(query, "gi"),
+                  (match) =>
+                    `<mark class="bg-yellow-200 dark:bg-yellow-800">${match}</mark>`
                 );
                 return (
                   <li key={post._id}>
@@ -85,17 +87,20 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
                       className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
                       onClick={() => setIsOpen(false)}
                     >
-                      <h3 className="font-medium"
+                      <h3
+                        className="font-medium"
                         dangerouslySetInnerHTML={{ __html: titleHighlight }}
                       />
-                      <p className="text-sm text-gray-500 dark:text-gray-400"
-                        dangerouslySetInnerHTML={{ __html: descriptionHighlight }}
+                      <p
+                        className="text-sm text-gray-500 dark:text-gray-400"
+                        dangerouslySetInnerHTML={{
+                          __html: descriptionHighlight,
+                        }}
                       />
                     </Link>
                   </li>
                 );
               })}
-              ))}
             </ul>
           )}
           {query && results.length === 0 && (
