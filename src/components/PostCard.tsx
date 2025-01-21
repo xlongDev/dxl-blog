@@ -15,14 +15,17 @@ export default function PostCard({ post }: { post: Post }) {
         {post.description}
       </p>
       <div className="flex items-center justify-between text-sm text-gray-500">
-        <time dateTime={post.date}>
-          {format(new Date(post.date), "yyyy年MM月dd日")}
+        <time
+          dateTime={post.date}
+          className="font-mono text-sm shrink-0 hover:text-blue-500 transition-colors"
+        >
+          {format(new Date(post.date), "yyyy.MM.dd")}
         </time>
-        <div className="flex gap-2">
+        <div className="flex gap-1.5 flex-wrap justify-end">
           {post.tags?.map((tag) => (
             <span
               key={tag}
-              className="rounded-full bg-gray-100 dark:bg-gray-800 px-3 py-1 transition-transform group-hover:scale-105"
+              className="inline-block rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 text-xs px-2.5 py-0.5 max-w-[120px] truncate transition-all hover:bg-blue-100 dark:hover:bg-blue-900/50"
             >
               {tag}
             </span>

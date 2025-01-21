@@ -82,10 +82,10 @@ export default function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1 }}
           onClick={scrollToContent}
-          className="absolute bottom-8 animate-bounce"
+          className="absolute bottom-16 animate-bounce hover:text-blue-400 transition-colors"
           aria-label="Scroll to content"
         >
-          <ChevronDownIcon className="h-8 w-8" />
+          <ChevronDownIcon className="h-10 w-10" />
         </motion.button>
       </div>
     </div>

@@ -33,23 +33,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh" suppressHydrationWarning>
-      <head>
-        <script
-          async
-          defer
-          data-website-id="your-website-id"
-          src="https://analytics.example.com/umami.js"
-        />
-      </head>
+      <head></head>
       <body
+        suppressHydrationWarning
         className={`${inter.className} ${notoSerifSC.variable} ${notoSansSC.variable} bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100`}
       >
         <Providers>
           <div className="min-h-screen flex flex-col">
             <Header />
-            <main className="flex-grow">
-              {children}
-            </main>
+            <main className="flex-grow">{children}</main>
             <Footer />
             <BackToTop />
           </div>

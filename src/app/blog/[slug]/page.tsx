@@ -1,6 +1,6 @@
 import { allPosts } from "contentlayer/generated";
 import { format } from "date-fns";
-import { getMDXComponent } from "next-contentlayer/hooks";
+import { useMDXComponent } from "next-contentlayer/hooks";
 import { notFound } from "next/navigation";
 import TableOfContents from "@/components/TableOfContents";
 import ReadingProgress from "@/components/ReadingProgress";
@@ -26,7 +26,7 @@ export default function BlogPost({ params }: { params: { slug: string } }) {
     notFound();
   }
 
-  const Content = getMDXComponent(post.body.code);
+  const Content = useMDXComponent(post.body.code);
 
   const seriesPosts = post.series
     ? allPosts
@@ -67,9 +67,9 @@ export default function BlogPost({ params }: { params: { slug: string } }) {
                 )}
                 <Content components={MDXComponents} />
               </div>
-              <RelatedPosts currentPost={post} allPosts={allPosts} />
               <ArticleActions slug={params.slug} />
               <Comments />
+              <RelatedPosts currentPost={post} allPosts={allPosts} />
             </div>
           </article>
           <div>

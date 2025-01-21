@@ -69,63 +69,32 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
           </div>
           {results.length > 0 && (
             <ul className="max-h-[60vh] overflow-auto p-2">
-              {results.map((post) => (
-                <li key={post._id}>
-                  <Link
-                    href={post.url}
-                    className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <h3 className="font-medium">
-                      {post.title
-                        .toLowerCase()
-                        .includes(query.toLowerCase()) ? (
-                        <span>
-                          {post.title
-                            .split(new RegExp(`(${query})`, "i"))
-                            .map((part, i) =>
-                              part.toLowerCase() === query.toLowerCase() ? (
-                                <span
-                                  key={i}
-                                  className="bg-yellow-200 dark:bg-yellow-800"
-                                >
-                                  {part}
-                                </span>
-                              ) : (
-                                part
-                              )
-                            )}
-                        </span>
-                      ) : (
-                        post.title
-                      )}
-                    </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {post.description
-                        .toLowerCase()
-                        .includes(query.toLowerCase()) ? (
-                        <span>
-                          {post.description
-                            .split(new RegExp(`(${query})`, "i"))
-                            .map((part, i) =>
-                              part.toLowerCase() === query.toLowerCase() ? (
-                                <span
-                                  key={i}
-                                  className="bg-yellow-200 dark:bg-yellow-800"
-                                >
-                                  {part}
-                                </span>
-                              ) : (
-                                part
-                              )
-                            )}
-                        </span>
-                      ) : (
-                        post.description
-                      )}
-                    </p>
-                  </Link>
-                </li>
+              {results.map((post) => {
+                const titleHighlight = post.title.replace(
+                  new RegExp(query, 'gi'),
+                  (match) => `<mark class="bg-yellow-200 dark:bg-yellow-800">${match}</mark>`
+                );
+                const descriptionHighlight = post.description.replace(
+                  new RegExp(query, 'gi'),
+                  (match) => `<mark class="bg-yellow-200 dark:bg-yellow-800">${match}</mark>`
+                );
+                return (
+                  <li key={post._id}>
+                    <Link
+                      href={post.url}
+                      className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <h3 className="font-medium"
+                        dangerouslySetInnerHTML={{ __html: titleHighlight }}
+                      />
+                      <p className="text-sm text-gray-500 dark:text-gray-400"
+                        dangerouslySetInnerHTML={{ __html: descriptionHighlight }}
+                      />
+                    </Link>
+                  </li>
+                );
+              })}
               ))}
             </ul>
           )}

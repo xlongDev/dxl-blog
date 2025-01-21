@@ -1,78 +1,105 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { HeartIcon, BookmarkIcon } from "@heroicons/react/24/outline";
-import {
-  HeartIcon as HeartIconSolid,
-  BookmarkIcon as BookmarkIconSolid,
-} from "@heroicons/react/24/solid";
+import { motion } from "framer-motion";
 
 interface ArticleActionsProps {
   slug: string;
 }
 
+interface ArticleStats {
+  likes: number;
+}
+
 export default function ArticleActions({ slug }: ArticleActionsProps) {
-  const [liked, setLiked] = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
-  const [likeCount, setLikeCount] = useState(0);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [stats, setStats] = useState<ArticleStats>({ likes: 0 });
 
   useEffect(() => {
-    // 从 localStorage 读取状态
-    const savedLiked = localStorage.getItem(`article-${slug}-liked`);
-    const savedBookmarked = localStorage.getItem(`article-${slug}-bookmarked`);
-    const savedLikeCount = localStorage.getItem(`article-${slug}-likes`);
+    // 从 localStorage 加载状态
+    const savedState = localStorage.getItem(`article-${slug}`);
+    if (savedState) {
+      const { liked, saved } = JSON.parse(savedState);
+      setIsLiked(liked);
+      setIsSaved(saved);
+    }
 
-    if (savedLiked) setLiked(JSON.parse(savedLiked));
-    if (savedBookmarked) setBookmarked(JSON.parse(savedBookmarked));
-    if (savedLikeCount) setLikeCount(parseInt(savedLikeCount));
+    // 从 localStorage 加载统计数据
+    const savedStats = localStorage.getItem(`article-stats-${slug}`);
+    if (savedStats) {
+      setStats(JSON.parse(savedStats));
+    }
   }, [slug]);
 
   const handleLike = () => {
-    const newLiked = !liked;
-    setLiked(newLiked);
-    setLikeCount((prev) => (newLiked ? prev + 1 : prev - 1));
-    localStorage.setItem(`article-${slug}-liked`, JSON.stringify(newLiked));
+    const newLiked = !isLiked;
+    setIsLiked(newLiked);
+
+    // 更新点赞数
+    const newStats = {
+      likes: stats.likes + (newLiked ? 1 : -1),
+    };
+    setStats(newStats);
+
+    // 保存状态到 localStorage
     localStorage.setItem(
-      `article-${slug}-likes`,
-      String(newLiked ? likeCount + 1 : likeCount - 1)
+      `article-${slug}`,
+      JSON.stringify({ liked: newLiked, saved: isSaved })
     );
+    localStorage.setItem(`article-stats-${slug}`, JSON.stringify(newStats));
   };
 
-  const handleBookmark = () => {
-    const newBookmarked = !bookmarked;
-    setBookmarked(newBookmarked);
+  const handleSave = () => {
+    const newSaved = !isSaved;
+    setIsSaved(newSaved);
+
+    // 保存状态到 localStorage
     localStorage.setItem(
-      `article-${slug}-bookmarked`,
-      JSON.stringify(newBookmarked)
+      `article-${slug}`,
+      JSON.stringify({ liked: isLiked, saved: newSaved })
     );
   };
 
   return (
-    <div className="flex items-center space-x-4">
+    <div className="flex items-center space-x-4 mt-8">
       <button
         onClick={handleLike}
-        className={`flex items-center space-x-1 ${
-          liked ? "text-red-500" : "text-gray-500 hover:text-red-500"
-        }`}
+        className="flex items-center space-x-2 text-gray-600 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-500 transition-colors"
       >
-        {liked ? (
-          <HeartIconSolid className="w-6 h-6" />
-        ) : (
-          <HeartIcon className="w-6 h-6" />
-        )}
-        <span>{likeCount}</span>
+        <motion.svg
+          animate={isLiked ? { scale: [1, 1.2, 1] } : {}}
+          className={`w-6 h-6 ${isLiked ? "fill-red-500" : "fill-none"}`}
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+          />
+        </motion.svg>
+        <span>{stats.likes}</span>
       </button>
       <button
-        onClick={handleBookmark}
-        className={`flex items-center ${
-          bookmarked ? "text-blue-500" : "text-gray-500 hover:text-blue-500"
-        }`}
+        onClick={handleSave}
+        className="flex items-center space-x-2 text-gray-600 hover:text-yellow-500 dark:text-gray-400 dark:hover:text-yellow-500 transition-colors"
       >
-        {bookmarked ? (
-          <BookmarkIconSolid className="w-6 h-6" />
-        ) : (
-          <BookmarkIcon className="w-6 h-6" />
-        )}
+        <motion.svg
+          animate={isSaved ? { scale: [1, 1.2, 1] } : {}}
+          className={`w-6 h-6 ${isSaved ? "fill-yellow-500" : "fill-none"}`}
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+          />
+        </motion.svg>
+        <span>收藏</span>
       </button>
     </div>
   );

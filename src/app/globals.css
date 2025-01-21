@@ -22,11 +22,20 @@
 
 /* 代码块样式 */
 pre {
-  @apply p-4 rounded-lg overflow-x-auto;
+  @apply p-4 rounded-lg overflow-x-auto bg-[#1a1b26];
 }
 
 code {
-  @apply font-mono text-sm;
+  @apply font-mono text-sm text-[#a9b1d6];
+}
+
+.syntax-highlighter {
+  background-color: #1a1b26 !important;
+}
+
+.syntax-highlighter code {
+  color: #a9b1d6 !important;
+  background-color: transparent !important;
 }
 
 /* 链接样式 */
