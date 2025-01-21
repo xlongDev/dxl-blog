@@ -8,14 +8,14 @@ export default function AboutPage() {
       <div className="prose dark:prose-invert">
         <div className="flex items-center gap-6 mb-8">
           <Image
-            src="/public/ava.jpg"
-            alt="段晓龙"
+            src="/ava.jpg"
+            alt="晓龙"
             width={120}
             height={120}
             className="rounded-full"
           />
           <div>
-            <h2 className="!mt-0">段晓龙</h2>
+            <h2 className="!mt-0">晓龙</h2>
             <p className="text-gray-600 dark:text-gray-400">
               前端开发工程师 / 跑者
             </p>

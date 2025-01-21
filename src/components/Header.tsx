@@ -3,7 +3,11 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
-import { ChevronDownIcon, MoonIcon, SunIcon } from "@heroicons/react/24/outline";
+import {
+  ChevronDownIcon,
+  MoonIcon,
+  SunIcon,
+} from "@heroicons/react/24/outline";
 import Search from "@/components/Search";
 import { allPosts } from "contentlayer/generated";
 
@@ -30,7 +34,7 @@ export default function Header() {
         <nav className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="text-xl font-bold">
-              段晓龙的blog
+              晓龙的前端笔记
             </Link>
             <div className="flex items-center space-x-6">
               {/* 文章分类下拉菜单 */}
@@ -87,16 +91,16 @@ export default function Header() {
               </a>
 
               {/* 主题切换按钮 */}
-            <button
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            >
-              {mounted && theme === "dark" ? (
-                <SunIcon  className="w-5 h-5 text-yellow-400" />
-              ) : (
-                <MoonIcon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-              )}
-            </button>
+              <button
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                {mounted && theme === "dark" ? (
+                  <SunIcon className="w-5 h-5 text-yellow-400" />
+                ) : (
+                  <MoonIcon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                )}
+              </button>
 
               {/* 搜索按钮 */}
               <button
@@ -124,7 +128,11 @@ export default function Header() {
       </header>
 
       {/* 搜索组件 */}
-      <Search posts={allPosts} isOpen={isSearchOpen} setIsOpen={setIsSearchOpen} />
+      <Search
+        posts={allPosts}
+        isOpen={isSearchOpen}
+        setIsOpen={setIsSearchOpen}
+      />
     </>
   );
 }
