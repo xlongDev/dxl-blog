@@ -35,7 +35,10 @@ export const Post = defineDocumentType(() => ({
   computedFields: {
     url: {
       type: "string",
-      resolve: (post) => `/blog/${post._raw.flattenedPath}`,
+      resolve: (post) => {
+        const pathSegments = post._raw.flattenedPath.split("/");
+        return `/blog/${pathSegments.join("/")}`;
+      },
     },
     category: {
       type: "string",

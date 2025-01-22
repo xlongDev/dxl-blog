@@ -16,7 +16,7 @@ export default function SeriesNav({
     <div className="my-8 p-4 border border-gray-200 dark:border-gray-800 rounded-lg">
       <h3 className="font-bold mb-4">系列文章：{currentPost.series}</h3>
       <ol className="space-y-2">
-        {seriesPosts.map((post, index) => (
+        {seriesPosts.map((post: Post, index: number) => (
           <li key={post._id}>
             <Link
               href={post.url}
