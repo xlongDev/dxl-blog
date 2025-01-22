@@ -3,6 +3,7 @@ title: "全面解析 JavaScript 模块化"
 date: "2021-07-21"
 description: "详细介绍 JavaScript 模块化的发展历史、不同方案及其适用场景，帮助开发者更好地理解模块化系统。"
 tags: ["JavaScript", "模块化", "ES6", "CommonJS", "前端开发"]
+category: "JavaScript"
 ---
 
 模块化是现代 JavaScript 开发的重要组成部分，它极大地提高了代码的复用性、可维护性和协作性。本文将全面介绍 JavaScript 模块化的发展历程、主流模块化方案及其应用场景。
@@ -36,15 +37,16 @@ CommonJS 是 Node.js 环境中广泛采用的模块化标准。它使用 `requir
 module.exports = {
   add(a, b) {
     return a + b;
-  }
+  },
 };
 
 // app.js
-const math = require('./math');
+const math = require("./math");
 console.log(math.add(2, 3)); // 5
 ```
 
 **特点：**
+
 - 同步加载，适用于服务器端。
 - 模块以文件为单位。
 
@@ -54,21 +56,22 @@ AMD 是为浏览器环境设计的异步模块加载方案，RequireJS 是其代
 
 ```javascript
 // 定义模块
-define('math', [], function() {
+define("math", [], function () {
   return {
-    add: function(a, b) {
+    add: function (a, b) {
       return a + b;
-    }
+    },
   };
 });
 
 // 使用模块
-require(['math'], function(math) {
+require(["math"], function (math) {
   console.log(math.add(2, 3)); // 5
 });
 ```
 
 **特点：**
+
 - 异步加载，适用于浏览器环境。
 - 配置复杂。
 
@@ -77,24 +80,24 @@ require(['math'], function(math) {
 UMD 兼容 CommonJS 和 AMD，适用于浏览器和服务器。
 
 ```javascript
-(function(root, factory) {
-  if (typeof define === 'function' && define.amd) {
+(function (root, factory) {
+  if (typeof define === "function" && define.amd) {
     // AMD
     define([], factory);
-  } else if (typeof module === 'object' && module.exports) {
+  } else if (typeof module === "object" && module.exports) {
     // CommonJS
     module.exports = factory();
   } else {
     // 浏览器全局变量
     root.myModule = factory();
   }
-}(this, function() {
+})(this, function () {
   return {
-    add: function(a, b) {
+    add: function (a, b) {
       return a + b;
-    }
+    },
   };
-}));
+});
 ```
 
 ### 3. ES6 模块 (ESM)
@@ -113,11 +116,12 @@ export const subtract = (a, b) => a - b;
 
 ```javascript
 // app.js
-import { add, subtract } from './math.js';
+import { add, subtract } from "./math.js";
 console.log(add(2, 3)); // 5
 ```
 
 **特点：**
+
 - 静态分析，编译时确定依赖关系。
 - 支持树摇（Tree Shaking）。
 - 浏览器和 Node.js 均支持（需要配置）。
@@ -130,7 +134,7 @@ ES2020 引入了动态导入语法，可在运行时加载模块。
 
 ```javascript
 const loadMath = async () => {
-  const math = await import('./math.js');
+  const math = await import("./math.js");
   console.log(math.add(2, 3)); // 5
 };
 loadMath();
@@ -138,12 +142,12 @@ loadMath();
 
 ## 不同模块化方案的对比
 
-| 特性               | CommonJS  | AMD       | ESM       |
-|--------------------|-----------|-----------|-----------|
-| 加载方式           | 同步       | 异步       | 静态/动态 |
-| 适用场景           | 服务器     | 浏览器     | 通用      |
-| 支持树摇           | 否         | 否         | 是        |
-| 社区支持           | 高         | 中         | 高        |
+| 特性     | CommonJS | AMD    | ESM       |
+| -------- | -------- | ------ | --------- |
+| 加载方式 | 同步     | 异步   | 静态/动态 |
+| 适用场景 | 服务器   | 浏览器 | 通用      |
+| 支持树摇 | 否       | 否     | 是        |
+| 社区支持 | 高       | 中     | 高        |
 
 ## 实践中的模块化选择
 

@@ -13,6 +13,11 @@ export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { theme, setTheme } = useTheme();
 
+  // 获取所有分类并去重
+  const categories = Array.from(
+    new Set(allPosts.map((post) => post.category))
+  ).sort();
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -41,36 +46,15 @@ export default function Header() {
               <div className="relative group">
                 <button className="hover:text-blue-500">分类</button>
                 <div className="absolute left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-in-out transform group-hover:translate-y-0 translate-y-1">
-                  <Link
-                    href="/blog/category/javascript"
-                    className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  >
-                    JavaScript
-                  </Link>
-                  <Link
-                    href="/blog/category/react"
-                    className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  >
-                    React
-                  </Link>
-                  <Link
-                    href="/blog/category/vue"
-                    className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  >
-                    Vue
-                  </Link>
-                  <Link
-                    href="/blog/category/node.js"
-                    className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  >
-                    Node.js
-                  </Link>
-                  <Link
-                    href="/blog/category/typescript"
-                    className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  >
-                    TypeScript
-                  </Link>
+                  {categories.map((category) => (
+                    <Link
+                      key={category}
+                      href={`/blog/category/${category.toLowerCase()}`}
+                      className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      {category}
+                    </Link>
+                  ))}
                 </div>
               </div>
               <Link href="/about" className="hover:text-blue-500">

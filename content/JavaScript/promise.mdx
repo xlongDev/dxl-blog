@@ -3,6 +3,7 @@ title: "深入理解 JavaScript 异步编程"
 date: "2021-03-14"
 description: "全面解析 JavaScript 异步编程的概念、机制以及常见应用场景"
 tags: ["JavaScript", "异步编程", "Promise", "Async/Await"]
+category: "JavaScript"
 ---
 
 ## 什么是异步编程？
@@ -95,11 +96,13 @@ const promise = new Promise((resolve, reject) => {
   }, 1000);
 });
 
-promise.then((result) => {
-  console.log(result);
-}).catch((error) => {
-  console.error(error);
-});
+promise
+  .then((result) => {
+    console.log(result);
+  })
+  .catch((error) => {
+    console.error(error);
+  });
 ```
 
 #### 链式调用
