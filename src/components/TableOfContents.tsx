@@ -68,12 +68,12 @@ export default function TableOfContents() {
   }
 
   return (
-    <nav className="hidden lg:block bg-white dark:bg-gray-900 p-4 rounded-lg border border-gray-200 dark:border-gray-800 max-h-[calc(100vh-8rem)] sticky top-24 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+    <nav className="hidden lg:block bg-white/30 dark:bg-gray-800/30 backdrop-blur-lg p-4 rounded-xl border border-gray-200/50 dark:border-gray-700/50 max-h-[calc(100vh-8rem)] sticky top-24 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent shadow-lg transition-all duration-300">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-bold">目录</h2>
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+          className="p-1 hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-purple-500/10 rounded-lg transition-all duration-300"
           aria-label={isExpanded ? "折叠目录" : "展开目录"}
         >
           <ChevronDownIcon

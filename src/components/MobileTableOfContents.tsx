@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import { motion, AnimatePresence } from "framer-motion";
 
 type Heading = {
   id: string;
@@ -53,10 +54,10 @@ export default function MobileTableOfContents() {
   if (headings.length === 0) return null;
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-lg">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-t border-gray-200 dark:border-gray-800 shadow-lg">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between w-full px-4 py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+        className="flex items-center justify-between w-full px-4 py-3 text-sm font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-50/80 dark:hover:bg-gray-800/80 transition-colors"
       >
         <span>目录</span>
         <ChevronDownIcon
@@ -65,38 +66,54 @@ export default function MobileTableOfContents() {
           }`}
         />
       </button>
-      {isOpen && (
-        <nav className="absolute bottom-full left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-lg px-4 py-4 max-h-[60vh] overflow-y-auto">
-          <ul className="space-y-1">
-            {headings.map((heading) => (
-              <li
-                key={heading.id}
-                style={{
-                  paddingLeft: `${(heading.level - 2) * 0.75}rem`,
-                }}
-              >
-                <a
-                  href={`#${heading.id}`}
-                  className={`block py-1.5 text-sm ${
-                    activeId === heading.id
-                      ? "text-blue-500 font-medium"
-                      : "text-gray-600 dark:text-gray-400"
-                  }`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document.getElementById(heading.id)?.scrollIntoView({
-                      behavior: "smooth",
-                    });
-                    setIsOpen(false);
-                  }}
-                >
-                  {heading.text}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      )}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.nav
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="absolute bottom-full left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-t border-gray-200 dark:border-gray-800 shadow-lg overflow-hidden"
+          >
+            <motion.div
+              initial={{ y: 20 }}
+              animate={{ y: 0 }}
+              exit={{ y: 20 }}
+              transition={{ duration: 0.2 }}
+              className="px-4 py-4 max-h-[60vh] overflow-y-auto"
+            >
+              <ul className="space-y-1">
+                {headings.map((heading) => (
+                  <li
+                    key={heading.id}
+                    style={{
+                      paddingLeft: `${(heading.level - 2) * 0.75}rem`,
+                    }}
+                  >
+                    <a
+                      href={`#${heading.id}`}
+                      className={`block py-1.5 text-sm ${
+                        activeId === heading.id
+                          ? "text-blue-600 dark:text-blue-400 font-medium"
+                          : "text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400"
+                      }`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        document.getElementById(heading.id)?.scrollIntoView({
+                          behavior: "smooth",
+                        });
+                        setIsOpen(false);
+                      }}
+                    >
+                      {heading.text}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          </motion.nav>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
