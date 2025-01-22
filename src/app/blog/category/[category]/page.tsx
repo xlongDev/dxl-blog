@@ -22,10 +22,17 @@ export default function CategoryPage({ params }: Props) {
     .filter((post) => post.category?.toLowerCase() === category)
     .sort((a, b) => compareDesc(new Date(a.date), new Date(b.date)));
 
+  // 获取原始分类名称
+  const originalCategory =
+    allPosts.find((post) => post.category?.toLowerCase() === category)
+      ?.category || category;
+
   return (
     <div className="space-y-8 container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <FadeIn>
-        <h1 className="text-3xl font-bold mb-8">{category} 分类下的文章</h1>
+        <h1 className="text-3xl font-bold mb-8">
+          {originalCategory} 分类下的文章
+        </h1>
       </FadeIn>
       <CategoryFilter posts={posts} />
     </div>

@@ -40,31 +40,31 @@ export default function Header() {
                 <button className="hover:text-blue-500">分类</button>
                 <div className="absolute left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-in-out transform group-hover:translate-y-0 translate-y-1">
                   <Link
-                    href="/blog?category=JavaScript"
+                    href="/blog/category/javascript"
                     className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
                     JavaScript
                   </Link>
                   <Link
-                    href="/blog?category=React"
+                    href="/blog/category/react"
                     className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
                     React
                   </Link>
                   <Link
-                    href="/blog?category=Vue"
+                    href="/blog/category/vue"
                     className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
                     Vue
                   </Link>
                   <Link
-                    href="/blog?category=Node.js"
+                    href="/blog/category/node.js"
                     className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
                     Node.js
                   </Link>
                   <Link
-                    href="/blog?category=TypeScript"
+                    href="/blog/category/typescript"
                     className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
                     TypeScript
