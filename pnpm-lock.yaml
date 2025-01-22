@@ -25,7 +25,7 @@ importers:
         version: 0.5.20
       contentlayer:
         specifier: 0.3.0
-        version: 0.3.0(esbuild@0.17.19)
+        version: 0.3.0(esbuild@0.17.19)(markdown-wasm@1.2.0)
       date-fns:
         specifier: ^3.2.0
         version: 3.6.0
@@ -35,12 +35,15 @@ importers:
       framer-motion:
         specifier: ^11.18.2
         version: 11.18.2(@emotion/is-prop-valid@1.3.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      markdown-wasm:
+        specifier: ^1.2.0
+        version: 1.2.0
       next:
         specifier: 13.5.6
         version: 13.5.6(@opentelemetry/api@1.1.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       next-contentlayer:
         specifier: 0.3.0
-        version: 0.3.0(esbuild@0.17.19)(next@13.5.6(@opentelemetry/api@1.1.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 0.3.0(esbuild@0.17.19)(markdown-wasm@1.2.0)(next@13.5.6(@opentelemetry/api@1.1.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       next-themes:
         specifier: ^0.2.1
         version: 0.2.1(next@13.5.6(@opentelemetry/api@1.1.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1864,6 +1867,9 @@ packages:
     resolution: {integrity: sha512-WWC0ZuMzCyDHYCasEGs4IPvLyTGftYwh6wIEOULOF0HXcqZlhwRzrK0w2VUlxWA98xnvb/jszw4ZSkJ6ADpM6Q==}
     engines: {node: '>=0.10.0'}
 
+  markdown-wasm@1.2.0:
+    resolution: {integrity: sha512-S12OTkyXCkOgI1n1rZY9cg4bK/PGu80Emjpvwp8BEjwCxhPV3yddF0U6+QhCitdBsI1tzWcoeahmW7k0Pq81OA==}
+
   math-intrinsics@1.1.0:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
     engines: {node: '>= 0.4'}
@@ -2830,9 +2836,9 @@ snapshots:
     dependencies:
       regenerator-runtime: 0.14.1
 
-  '@contentlayer/cli@0.3.0(esbuild@0.17.19)':
+  '@contentlayer/cli@0.3.0(esbuild@0.17.19)(markdown-wasm@1.2.0)':
     dependencies:
-      '@contentlayer/core': 0.3.0(esbuild@0.17.19)
+      '@contentlayer/core': 0.3.0(esbuild@0.17.19)(markdown-wasm@1.2.0)
       '@contentlayer/utils': 0.3.0
       clipanion: 3.2.1(typanion@3.14.0)
       typanion: 3.14.0
@@ -2842,16 +2848,16 @@ snapshots:
       - markdown-wasm
       - supports-color
 
-  '@contentlayer/client@0.3.0(esbuild@0.17.19)':
+  '@contentlayer/client@0.3.0(esbuild@0.17.19)(markdown-wasm@1.2.0)':
     dependencies:
-      '@contentlayer/core': 0.3.0(esbuild@0.17.19)
+      '@contentlayer/core': 0.3.0(esbuild@0.17.19)(markdown-wasm@1.2.0)
     transitivePeerDependencies:
       - '@effect-ts/otel-node'
       - esbuild
       - markdown-wasm
       - supports-color
 
-  '@contentlayer/core@0.3.0(esbuild@0.17.19)':
+  '@contentlayer/core@0.3.0(esbuild@0.17.19)(markdown-wasm@1.2.0)':
     dependencies:
       '@contentlayer/utils': 0.3.0
       camel-case: 4.1.2
@@ -2867,13 +2873,14 @@ snapshots:
       unified: 10.1.2
     optionalDependencies:
       esbuild: 0.17.19
+      markdown-wasm: 1.2.0
     transitivePeerDependencies:
       - '@effect-ts/otel-node'
       - supports-color
 
-  '@contentlayer/source-files@0.3.0(esbuild@0.17.19)':
+  '@contentlayer/source-files@0.3.0(esbuild@0.17.19)(markdown-wasm@1.2.0)':
     dependencies:
-      '@contentlayer/core': 0.3.0(esbuild@0.17.19)
+      '@contentlayer/core': 0.3.0(esbuild@0.17.19)(markdown-wasm@1.2.0)
       '@contentlayer/utils': 0.3.0
       chokidar: 3.6.0
       fast-glob: 3.3.3
@@ -2890,10 +2897,10 @@ snapshots:
       - markdown-wasm
       - supports-color
 
-  '@contentlayer/source-remote-files@0.3.0(esbuild@0.17.19)':
+  '@contentlayer/source-remote-files@0.3.0(esbuild@0.17.19)(markdown-wasm@1.2.0)':
     dependencies:
-      '@contentlayer/core': 0.3.0(esbuild@0.17.19)
-      '@contentlayer/source-files': 0.3.0(esbuild@0.17.19)
+      '@contentlayer/core': 0.3.0(esbuild@0.17.19)(markdown-wasm@1.2.0)
+      '@contentlayer/source-files': 0.3.0(esbuild@0.17.19)(markdown-wasm@1.2.0)
       '@contentlayer/utils': 0.3.0
     transitivePeerDependencies:
       - '@effect-ts/otel-node'
@@ -3794,13 +3801,13 @@ snapshots:
 
   concat-map@0.0.1: {}
 
-  contentlayer@0.3.0(esbuild@0.17.19):
+  contentlayer@0.3.0(esbuild@0.17.19)(markdown-wasm@1.2.0):
     dependencies:
-      '@contentlayer/cli': 0.3.0(esbuild@0.17.19)
-      '@contentlayer/client': 0.3.0(esbuild@0.17.19)
-      '@contentlayer/core': 0.3.0(esbuild@0.17.19)
-      '@contentlayer/source-files': 0.3.0(esbuild@0.17.19)
-      '@contentlayer/source-remote-files': 0.3.0(esbuild@0.17.19)
+      '@contentlayer/cli': 0.3.0(esbuild@0.17.19)(markdown-wasm@1.2.0)
+      '@contentlayer/client': 0.3.0(esbuild@0.17.19)(markdown-wasm@1.2.0)
+      '@contentlayer/core': 0.3.0(esbuild@0.17.19)(markdown-wasm@1.2.0)
+      '@contentlayer/source-files': 0.3.0(esbuild@0.17.19)(markdown-wasm@1.2.0)
+      '@contentlayer/source-remote-files': 0.3.0(esbuild@0.17.19)(markdown-wasm@1.2.0)
       '@contentlayer/utils': 0.3.0
     transitivePeerDependencies:
       - '@effect-ts/otel-node'
@@ -4860,6 +4867,8 @@ snapshots:
 
   markdown-extensions@1.1.1: {}
 
+  markdown-wasm@1.2.0: {}
+
   math-intrinsics@1.1.0: {}
 
   mdast-util-definitions@5.1.2:
@@ -5240,9 +5249,9 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
-  next-contentlayer@0.3.0(esbuild@0.17.19)(next@13.5.6(@opentelemetry/api@1.1.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  next-contentlayer@0.3.0(esbuild@0.17.19)(markdown-wasm@1.2.0)(next@13.5.6(@opentelemetry/api@1.1.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
-      '@contentlayer/core': 0.3.0(esbuild@0.17.19)
+      '@contentlayer/core': 0.3.0(esbuild@0.17.19)(markdown-wasm@1.2.0)
       '@contentlayer/utils': 0.3.0
       next: 13.5.6(@opentelemetry/api@1.1.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1

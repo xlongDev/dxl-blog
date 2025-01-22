@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Noto_Serif_SC, Noto_Sans_SC } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import Header from "@/components/Header";
@@ -7,16 +7,6 @@ import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
 
 const inter = Inter({ subsets: ["latin"] });
-const notoSerifSC = Noto_Serif_SC({
-  weight: ["400", "700"],
-  subsets: ["latin"],
-  variable: "--font-noto-serif-sc",
-});
-const notoSansSC = Noto_Sans_SC({
-  weight: ["400", "700"],
-  subsets: ["latin"],
-  variable: "--font-noto-sans-sc",
-});
 
 export const metadata: Metadata = {
   title: "段晓龙的博客 | 前端技术分享",
@@ -36,7 +26,7 @@ export default function RootLayout({
       <head></head>
       <body
         suppressHydrationWarning
-        className={`${inter.className} ${notoSerifSC.variable} ${notoSansSC.variable} bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100`}
+        className={`${inter.className} bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans`}
       >
         <Providers>
           <div className="min-h-screen flex flex-col">
