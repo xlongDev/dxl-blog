@@ -11,6 +11,7 @@ JavaScript 的生态系统随着 ECMAScript 的更新不断发展。从 ES2021 �
 ## ES2021
 
 ### 1. `String.prototype.replaceAll`
+
 `replaceAll` 方法为字符串操作提供了更简洁的方式，允许替换所有匹配的子字符串。
 
 ```javascript
@@ -19,6 +20,7 @@ console.log(str.replaceAll("foo", "baz")); // "baz bar baz"
 ```
 
 ### 2. 逻辑赋值运算符
+
 引入了三个新的逻辑赋值运算符：`&&=`, `||=`, `??=`。
 
 ```javascript
@@ -33,6 +35,7 @@ c ??= "default"; // c === "default"
 ```
 
 ### 3. WeakRefs 和 FinalizationRegistry
+
 提供对弱引用的支持和对象清理回调。
 
 ```javascript
@@ -41,6 +44,7 @@ console.log(ref.deref()); // { name: "example" }
 ```
 
 ### 4. 数字分隔符
+
 增加数字分隔符（`_`），提升大数字的可读性。
 
 ```javascript
@@ -51,6 +55,7 @@ console.log(largeNumber); // 1000000
 ## ES2022
 
 ### 1. 类的私有字段、方法和存取器
+
 增加 `#` 前缀支持定义类的私有成员。
 
 ```javascript
@@ -71,6 +76,7 @@ console.log(instance.getPrivateField()); // 42
 ```
 
 ### 2. `Array` 和 `TypedArray` 的 `at` 方法
+
 支持通过负索引从数组末尾访问元素。
 
 ```javascript
@@ -79,14 +85,16 @@ console.log(arr.at(-1)); // 30
 ```
 
 ### 3. 顶层 await
+
 模块中可以直接使用 `await`，无需嵌套在异步函数中。
 
 ```javascript
-const data = await fetch("/api/data").then(res => res.json());
+const data = await fetch("/api/data").then((res) => res.json());
 console.log(data);
 ```
 
 ### 4. Error Cause
+
 支持在错误对象中传递原因信息。
 
 ```javascript
@@ -94,22 +102,24 @@ try {
   throw new Error("Original error", { cause: "Database connection failed" });
 } catch (e) {
   console.log(e.message); // "Original error"
-  console.log(e.cause);   // "Database connection failed"
+  console.log(e.cause); // "Database connection failed"
 }
 ```
 
 ## ES2023
 
 ### 1. `Array.prototype.findLast` 和 `findLastIndex`
+
 从数组末尾开始搜索。
 
 ```javascript
 const arr = [5, 12, 8, 130, 44];
-console.log(arr.findLast(x => x > 10)); // 130
-console.log(arr.findLastIndex(x => x > 10)); // 3
+console.log(arr.findLast((x) => x > 10)); // 130
+console.log(arr.findLastIndex((x) => x > 10)); // 3
 ```
 
 ### 2. 新的 `Hashbang` 语法
+
 允许在脚本文件顶部使用 `#!` 指定解释器。
 
 ```javascript
@@ -118,6 +128,7 @@ console.log("Hello, World!");
 ```
 
 ### 3. Symbol 的 `description` 属性
+
 允许直接访问 Symbol 的描述。
 
 ```javascript
@@ -126,18 +137,20 @@ console.log(sym.description); // "example"
 ```
 
 ### 4. `Array.prototype.toSorted`
+
 非破坏性排序方法。
 
 ```javascript
 const arr = [3, 1, 4, 1, 5];
 const sorted = arr.toSorted();
 console.log(sorted); // [1, 1, 3, 4, 5]
-console.log(arr);    // [3, 1, 4, 1, 5]
+console.log(arr); // [3, 1, 4, 1, 5]
 ```
 
 ## ES2024
 
 ### 1. `Array.prototype.toReversed`, `toSpliced`, 和 `with`
+
 这些方法为数组操作引入了非破坏性的新选项。
 
 ```javascript
@@ -153,6 +166,7 @@ console.log(updated); // [1, 4, 3]
 ```
 
 ### 2. JSON 模块
+
 支持以模块的方式直接导入 JSON 文件。
 
 ```javascript
@@ -161,6 +175,7 @@ console.log(data);
 ```
 
 ### 3. 更强的模式匹配（提案）
+
 增强正则表达式的匹配功能，例如新增 `match.groups`。
 
 ```javascript

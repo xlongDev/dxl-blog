@@ -61,17 +61,17 @@ JavaScript 中的任务分为两类：**宏任务（Macro Task）** 和 **微任
 ### 示例代码
 
 ```javascript
-console.log('start');
+console.log("start");
 
 setTimeout(() => {
-  console.log('macro task');
+  console.log("macro task");
 }, 0);
 
 Promise.resolve().then(() => {
-  console.log('micro task');
+  console.log("micro task");
 });
 
-console.log('end');
+console.log("end");
 ```
 
 输出结果为：
@@ -99,11 +99,11 @@ Node.js 的事件循环分为以下阶段：
 ### 示例代码
 
 ```javascript
-const fs = require('fs');
+const fs = require("fs");
 
 fs.readFile(__filename, () => {
-  setTimeout(() => console.log('timeout'), 0);
-  setImmediate(() => console.log('immediate'));
+  setTimeout(() => console.log("timeout"), 0);
+  setImmediate(() => console.log("immediate"));
 });
 ```
 

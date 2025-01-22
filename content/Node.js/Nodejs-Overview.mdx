@@ -39,78 +39,87 @@ Node.js 的高性能主要归功于以下两点：
 Node.js 内置了一些常用模块，以下是几个关键模块及其功能：
 
 ### 1. `http`
+
 用于创建 HTTP 服务器和客户端。
 
 ```javascript
-const http = require('http');
+const http = require("http");
 
 const server = http.createServer((req, res) => {
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end('Hello, Node.js!');
+  res.writeHead(200, { "Content-Type": "text/plain" });
+  res.end("Hello, Node.js!");
 });
 
 server.listen(3000, () => {
-  console.log('Server is running on http://localhost:3000');
+  console.log("Server is running on http://localhost:3000");
 });
 ```
 
 ### 2. `fs`
+
 用于文件操作（读、写、删除等）。
 
 ```javascript
-const fs = require('fs');
+const fs = require("fs");
 
-fs.writeFile('example.txt', 'Hello, File System!', (err) => {
+fs.writeFile("example.txt", "Hello, File System!", (err) => {
   if (err) throw err;
-  console.log('File saved!');
+  console.log("File saved!");
 });
 ```
 
 ### 3. `path`
+
 用于处理文件路径。
 
 ```javascript
-const path = require('path');
+const path = require("path");
 
-const filePath = path.join(__dirname, 'example.txt');
+const filePath = path.join(__dirname, "example.txt");
 console.log(filePath);
 ```
 
 ### 4. `events`
+
 实现事件驱动编程。
 
 ```javascript
-const EventEmitter = require('events');
+const EventEmitter = require("events");
 
 class MyEmitter extends EventEmitter {}
 const myEmitter = new MyEmitter();
 
-myEmitter.on('event', () => {
-  console.log('An event occurred!');
+myEmitter.on("event", () => {
+  console.log("An event occurred!");
 });
 
-myEmitter.emit('event');
+myEmitter.emit("event");
 ```
 
 ## 常见应用场景
 
 ### 1. Web 服务器
+
 Node.js 适合构建高并发的 Web 应用程序，例如实时聊天系统。
 
 ### 2. API 网关
+
 Node.js 的轻量特性使其成为构建微服务和 API 网关的理想选择。
 
 ### 3. 工具和脚本
+
 Node.js 提供了一个强大的 CLI 环境，可以用来开发自动化脚本和工具。
 
 ## 优势与局限性
 
 ### 优势
+
 - 高性能：得益于 V8 引擎和事件驱动架构。
 - 活跃的生态系统：拥有庞大的 npm 包管理库。
 - 全栈开发：使用统一的 JavaScript 语言。
 
 ### 局限性
+
 - 单线程：对于 CPU 密集型任务性能有限。
 - 回调地狱：尽管 `async/await` 已大大缓解，但仍需注意异步代码的管理。
 

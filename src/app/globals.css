@@ -15,6 +15,16 @@
 }
 
 @layer base {
+  /* 仅对需要过渡效果的元素应用 */
+  body,
+  .prose a,
+  .prose h1,
+  .prose h2,
+  .prose h3,
+  .prose h4 {
+    @apply transition-colors duration-200 ease-in-out; /* 缩短过渡时间 */
+  }
+
   body {
     @apply antialiased;
   }

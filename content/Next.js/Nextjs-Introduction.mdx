@@ -26,7 +26,7 @@ Next.js 是由 [Vercel](https://vercel.com/) 开发的一个 React 框架，专�
 Next.js 采用基于文件系统的路由机制，开发者只需在 `pages/` 目录下创建文件，即可定义对应的路由。
 
 ```bash
-/pages/index.js    // 对应根路径 / 
+/pages/index.js    // 对应根路径 /
 /pages/about.js    // 对应 /about
 /pages/blog/[id].js  // 动态路由 /blog/:id
 ```
@@ -36,10 +36,7 @@ Next.js 采用基于文件系统的路由机制，开发者只需在 `pages/` �
 ```javascript
 export async function getStaticPaths() {
   return {
-    paths: [
-      { params: { id: '1' } },
-      { params: { id: '2' } }
-    ],
+    paths: [{ params: { id: "1" } }, { params: { id: "2" } }],
     fallback: false,
   };
 }
@@ -63,7 +60,7 @@ Next.js 提供了三种主要的数据获取方法：
 
 ```javascript
 export async function getServerSideProps(context) {
-  const res = await fetch('https://api.example.com/data');
+  const res = await fetch("https://api.example.com/data");
   const data = await res.json();
 
   return {
@@ -97,7 +94,7 @@ Next.js 支持多种样式处理方式：
 示例：
 
 ```javascript
-import styles from './Home.module.css';
+import styles from "./Home.module.css";
 
 export default function Home() {
   return <div className={styles.container}>Hello Next.js</div>;
@@ -111,8 +108,8 @@ Next.js 内置国际化功能，通过配置 `next.config.js` 实现多语言支
 ```javascript
 module.exports = {
   i18n: {
-    locales: ['en', 'zh'],
-    defaultLocale: 'en',
+    locales: ["en", "zh"],
+    defaultLocale: "en",
   },
 };
 ```
@@ -123,7 +120,7 @@ Next.js 提供了增量静态生成（ISR）功能，使静态页面在构建后
 
 ```javascript
 export async function getStaticProps() {
-  const res = await fetch('https://api.example.com/data');
+  const res = await fetch("https://api.example.com/data");
   const data = await res.json();
 
   return {

@@ -11,6 +11,7 @@ JavaScript 自 ES2015（即 ES6）开始进入快速发展阶段，陆续引入�
 ## ES2015 (ES6)
 
 ### 1. `let` 和 `const`
+
 ES2015 引入了块级作用域的变量声明方式，替代 `var`，提供了更可靠的变量作用域管理。
 
 ```javascript
@@ -20,6 +21,7 @@ const PI = 3.14;
 ```
 
 ### 2. 箭头函数
+
 箭头函数提供了简洁的函数声明方式，并且不绑定自己的 `this` 值。
 
 ```javascript
@@ -28,6 +30,7 @@ console.log(add(2, 3)); // 输出: 5
 ```
 
 ### 3. 模板字符串
+
 使用反引号定义的字符串支持多行和嵌入表达式。
 
 ```javascript
@@ -36,14 +39,16 @@ console.log(`Hello, ${name}!`); // 输出: Hello, JavaScript!
 ```
 
 ### 4. 解构赋值
+
 解构赋值可以轻松提取对象或数组的值。
 
 ```javascript
 const [x, y] = [1, 2];
-const {name, age} = {name: "John", age: 30};
+const { name, age } = { name: "John", age: 30 };
 ```
 
 ### 5. 默认参数
+
 函数可以为参数设置默认值。
 
 ```javascript
@@ -54,11 +59,12 @@ greet(); // 输出: Hello, Guest!
 ```
 
 ### 6. 模块化 (`import` 和 `export`)
+
 引入了标准的模块化语法，替代了以前的 `require` 和 `module.exports`。
 
 ```javascript
 // module.js
-export const greet = name => `Hello, ${name}`;
+export const greet = (name) => `Hello, ${name}`;
 
 // main.js
 import { greet } from "./module.js";
@@ -66,6 +72,7 @@ console.log(greet("Alice"));
 ```
 
 ### 7. 类（Class）
+
 引入了类语法，简化了基于原型的继承方式。
 
 ```javascript
@@ -84,6 +91,7 @@ person.greet();
 ## ES2016 (ES7)
 
 ### 1. 指数操作符 (`**`)
+
 提供了计算幂的语法。
 
 ```javascript
@@ -91,6 +99,7 @@ console.log(2 ** 3); // 输出: 8
 ```
 
 ### 2. `Array.prototype.includes`
+
 用于判断数组中是否包含某个值。
 
 ```javascript
@@ -101,6 +110,7 @@ console.log(fruits.includes("banana")); // 输出: true
 ## ES2017 (ES8)
 
 ### 1. `async` / `await`
+
 简化了异步代码的书写方式，使得异步代码更接近同步代码的语义。
 
 ```javascript
@@ -112,10 +122,11 @@ const fetchData = async () => {
 ```
 
 ### 2. `Object.entries` 和 `Object.values`
+
 用于遍历对象的键值对或值。
 
 ```javascript
-const obj = {a: 1, b: 2};
+const obj = { a: 1, b: 2 };
 console.log(Object.entries(obj)); // 输出: [["a", 1], ["b", 2]]
 console.log(Object.values(obj)); // 输出: [1, 2]
 ```
@@ -123,27 +134,32 @@ console.log(Object.values(obj)); // 输出: [1, 2]
 ## ES2018 (ES9)
 
 ### 1. 剩余/扩展运算符（对象）
+
 扩展运算符支持对象解构。
 
 ```javascript
-const obj = {a: 1, b: 2, c: 3};
-const {a, ...rest} = obj;
+const obj = { a: 1, b: 2, c: 3 };
+const { a, ...rest } = obj;
 console.log(rest); // 输出: {b: 2, c: 3}
 ```
 
 ### 2. 正则表达式新增特性
+
 - `dotAll` 模式 (`/s` 修饰符)
 - 正则表达式命名捕获组
 
 ```javascript
 const regex = /(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})/;
-const {groups: {year, month, day}} = regex.exec("2025-01-21");
+const {
+  groups: { year, month, day },
+} = regex.exec("2025-01-21");
 console.log(year, month, day); // 输出: 2025 01 21
 ```
 
 ## ES2019 (ES10)
 
 ### 1. `Array.prototype.flat` 和 `Array.prototype.flatMap`
+
 简化了多维数组的展开。
 
 ```javascript
@@ -152,24 +168,30 @@ console.log(arr.flat(2)); // 输出: [1, 2, 3]
 ```
 
 ### 2. `Object.fromEntries`
+
 将键值对数组转换为对象。
 
 ```javascript
-const entries = [["a", 1], ["b", 2]];
+const entries = [
+  ["a", 1],
+  ["b", 2],
+];
 console.log(Object.fromEntries(entries)); // 输出: {a: 1, b: 2}
 ```
 
 ## ES2020 (ES11)
 
 ### 1. 可选链操作符 (`?.`)
+
 简化了深层嵌套属性的访问。
 
 ```javascript
-const user = {profile: {name: "Alice"}};
+const user = { profile: { name: "Alice" } };
 console.log(user?.profile?.name); // 输出: Alice
 ```
 
 ### 2. 空值合并操作符 (`??`)
+
 提供了对 `null` 和 `undefined` 的默认值处理。
 
 ```javascript
@@ -178,6 +200,7 @@ console.log(value); // 输出: default
 ```
 
 ### 3. 动态 `import`
+
 支持按需加载模块。
 
 ```javascript
@@ -186,6 +209,7 @@ module.greet("Alice");
 ```
 
 ### 4. 全局对象 `globalThis`
+
 提供了跨平台统一的全局对象。
 
 ```javascript
