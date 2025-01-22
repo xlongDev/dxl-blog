@@ -8,7 +8,7 @@ export default function PostCard({ post }: { post: Post }) {
       href={post.url}
       className="group block p-6 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
     >
-      <h2 className="text-xl font-bold mb-2 group-hover:text-blue-500 transition-colors">
+      <h2 className="text-lg sm:text-xl font-bold mb-2 leading-snug group-hover:text-blue-500 transition-colors">
         {post.title}
       </h2>
       <p className="text-gray-600 dark:text-gray-400 mb-4">

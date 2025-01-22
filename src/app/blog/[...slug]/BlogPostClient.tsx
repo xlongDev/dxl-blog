@@ -54,7 +54,6 @@ export default function BlogPostClient({ post }: BlogPostClientProps) {
                   </div>
                 )}
               </div>
-              <ArticleActions slug={post.url} />
               {post.series && (
                 <SeriesNav
                   currentPost={post}
@@ -62,6 +61,7 @@ export default function BlogPostClient({ post }: BlogPostClientProps) {
                 />
               )}
               <MDXContent components={MDXComponents} />
+              <ArticleActions slug={post.url} />
             </div>
           </article>
           <div className="hidden lg:block w-64 relative">
@@ -72,8 +72,8 @@ export default function BlogPostClient({ post }: BlogPostClientProps) {
         </div>
         <MobileTableOfContents />
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <RelatedPosts currentPost={post} allPosts={allPosts} />
           <Comments />
+          <RelatedPosts currentPost={post} allPosts={allPosts} />
         </div>
       </div>
     </div>

@@ -17,7 +17,7 @@ export default function AboutPage() {
           <div>
             <h2 className="!mt-0">晓龙</h2>
             <p className="text-gray-600 dark:text-gray-400">
-              前端开发工程师 / 跑者
+              前端开发者 / 跑者
             </p>
           </div>
         </div>

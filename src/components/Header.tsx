@@ -30,7 +30,9 @@ export default function Header() {
                 height={32}
                 className="rounded-full"
               />
-              <span className="text-xl font-bold">晓龙的前端笔记</span>
+              <span className="text-xl font-bold truncate min-w-[3rem]">
+                晓龙的blog
+              </span>
             </Link>
             <div className="flex items-center space-x-6">
               <Link href="/blog" className="hover:text-blue-500">
