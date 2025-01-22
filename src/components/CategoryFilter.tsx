@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { Post } from "contentlayer/generated";
 import PostCard from "./PostCard";
 import FadeIn from "@/components/FadeIn";
 import Link from "next/link";
-import { Menu } from "@headlessui/react";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 
 interface CategoryFilterProps {
@@ -62,7 +61,7 @@ export default function CategoryFilter({ posts }: CategoryFilterProps) {
 
         <div className="lg:hidden">
           <Menu as="div" className="relative inline-block text-left w-full">
-            <Menu.Button className="inline-flex w-full justify-between items-center rounded-xl bg-white/30 dark:bg-gray-800/30 backdrop-blur-lg px-6 py-3.5 text-sm font-medium shadow-lg hover:bg-white/40 dark:hover:bg-gray-700/40 focus:outline-none transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50">
+            <MenuButton className="inline-flex w-full justify-between items-center rounded-xl bg-white/30 dark:bg-gray-800/30 backdrop-blur-lg px-6 py-3.5 text-sm font-medium shadow-lg hover:bg-white/40 dark:hover:bg-gray-700/40 focus:outline-none transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50">
               <span className="font-medium bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 文章分类
               </span>
@@ -70,10 +69,10 @@ export default function CategoryFilter({ posts }: CategoryFilterProps) {
                 className="h-5 w-5 text-blue-600 dark:text-blue-400"
                 aria-hidden="true"
               />
-            </Menu.Button>
-            <Menu.Items className="absolute left-0 z-10 mt-2 w-full origin-top-right rounded-xl bg-white/30 dark:bg-gray-800/30 backdrop-blur-lg shadow-xl ring-1 ring-black/5 focus:outline-none border border-gray-200/50 dark:border-gray-700/50 divide-y divide-gray-100/50 dark:divide-gray-700/50 overflow-hidden transition-all duration-300">
+            </MenuButton>
+            <MenuItems className="absolute left-0 z-10 mt-2 w-full origin-top-right rounded-xl bg-white/30 dark:bg-gray-800/30 backdrop-blur-lg shadow-xl ring-1 ring-black/5 focus:outline-none border border-gray-200/50 dark:border-gray-700/50 divide-y divide-gray-100/50 dark:divide-gray-700/50 overflow-hidden transition-all duration-300">
               <div className="py-2">
-                <Menu.Item>
+                <MenuItem>
                   {({ active }) => (
                     <Link
                       href="/blog"
@@ -101,9 +100,9 @@ export default function CategoryFilter({ posts }: CategoryFilterProps) {
                       </span>
                     </Link>
                   )}
-                </Menu.Item>
+                </MenuItem>
                 {allCategories.map((category) => (
-                  <Menu.Item key={category}>
+                  <MenuItem key={category}>
                     {({ active }) => (
                       <Link
                         href={`/blog/category/${category.toLowerCase()}`}
@@ -131,10 +130,10 @@ export default function CategoryFilter({ posts }: CategoryFilterProps) {
                         </span>
                       </Link>
                     )}
-                  </Menu.Item>
+                  </MenuItem>
                 ))}
               </div>
-            </Menu.Items>
+            </MenuItems>
           </Menu>
         </div>
       </div>
