@@ -139,7 +139,10 @@ export default function BingHero() {
   // 如果壁纸数据未加载完成，显示加载状态
   if (isLoading || !wallpapers.length) {
     return (
-      <div className="relative w-full flex items-center justify-center" style={{ height: "100vh" }}>
+      <div
+        className="relative w-full flex items-center justify-center"
+        style={{ height: "100vh" }}
+      >
         <div className="text-white text-lg">加载中...</div>
       </div>
     );

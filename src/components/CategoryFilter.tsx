@@ -70,7 +70,7 @@ export default function CategoryFilter({ posts }: CategoryFilterProps) {
                 aria-hidden="true"
               />
             </MenuButton>
-            <MenuItems className="absolute left-0 z-10 mt-2 w-full origin-top-right rounded-xl bg-white/30 dark:bg-gray-800/30 shadow-xl ring-1 ring-black/5 focus:outline-none border border-gray-200/50 dark:border-gray-700/50 divide-y divide-gray-100/50 dark:divide-gray-700/50 overflow-hidden transition-all duration-300 hover:backdrop-blur-lg">
+            <MenuItems className="absolute left-0 z-10 mt-2 w-full origin-top-right rounded-xl bg-white/10 dark:bg-gray-800/10 backdrop-blur-lg p-4 rounded-xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg transition-all duration-300">
               <div className="py-2">
                 <MenuItem>
                   {({ active }) => (

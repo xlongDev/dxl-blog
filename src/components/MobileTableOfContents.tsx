@@ -73,7 +73,7 @@ export default function MobileTableOfContents() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="absolute bottom-full left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-t border-gray-200 dark:border-gray-800 shadow-lg overflow-hidden"
+            className="absolute bottom-full left-0 right-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg border-t border-gray-200/50 dark:border-gray-700/50 shadow-lg overflow-hidden"
           >
             <motion.div
               initial={{ y: 20 }}
@@ -83,9 +83,9 @@ export default function MobileTableOfContents() {
               className="px-4 py-4 max-h-[60vh] overflow-y-auto"
             >
               <ul className="space-y-1">
-                {headings.map((heading) => (
+                {headings.map((heading, index) => (
                   <li
-                    key={heading.id}
+                    key={`${heading.id}-${index}`}
                     style={{
                       paddingLeft: `${(heading.level - 2) * 0.75}rem`,
                     }}
@@ -99,10 +99,40 @@ export default function MobileTableOfContents() {
                       }`}
                       onClick={(e) => {
                         e.preventDefault();
-                        document.getElementById(heading.id)?.scrollIntoView({
-                          behavior: "smooth",
-                        });
-                        setIsOpen(false);
+                        const element = document.getElementById(heading.id);
+                        if (element) {
+                          const headerHeight = 80; // 顶部导航栏的高度
+                          const elementPosition =
+                            element.getBoundingClientRect().top +
+                            window.scrollY;
+                          const offsetPosition = elementPosition - headerHeight;
+
+                          const handleScroll = () => {
+                            const currentPosition = window.scrollY;
+                            if (
+                              Math.abs(currentPosition - offsetPosition) < 2
+                            ) {
+                              window.removeEventListener(
+                                "scroll",
+                                handleScroll
+                              );
+                              setIsOpen(false);
+                            }
+                          };
+
+                          window.addEventListener("scroll", handleScroll);
+
+                          window.scrollTo({
+                            top: offsetPosition,
+                            behavior: "smooth",
+                          });
+
+                          // 设置一个超时，以防滚动没有完全到达目标位置
+                          setTimeout(() => {
+                            window.removeEventListener("scroll", handleScroll);
+                            setIsOpen(false);
+                          }, 1000);
+                        }
                       }}
                     >
                       {heading.text}

@@ -1,0 +1,186 @@
+---
+title: "Express.js 全面指南"
+date: "2025-01-23"
+description: "全面介绍 Express.js 的基础概念、核心功能及其使用场景。"
+tags: ["Express.js", "Node.js", "后端开发"]
+category: "Node.js"
+---
+
+Express.js 是一个基于 Node.js 平台的轻量级、灵活的 Web 应用程序框架，专为构建高性能 Web 应用和 API 而设计。作为 Node.js 最流行的框架之一，Express.js 提供了丰富的功能与灵活的扩展性，极大地简化了 Web 应用开发的过程。
+
+## 什么是 Express.js
+
+Express.js（简称 Express）是一个 Node.js 的 Web 框架。它的核心目标是：
+
+- 提供简单易用的 API，帮助开发者快速创建 Web 应用。
+- 高度可定制化，支持中间件机制以扩展功能。
+- 提供高性能和灵活的请求处理能力。
+
+Express 通常被用于：
+
+- 创建 RESTful API
+- 构建服务器端渲染的 Web 应用
+- 为微服务架构提供支持
+
+## Express.js 的核心特点
+
+1. **轻量与灵活**：Express 只提供最基本的功能，其他功能通过中间件实现。
+2. **中间件机制**：中间件是 Express 的核心，允许开发者在请求和响应周期中插入自定义逻辑。
+3. **路由系统**：Express 提供了功能强大的路由机制，可以轻松处理复杂的 URL 映射。
+4. **与 Node.js 集成**：Express 完全基于 Node.js，能够无缝使用 Node.js 提供的模块与功能。
+5. **模板引擎支持**：支持多种模板引擎（如 Pug、EJS 等），方便构建动态页面。
+
+## 快速开始
+
+下面是一个简单的 Express 应用示例：
+
+```javascript
+const express = require('express');
+const app = express();
+const port = 3000;
+
+// 根路由处理
+app.get('/', (req, res) => {
+  res.send('Hello, Express!');
+});
+
+// 启动服务器
+app.listen(port, () => {
+  console.log(`Server is running at http://localhost:${port}`);
+});
+```
+
+运行上述代码后，访问 `http://localhost:3000/`，即可在浏览器中看到 "Hello, Express!"。
+
+## 核心概念
+
+### 1. 路由
+
+路由定义了应用如何响应客户端请求（如 GET、POST 等）。
+
+#### 基本路由
+
+```javascript
+app.get('/user', (req, res) => {
+  res.send('User Page');
+});
+```
+
+#### 路由参数
+
+```javascript
+app.get('/user/:id', (req, res) => {
+  const userId = req.params.id;
+  res.send(`User ID: ${userId}`);
+});
+```
+
+### 2. 中间件
+
+中间件是 Express 的核心组件，允许你在请求处理链中插入功能。
+
+#### 应用级中间件
+
+```javascript
+app.use((req, res, next) => {
+  console.log('Time:', Date.now());
+  next();
+});
+```
+
+#### 路由级中间件
+
+```javascript
+app.get('/user', (req, res, next) => {
+  console.log('User route middleware');
+  next();
+}, (req, res) => {
+  res.send('User Page');
+});
+```
+
+### 3. 静态文件服务
+
+Express 可以快速托管静态文件：
+
+```javascript
+app.use(express.static('public'));
+```
+
+将上述代码中的 `public` 替换为静态资源文件夹路径即可。
+
+### 4. 模板引擎
+
+Express 支持多种模板引擎，例如 Pug：
+
+```javascript
+app.set('view engine', 'pug');
+app.set('views', './views');
+
+app.get('/home', (req, res) => {
+  res.render('index', { title: 'Home', message: 'Welcome to Express!' });
+});
+```
+
+`views/index.pug` 示例：
+
+```pug
+doctype html
+html
+  head
+    title= title
+  body
+    h1= message
+```
+
+访问 `/home` 即可渲染动态页面。
+
+## 实用功能
+
+### 1. 参数解析
+
+Express 内置了 `express.json()` 和 `express.urlencoded()` 中间件，用于解析请求体：
+
+```javascript
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+```
+
+### 2. 错误处理
+
+Express 提供了简单的错误处理机制：
+
+```javascript
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
+```
+
+### 3. 跨域资源共享（CORS）
+
+使用 `cors` 中间件轻松启用 CORS：
+
+```javascript
+const cors = require('cors');
+app.use(cors());
+```
+
+## 常用工具与中间件
+
+- **body-parser**: 解析请求体（现已内置到 Express）。
+- **morgan**: 日志记录中间件。
+- **helmet**: 提升应用安全性。
+- **express-validator**: 数据验证和清理工具。
+
+## 应用场景
+
+1. **RESTful API**：利用 Express 快速搭建高效的 API 服务。
+2. **微服务**：作为微服务架构的基础组件，Express 可以轻松集成到复杂系统中。
+3. **SSR（服务器端渲染）**：结合模板引擎渲染动态内容。
+4. **实时通信**：结合 Socket.IO 构建实时应用。
+
+## 总结
+
+Express.js 是一个功能强大且灵活的 Web 框架，非常适合快速构建 Web 应用和 API。通过学习其核心概念和扩展功能，开发者可以轻松应对各种后端开发场景。如果你正在寻找一个高效的工具来开发 Web 服务，Express.js 是一个不错的选择。
+

@@ -68,7 +68,7 @@ export default function TableOfContents() {
   }
 
   return (
-    <nav className="hidden lg:block bg-white/30 dark:bg-gray-800/30 backdrop-blur-lg p-4 rounded-xl border border-gray-200/50 dark:border-gray-700/50 max-h-[calc(100vh-8rem)] sticky top-24 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent shadow-lg transition-all duration-300">
+    <nav className="hidden lg:block bg-white dark:bg-gray-800 backdrop-blur-lg p-4 rounded-xl border border-gray-200/50 dark:border-gray-700/50 max-h-[calc(100vh-8rem)] sticky top-24 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent shadow-lg transition-all duration-300">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-bold">目录</h2>
         <button
@@ -89,9 +89,9 @@ export default function TableOfContents() {
         }`}
       >
         <ul className="space-y-2">
-          {headings.map((heading) => (
+          {headings.map((heading, index) => (
             <li
-              key={heading.id}
+              key={`${heading.id}-${index}`}
               style={{ paddingLeft: `${(heading.level - 2) * 0.75}rem` }}
             >
               <a
