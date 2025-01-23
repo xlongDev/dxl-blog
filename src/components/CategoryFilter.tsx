@@ -28,7 +28,7 @@ export default function CategoryFilter({ posts }: CategoryFilterProps) {
       {/* 分类导航 */}
       <div className="w-full">
         <div className="hidden lg:block">
-          <nav className="bg-white/30 dark:bg-gray-800/30 backdrop-blur-lg rounded-2xl p-4 shadow-lg border border-gray-200/50 dark:border-gray-700/50">
+          <nav className="bg-white/30 dark:bg-gray-800/30 rounded-2xl p-4 shadow-lg border border-gray-200/50 dark:border-gray-700/50 hover:backdrop-blur-lg transition-all duration-300">
             <div className="flex flex-wrap gap-2">
               <Link
                 href="/blog"
@@ -61,7 +61,7 @@ export default function CategoryFilter({ posts }: CategoryFilterProps) {
 
         <div className="lg:hidden">
           <Menu as="div" className="relative inline-block text-left w-full">
-            <MenuButton className="inline-flex w-full justify-between items-center rounded-xl bg-white/30 dark:bg-gray-800/30 backdrop-blur-lg px-6 py-3.5 text-sm font-medium shadow-lg hover:bg-white/40 dark:hover:bg-gray-700/40 focus:outline-none transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50">
+            <MenuButton className="inline-flex w-full justify-between items-center rounded-xl bg-white/30 dark:bg-gray-800/30 px-6 py-3.5 text-sm font-medium shadow-lg hover:bg-white/40 dark:hover:bg-gray-700/40 hover:backdrop-blur-lg focus:outline-none transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50">
               <span className="font-medium bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 文章分类
               </span>
@@ -70,7 +70,7 @@ export default function CategoryFilter({ posts }: CategoryFilterProps) {
                 aria-hidden="true"
               />
             </MenuButton>
-            <MenuItems className="absolute left-0 z-10 mt-2 w-full origin-top-right rounded-xl bg-white/30 dark:bg-gray-800/30 backdrop-blur-lg shadow-xl ring-1 ring-black/5 focus:outline-none border border-gray-200/50 dark:border-gray-700/50 divide-y divide-gray-100/50 dark:divide-gray-700/50 overflow-hidden transition-all duration-300">
+            <MenuItems className="absolute left-0 z-10 mt-2 w-full origin-top-right rounded-xl bg-white/30 dark:bg-gray-800/30 shadow-xl ring-1 ring-black/5 focus:outline-none border border-gray-200/50 dark:border-gray-700/50 divide-y divide-gray-100/50 dark:divide-gray-700/50 overflow-hidden transition-all duration-300 hover:backdrop-blur-lg">
               <div className="py-2">
                 <MenuItem>
                   {({ active }) => (

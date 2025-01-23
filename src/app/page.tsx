@@ -3,6 +3,7 @@ import { allPosts } from "contentlayer/generated";
 import { compareDesc } from "date-fns";
 import PostCard from "@/components/PostCard";
 import Hero from "@/components/Hero";
+import BingHero from "@/components/BingHero";
 import PopularPosts from "@/components/PopularPosts";
 
 export default function Home() {
@@ -12,7 +13,8 @@ export default function Home() {
 
   return (
     <>
-      <Hero />
+      <BingHero />
+      {/* <Hero /> */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Hero Section */}
         <section className="text-center space-y-6">

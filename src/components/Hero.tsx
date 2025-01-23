@@ -3,18 +3,37 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { quotes, backgrounds } from "@/data/hero";
-import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import {
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from "@heroicons/react/24/outline";
 
 export default function Hero() {
   const [currentQuote, setCurrentQuote] = useState(quotes[0]);
   const [currentBg, setCurrentBg] = useState(backgrounds[0]);
+  const [currentBgIndex, setCurrentBgIndex] = useState(0);
 
   useEffect(() => {
     const quoteIndex = Math.floor(Math.random() * quotes.length);
     const bgIndex = Math.floor(Math.random() * backgrounds.length);
     setCurrentQuote(quotes[quoteIndex]);
     setCurrentBg(backgrounds[bgIndex]);
+    setCurrentBgIndex(bgIndex);
   }, []);
+
+  const handlePrevBg = () => {
+    const newIndex =
+      (currentBgIndex - 1 + backgrounds.length) % backgrounds.length;
+    setCurrentBgIndex(newIndex);
+    setCurrentBg(backgrounds[newIndex]);
+  };
+
+  const handleNextBg = () => {
+    const newIndex = (currentBgIndex + 1) % backgrounds.length;
+    setCurrentBgIndex(newIndex);
+    setCurrentBg(backgrounds[newIndex]);
+  };
 
   const scrollToContent = () => {
     window.scrollTo({
@@ -82,11 +101,34 @@ export default function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1 }}
           onClick={scrollToContent}
-          className="absolute bottom-16 animate-bounce hover:text-blue-400 transition-colors"
+          className="absolute bottom-16 animate-bounce text-white hover:text-blue-400 transition-colors"
           aria-label="Scroll to content"
         >
           <ChevronDownIcon className="h-10 w-10" />
         </motion.button>
+
+        <div className="fixed right-6 top-1/2 -translate-y-1/2 flex flex-col gap-4">
+          <motion.button
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 1.2 }}
+            onClick={handlePrevBg}
+            className="p-3 rounded-full bg-white/10 backdrop-blur-lg border border-white/20 text-white hover:bg-white/20 transition-all duration-300 shadow-lg absolute bottom-16 right-6"
+            aria-label="Previous background"
+          >
+            <ChevronLeftIcon className="h-6 w-6" />
+          </motion.button>
+          <motion.button
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 1.3 }}
+            onClick={handleNextBg}
+            className="p-3 rounded-full bg-white/10 backdrop-blur-lg border border-white/20 text-white hover:bg-white/20 transition-all duration-300 shadow-lg absolute bottom-16 right-20"
+            aria-label="Next background"
+          >
+            <ChevronRightIcon className="h-6 w-6" />
+          </motion.button>
+        </div>
       </div>
     </div>
   );
