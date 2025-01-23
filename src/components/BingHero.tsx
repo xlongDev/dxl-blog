@@ -24,7 +24,7 @@ export default function BingHero() {
   const [showInfo, setShowInfo] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentQuote, setCurrentQuote] = useState(quotes[0]);
-  const [offset, setOffset] = useState(0); // 初始 offset 为 0，确保加载第一组壁纸
+  const [offset, setOffset] = useState(0);
   const [isPreloading, setIsPreloading] = useState(false); // 用于标记是否正在预加载
 
   // 随机选择一个标语
@@ -74,7 +74,7 @@ export default function BingHero() {
 
   // 初始化时获取第一批壁纸
   useEffect(() => {
-    fetchBingWallpapers(offset); // 初始 offset 为 0，确保加载第一组壁纸
+    fetchBingWallpapers(offset);
   }, []);
 
   // 预加载下一组壁纸
@@ -83,8 +83,8 @@ export default function BingHero() {
     if (currentIndex >= wallpapers.length - 3 && !isPreloading) {
       let newOffset = offset + 8;
 
-      // 如果 offset 超过 8，重置为 0
-      if (newOffset > 8) {
+      // 如果 offset 超过 16，重置为 0
+      if (newOffset > 16) {
         newOffset = 0;
       }
 
@@ -112,8 +112,8 @@ export default function BingHero() {
       setCurrentIndex(0);
       setCurrentQuote(getRandomQuote());
 
-      // 如果 offset 超过 8，重置为 0
-      if (offset + 8 > 8) {
+      // 如果 offset 超过 16，重置为 0
+      if (offset + 8 > 16) {
         setOffset(0);
       }
     }
