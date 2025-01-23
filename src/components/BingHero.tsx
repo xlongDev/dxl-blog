@@ -24,6 +24,8 @@ export default function BingHero() {
   const [showInfo, setShowInfo] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentQuote, setCurrentQuote] = useState(quotes[0]);
+  const [offset, setOffset] = useState(0);
+  const [isPreloading, setIsPreloading] = useState(false); // 用于标记是否正在预加载
 
   // 随机选择一个标语
   const getRandomQuote = () => {
@@ -37,31 +39,45 @@ export default function BingHero() {
   }, []);
 
   // 获取 Bing 壁纸数据
+  const fetchBingWallpapers = async (offset: number) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`/api/bing?offset=${offset}`);
+      const data = await response.json();
+      const images = data.images;
+
+      const wallpaperData = images.map((image: any) => ({
+        url: `https://www.bing.com${image.url}`,
+        copyright: image.copyright,
+        title: image.title,
+        location: image.copyright.split("(")[1]?.split(")")[0] || "未知地点",
+      }));
+
+      // 将新获取的壁纸追加到现有壁纸列表的末尾
+      setWallpapers((prev) => [...prev, ...wallpaperData]);
+    } catch (error) {
+      console.error("Failed to fetch Bing wallpapers:", error);
+    } finally {
+      setIsLoading(false);
+      setIsPreloading(false); // 预加载完成
+    }
+  };
+
+  // 初始化时获取第一批壁纸
   useEffect(() => {
-    const fetchBingWallpapers = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch("/api/bing");
-        const data = await response.json();
-        const images = data.images;
-
-        const wallpaperData = images.map((image: any) => ({
-          url: `https://www.bing.com${image.url}`,
-          copyright: image.copyright,
-          title: image.title,
-          location: image.copyright.split("(")[1]?.split(")")[0] || "未知地点",
-        }));
-
-        setWallpapers(wallpaperData);
-      } catch (error) {
-        console.error("Failed to fetch Bing wallpapers:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchBingWallpapers();
+    fetchBingWallpapers(offset);
   }, []);
+
+  // 预加载下一组壁纸
+  useEffect(() => {
+    // 当用户浏览到当前组壁纸的后半部分时（例如第6张），预加载下一组壁纸
+    if (currentIndex >= wallpapers.length - 3 && !isPreloading) {
+      const newOffset = offset + 8;
+      setOffset(newOffset);
+      setIsPreloading(true); // 标记为正在预加载
+      fetchBingWallpapers(newOffset);
+    }
+  }, [currentIndex, wallpapers.length, isPreloading, offset]);
 
   // 滚动到内容区域
   const scrollToContent = () => {
@@ -73,18 +89,16 @@ export default function BingHero() {
 
   // 切换到下一张壁纸
   const nextWallpaper = () => {
-    if (wallpapers.length > 1) {
-      setCurrentIndex((prev) => (prev + 1) % wallpapers.length);
+    if (currentIndex < wallpapers.length - 1) {
+      setCurrentIndex((prev) => prev + 1);
       setCurrentQuote(getRandomQuote());
     }
   };
 
   // 切换到上一张壁纸
   const prevWallpaper = () => {
-    if (wallpapers.length > 1) {
-      setCurrentIndex(
-        (prev) => (prev - 1 + wallpapers.length) % wallpapers.length
-      );
+    if (currentIndex > 0) {
+      setCurrentIndex((prev) => prev - 1);
       setCurrentQuote(getRandomQuote());
     }
   };
