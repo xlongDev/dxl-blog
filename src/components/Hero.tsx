@@ -2,39 +2,84 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { quotes, backgrounds } from "@/data/hero";
 import {
   ChevronDownIcon,
+  InformationCircleIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
+import { quotes } from "@/data/quotes";
+import TypewriterQuote from "./TypewriterQuote";
 
-export default function Hero() {
+interface BingWallpaper {
+  url: string;
+  copyright: string;
+  title: string;
+  location: string;
+}
+
+export default function BingHero() {
+  const [wallpapers, setWallpapers] = useState<BingWallpaper[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0); // 初始显示第一张壁纸
+  const [showInfo, setShowInfo] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentQuote, setCurrentQuote] = useState(quotes[0]);
-  const [currentBg, setCurrentBg] = useState(backgrounds[0]);
-  const [currentBgIndex, setCurrentBgIndex] = useState(0);
+  const [offset, setOffset] = useState(0);
+  const [isPreloading, setIsPreloading] = useState(false); // 用于标记是否正在预加载
 
-  useEffect(() => {
+  // 随机选择一个标语
+  const getRandomQuote = () => {
     const quoteIndex = Math.floor(Math.random() * quotes.length);
-    const bgIndex = Math.floor(Math.random() * backgrounds.length);
-    setCurrentQuote(quotes[quoteIndex]);
-    setCurrentBg(backgrounds[bgIndex]);
-    setCurrentBgIndex(bgIndex);
+    return quotes[quoteIndex];
+  };
+
+  // 初始化时随机选择一个标语
+  useEffect(() => {
+    setCurrentQuote(getRandomQuote());
   }, []);
 
-  const handlePrevBg = () => {
-    const newIndex =
-      (currentBgIndex - 1 + backgrounds.length) % backgrounds.length;
-    setCurrentBgIndex(newIndex);
-    setCurrentBg(backgrounds[newIndex]);
+  // 获取 Bing 壁纸数据
+  const fetchBingWallpapers = async (offset: number) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`/api/bing?offset=${offset}`);
+      const data = await response.json();
+      const images = data.images;
+
+      const wallpaperData = images.map((image: any) => ({
+        url: `https://www.bing.com${image.url}`,
+        copyright: image.copyright,
+        title: image.title,
+        location: image.copyright.split("(")[1]?.split(")")[0] || "未知地点",
+      }));
+
+      // 将新获取的壁纸追加到现有壁纸列表的末尾
+      setWallpapers((prev) => [...prev, ...wallpaperData]);
+    } catch (error) {
+      console.error("Failed to fetch Bing wallpapers:", error);
+    } finally {
+      setIsLoading(false);
+      setIsPreloading(false); // 预加载完成
+    }
   };
 
-  const handleNextBg = () => {
-    const newIndex = (currentBgIndex + 1) % backgrounds.length;
-    setCurrentBgIndex(newIndex);
-    setCurrentBg(backgrounds[newIndex]);
-  };
+  // 初始化时获取第一批壁纸
+  useEffect(() => {
+    fetchBingWallpapers(offset);
+  }, []);
 
+  // 预加载下一组壁纸
+  useEffect(() => {
+    // 当用户浏览到当前组壁纸的后半部分时（例如第6张），预加载下一组壁纸
+    if (currentIndex >= wallpapers.length - 3 && !isPreloading) {
+      const newOffset = offset + 8;
+      setOffset(newOffset);
+      setIsPreloading(true); // 标记为正在预加载
+      fetchBingWallpapers(newOffset);
+    }
+  }, [currentIndex, wallpapers.length, isPreloading, offset]);
+
+  // 滚动到内容区域
   const scrollToContent = () => {
     window.scrollTo({
       top: window.innerHeight,
@@ -42,11 +87,36 @@ export default function Hero() {
     });
   };
 
+  // 切换到下一张壁纸
+  const nextWallpaper = () => {
+    if (currentIndex < wallpapers.length - 1) {
+      setCurrentIndex((prev) => prev + 1); // 切换到下一张壁纸
+      setCurrentQuote(getRandomQuote());
+    }
+  };
+
+  // 切换到上一张壁纸
+  const prevWallpaper = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex((prev) => prev - 1); // 切换到上一张壁纸
+      setCurrentQuote(getRandomQuote());
+    }
+  };
+
+  // 处理打字完成后的回调
+  const handleTypingComplete = () => {
+    setCurrentQuote(getRandomQuote());
+  };
+
+  if (!wallpapers.length) return null;
+
+  const currentWallpaper = wallpapers[currentIndex];
+
   return (
     <div className="relative w-full" style={{ height: "100vh" }}>
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         <motion.div
-          key={currentBg.url}
+          key={currentWallpaper.url}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -56,80 +126,95 @@ export default function Hero() {
           <div
             className="absolute inset-0 w-full h-full"
             style={{
-              backgroundImage: `url(${currentBg.url})`,
+              backgroundImage: `url(${currentWallpaper.url})`,
               backgroundSize: "cover",
               backgroundPosition: "center",
               backgroundRepeat: "no-repeat",
-              height: "100vh",
-              minHeight: "100vh",
             }}
           />
           <div className="absolute inset-0 bg-black/30" />
         </motion.div>
       </AnimatePresence>
 
-      <div className="relative h-full flex flex-col items-center justify-center text-white px-4">
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="text-3xl md:text-4xl font-bold text-center mb-4 tracking-wider leading-relaxed"
-          style={{
-            textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
-            fontFamily: "var(--font-noto-serif-sc)",
-            letterSpacing: "0.1em",
-          }}
-        >
-          {currentQuote.text}
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-          className="text-lg md:text-xl text-center text-gray-200 tracking-wide"
-          style={{
-            textShadow: "1px 1px 2px rgba(0, 0, 0, 0.2)",
-            fontFamily: "var(--font-noto-sans-sc)",
-            letterSpacing: "0.05em",
-          }}
-        >
-          {currentQuote.translation}
-        </motion.p>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <TypewriterQuote
+          key={currentQuote.text}
+          text={currentQuote.text}
+          author={currentQuote.author}
+          onTypingComplete={handleTypingComplete}
+        />
+      </div>
 
+      <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2">
         <motion.button
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
           onClick={scrollToContent}
-          className="absolute bottom-16 animate-bounce text-white hover:text-blue-400 transition-colors"
+          className="animate-bounce text-white hover:text-blue-400 transition-colors"
           aria-label="Scroll to content"
         >
           <ChevronDownIcon className="h-10 w-10" />
         </motion.button>
-
-        <div className="fixed right-6 top-1/2 -translate-y-1/2 flex flex-col gap-4">
-          <motion.button
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 1.2 }}
-            onClick={handlePrevBg}
-            className="p-3 rounded-full bg-white/10 backdrop-blur-lg border border-white/20 text-white hover:bg-white/20 transition-all duration-300 shadow-lg absolute bottom-16 right-6"
-            aria-label="Previous background"
-          >
-            <ChevronLeftIcon className="h-6 w-6" />
-          </motion.button>
-          <motion.button
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 1.3 }}
-            onClick={handleNextBg}
-            className="p-3 rounded-full bg-white/10 backdrop-blur-lg border border-white/20 text-white hover:bg-white/20 transition-all duration-300 shadow-lg absolute bottom-16 right-20"
-            aria-label="Next background"
-          >
-            <ChevronRightIcon className="h-6 w-6" />
-          </motion.button>
-        </div>
       </div>
+
+      {/* Navigation buttons */}
+      <div className="absolute top-1/2 -translate-y-1/2 left-4 sm:left-8">
+        <motion.button
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3 }}
+          onClick={prevWallpaper}
+          className="p-2 sm:p-3 text-white/50 hover:text-white bg-black/10 hover:bg-black/30 hover:backdrop-blur-sm rounded-full transition-all duration-300 hover:scale-110"
+          aria-label="Previous wallpaper"
+        >
+          <ChevronLeftIcon className="h-6 w-6 sm:h-7 sm:w-7" />
+        </motion.button>
+      </div>
+
+      <div className="absolute top-1/2 -translate-y-1/2 right-4 sm:right-8">
+        <motion.button
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3 }}
+          onClick={nextWallpaper}
+          className="p-2 sm:p-3 text-white/50 hover:text-white bg-black/10 hover:bg-black/30 hover:backdrop-blur-sm rounded-full transition-all duration-300 hover:scale-110"
+          aria-label="Next wallpaper"
+        >
+          <ChevronRightIcon className="h-6 w-6 sm:h-7 sm:w-7" />
+        </motion.button>
+      </div>
+
+      {/* Info button */}
+      <div className="absolute top-4 right-4 sm:top-8 sm:right-8">
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          onClick={() => setShowInfo(!showInfo)}
+          className="p-2 sm:p-3 text-white/50 hover:text-white bg-black/10 hover:bg-black/30 hover:backdrop-blur-sm rounded-full transition-all duration-300 hover:scale-110"
+          aria-label="Toggle information"
+        >
+          <InformationCircleIcon className="h-6 w-6 sm:h-7 sm:w-7" />
+        </motion.button>
+      </div>
+
+      {/* Wallpaper information */}
+      <AnimatePresence>
+        {showInfo && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="absolute top-16 right-4 sm:top-20 sm:right-8 bg-black/40 backdrop-blur-sm text-white p-4 rounded-lg max-w-[calc(100vw-2rem)] sm:max-w-md"
+          >
+            <h3 className="font-bold mb-2 text-sm sm:text-base">
+              {currentWallpaper.title}
+            </h3>
+            <p className="text-xs sm:text-sm">{currentWallpaper.copyright}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

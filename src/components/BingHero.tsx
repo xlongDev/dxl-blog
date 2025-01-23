@@ -24,7 +24,7 @@ export default function BingHero() {
   const [showInfo, setShowInfo] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentQuote, setCurrentQuote] = useState(quotes[0]);
-  const [offset, setOffset] = useState(0);
+  const [offset, setOffset] = useState(0); // 初始 offset 为 0，确保加载第一组壁纸
   const [isPreloading, setIsPreloading] = useState(false); // 用于标记是否正在预加载
 
   // 随机选择一个标语
@@ -53,8 +53,17 @@ export default function BingHero() {
         location: image.copyright.split("(")[1]?.split(")")[0] || "未知地点",
       }));
 
-      // 将新获取的壁纸追加到现有壁纸列表的末尾
-      setWallpapers((prev) => [...prev, ...wallpaperData]);
+      // 将新获取的壁纸追加到现有壁纸列表中
+      setWallpapers((prev) => {
+        // 检查新数据是否已经存在，避免重复追加
+        const newUrls = wallpaperData.map((w: BingWallpaper) => w.url); // 为 w 指定类型
+        const existingUrls = prev.map((w: BingWallpaper) => w.url); // 为 w 指定类型
+        const uniqueWallpaperData = wallpaperData.filter(
+          (w: BingWallpaper) => !existingUrls.includes(w.url) // 为 w 指定类型
+        );
+
+        return [...prev, ...uniqueWallpaperData];
+      });
     } catch (error) {
       console.error("Failed to fetch Bing wallpapers:", error);
     } finally {
@@ -65,14 +74,20 @@ export default function BingHero() {
 
   // 初始化时获取第一批壁纸
   useEffect(() => {
-    fetchBingWallpapers(offset);
+    fetchBingWallpapers(offset); // 初始 offset 为 0，确保加载第一组壁纸
   }, []);
 
   // 预加载下一组壁纸
   useEffect(() => {
     // 当用户浏览到当前组壁纸的后半部分时（例如第6张），预加载下一组壁纸
     if (currentIndex >= wallpapers.length - 3 && !isPreloading) {
-      const newOffset = offset + 8;
+      let newOffset = offset + 8;
+
+      // 如果 offset 超过 8，重置为 0
+      if (newOffset > 8) {
+        newOffset = 0;
+      }
+
       setOffset(newOffset);
       setIsPreloading(true); // 标记为正在预加载
       fetchBingWallpapers(newOffset);
@@ -92,6 +107,15 @@ export default function BingHero() {
     if (currentIndex < wallpapers.length - 1) {
       setCurrentIndex((prev) => prev + 1);
       setCurrentQuote(getRandomQuote());
+    } else if (currentIndex === wallpapers.length - 1) {
+      // 如果当前是最后一张壁纸，重置 currentIndex 为 0
+      setCurrentIndex(0);
+      setCurrentQuote(getRandomQuote());
+
+      // 如果 offset 超过 8，重置为 0
+      if (offset + 8 > 8) {
+        setOffset(0);
+      }
     }
   };
 
@@ -99,6 +123,10 @@ export default function BingHero() {
   const prevWallpaper = () => {
     if (currentIndex > 0) {
       setCurrentIndex((prev) => prev - 1);
+      setCurrentQuote(getRandomQuote());
+    } else if (currentIndex === 0) {
+      // 如果当前是第一张壁纸，切换到数组的最后一张
+      setCurrentIndex(wallpapers.length - 1);
       setCurrentQuote(getRandomQuote());
     }
   };
@@ -108,7 +136,14 @@ export default function BingHero() {
     setCurrentQuote(getRandomQuote());
   };
 
-  if (!wallpapers.length) return null;
+  // 如果壁纸数据未加载完成，显示加载状态
+  if (isLoading || !wallpapers.length) {
+    return (
+      <div className="relative w-full flex items-center justify-center" style={{ height: "100vh" }}>
+        <div className="text-white text-lg">加载中...</div>
+      </div>
+    );
+  }
 
   const currentWallpaper = wallpapers[currentIndex];
 
