@@ -6,54 +6,114 @@
   :root {
     --background: 210 20% 98%;
     --foreground: 215 25% 27%;
+    --code-bg: #1a1b26;
+    --code-text: #a9b1d6;
   }
 
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 0 0% 100%;
+    --code-bg: #0d1117;
+    --code-text: #c9d1d9;
   }
 }
 
 @layer base {
-  /* 仅对需要过渡效果的元素应用 */
   body,
   .prose a,
   .prose h1,
   .prose h2,
   .prose h3,
   .prose h4 {
-    @apply transition-colors duration-200 ease-in-out; /* 缩短过渡时间 */
+    @apply transition-colors duration-200 ease-in-out;
   }
 
   body {
-    @apply antialiased;
+    @apply antialiased bg-[rgb(var(--background))] text-[rgb(var(--foreground))];
   }
 }
 
-/* 代码块样式 */
+/* 代码高亮样式 */
 pre {
-  @apply p-4 rounded-lg overflow-x-auto bg-[#1a1b26];
+  @apply font-mono text-sm overflow-x-auto;
+  background-color: var(--code-bg) !important;
 }
 
 code {
-  @apply font-mono text-sm text-[#a9b1d6];
+  @apply font-mono text-sm;
+  color: var(--code-text);
 }
 
-.syntax-highlighter {
-  background-color: #1a1b26 !important;
+/* 代码块容器样式 */
+.code-block {
+  @apply relative my-6 rounded-lg overflow-hidden;
+  background-color: var(--code-bg);
 }
 
-.syntax-highlighter code {
-  color: #a9b1d6 !important;
-  background-color: transparent !important;
+/* 高亮行样式 */
+.line--highlighted {
+  @apply bg-blue-500/10 border-l-2 border-blue-500;
+  margin-left: -1rem;
+  padding-left: calc(1rem - 2px);
 }
 
-/* 链接样式 */
+/* 高亮词样式 */
+.word--highlighted {
+  @apply bg-blue-500/10 rounded px-1;
+}
+
+/* 行号样式 */
+.line-number {
+  @apply text-gray-500 mr-4 select-none;
+  user-select: none;
+}
+
+/* 代码注释样式 */
+.comment {
+  @apply text-gray-500;
+}
+
+/* 字符串样式 */
+.string {
+  @apply text-green-400;
+}
+
+/* 关键字样式 */
+.keyword {
+  @apply text-purple-400;
+}
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: #7ec699 !important;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+  color: #67cdcc !important;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: #cc99cd !important;
+}
+
+.token.function,
+.token.class-name {
+  color: #dd4a68 !important;
+}
+
+/* 保留你原有的部分样式 */
 .prose a {
-  @apply transition-colors duration-200;
+  @apply text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300;
 }
 
-/* 标题样式 */
 .prose h1,
 .prose h2,
 .prose h3,
@@ -61,43 +121,27 @@ code {
   @apply font-bold scroll-mt-20;
 }
 
-/* 列表样式 */
 .prose ul,
 .prose ol {
   @apply my-6;
 }
 
-/* 引用块样式 */
 .prose blockquote {
-  @apply italic border-l-4 pl-4 my-6;
+  @apply italic border-l-4 pl-4 my-6 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700;
 }
 
-/* 表格样式 */
 .prose table {
   @apply w-full my-6;
 }
 
 .prose table th {
-  @apply bg-gray-100 dark:bg-gray-800 p-2;
+  @apply bg-gray-100 dark:bg-gray-800 p-2 font-semibold;
 }
 
 .prose table td {
   @apply p-2 border-t border-gray-200 dark:border-gray-700;
 }
 
-/* 图片样式 */
 .prose img {
-  @apply rounded-lg my-6;
-}
-
-/* 代码行号样式 */
-.prose pre code {
-  @apply grid;
-  counter-reset: line;
-}
-
-.prose pre code > .line::before {
-  counter-increment: line;
-  content: counter(line);
-  @apply inline-block w-6 mr-4 text-gray-500;
+  @apply rounded-lg my-6 shadow-xl;
 }

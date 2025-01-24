@@ -1,0 +1,186 @@
+---
+title: "React 18 新特性全面解析"
+date: "2022-10-04"
+description: "深入介绍 React 18 的主要新特性及其在前端开发中的应用场景。"
+tags: ["React", "前端开发", "JavaScript"]
+category: "React"
+---
+
+React 18 是 React 的一个重要版本更新，它为开发者带来了多项新特性和改进。这些新特性不仅提升了用户体验，还为开发者提供了更多工具以优化应用性能。本文将全面解析 React 18 的核心更新，并结合示例帮助理解其应用场景。
+
+## React 18 的主要新特性
+
+### 1. Concurrent Rendering（并发渲染）
+
+并发渲染是 React 18 最重要的更新之一。它允许 React 在执行渲染任务时更高效地处理优先级较高的更新，而不会阻塞低优先级任务，从而提升应用的响应速度。
+
+#### 使用示例
+```jsx
+import { useState, useTransition } from 'react';
+
+function App() {
+  const [isPending, startTransition] = useTransition();
+  const [input, setInput] = useState('');
+  const [list, setList] = useState([]);
+
+  const handleChange = (e) => {
+    const value = e.target.value;
+    setInput(value);
+
+    startTransition(() => {
+      const newList = Array(5000).fill(value);
+      setList(newList);
+    });
+  };
+
+  return (
+    <div>
+      <input value={input} onChange={handleChange} />
+      {isPending ? <p>Loading...</p> : <ul>{list.map((item, i) => <li key={i}>{item}</li>)}</ul>}
+    </div>
+  );
+}
+```
+
+在上面的例子中，`startTransition` 将低优先级任务（渲染长列表）延后处理，优先响应用户输入。
+
+---
+
+### 2. Automatic Batching（自动批处理）
+
+React 18 自动批处理多个状态更新，即使这些更新分布在异步操作中。
+
+#### 示例对比
+React 18 之前：
+```jsx
+function App() {
+  const [count, setCount] = useState(0);
+  const [text, setText] = useState('');
+
+  const handleClick = () => {
+    setCount(count + 1);
+    setText('Updated');
+  };
+
+  return (
+    <button onClick={handleClick}>{count} - {text}</button>
+  );
+}
+```
+在 React 17 中，上述代码会触发两次重新渲染。
+
+React 18 自动批处理：
+```jsx
+function App() {
+  const [count, setCount] = useState(0);
+  const [text, setText] = useState('');
+
+  const handleClick = () => {
+    setTimeout(() => {
+      setCount((prev) => prev + 1);
+      setText('Updated');
+    }, 1000);
+  };
+
+  return (
+    <button onClick={handleClick}>{count} - {text}</button>
+  );
+}
+```
+在 React 18 中，即使状态更新在 `setTimeout` 中，也会批量处理，从而减少渲染次数。
+
+---
+
+### 3. Suspense 的改进
+
+React 18 扩展了 `Suspense` 的功能，使其不仅支持代码拆分，还支持数据加载的场景。
+
+#### 示例
+```jsx
+import React, { Suspense } from 'react';
+
+const UserProfile = React.lazy(() => import('./UserProfile'));
+
+function App() {
+  return (
+    <Suspense fallback={<p>Loading...</p>}>
+      <UserProfile />
+    </Suspense>
+  );
+}
+```
+
+在 React 18 中，`Suspense` 可以与服务器端数据流结合，支持更流畅的用户体验。
+
+---
+
+### 4. 支持 SSR 的 Streaming（流式渲染）
+
+React 18 引入了流式渲染，以提升服务器端渲染（SSR）的效率，尤其是对于初次加载较慢的页面。
+
+#### 示例
+```javascript
+import { renderToPipeableStream } from 'react-dom/server';
+import App from './App';
+
+const { pipe } = renderToPipeableStream(<App />, {
+  onShellReady() {
+    pipe(process.stdout);
+  },
+});
+```
+流式渲染允许服务器先返回高优先级的内容，然后再加载其余部分。
+
+---
+
+### 5. 新的 Hooks
+
+React 18 引入了两个新的 Hooks：`useTransition` 和 `useDeferredValue`。
+
+#### `useTransition`
+`useTransition` 用于管理非紧急更新。
+
+#### 示例
+```jsx
+function App() {
+  const [isPending, startTransition] = useTransition();
+  const [value, setValue] = useState('');
+
+  const handleChange = (e) => {
+    startTransition(() => {
+      setValue(e.target.value);
+    });
+  };
+
+  return (
+    <div>
+      <input onChange={handleChange} />
+      {isPending ? <p>Updating...</p> : <p>{value}</p>}
+    </div>
+  );
+}
+```
+
+#### `useDeferredValue`
+`useDeferredValue` 将值延后处理，以避免阻塞主线程。
+
+#### 示例
+```jsx
+function App() {
+  const [value, setValue] = useState('');
+  const deferredValue = useDeferredValue(value);
+
+  return (
+    <div>
+      <input onChange={(e) => setValue(e.target.value)} />
+      <p>{deferredValue}</p>
+    </div>
+  );
+}
+```
+
+---
+
+## 结语
+
+React 18 的更新为开发者提供了更多工具，以优化性能并提升用户体验。无论是并发渲染、自动批处理还是 `Suspense` 的扩展，这些特性都可以帮助开发者构建更加高效的应用。

@@ -1,0 +1,187 @@
+---
+title: "Rollup.js 概述"
+date: "2022-08-08"
+description: "全面介绍 Rollup.js 的基础概念、使用场景及配置方式，帮助开发者掌握这一强大的 JavaScript 打包工具。"
+tags: ["Rollup.js", "JavaScript", "模块打包"]
+category: "Build-Tools"
+---
+
+Rollup.js 是一个现代的 JavaScript 模块打包工具，以支持 ES 模块为核心，专注于提供高效、轻量的打包输出。自发布以来，Rollup.js 已广泛应用于库开发和前端项目优化中。
+
+## 什么是 Rollup.js
+
+Rollup.js 是一个 JavaScript 模块打包器，专注于将多个 ES 模块组合成一个文件（通常是库或应用程序）。与 Webpack 和 Parcel 相比，Rollup 的核心特性是对 ES 模块的原生支持，它能够根据模块依赖关系高效地优化输出文件。
+
+### Rollup.js 的核心特性
+
+1. **支持 ES 模块**：Rollup 专为 ES 模块设计，利用其静态分析能力，实现优化的依赖处理。
+2. **Tree Shaking**：通过消除未使用的代码，生成更小的打包文件。
+3. **插件体系**：Rollup 提供了丰富的插件生态，支持功能扩展，如 Babel 转译、代码压缩等。
+4. **易于配置**：Rollup 的配置简单直观，非常适合用于库和工具开发。
+
+## 为什么选择 Rollup.js
+
+Rollup.js 通常被选择用于以下场景：
+
+- **库开发**：Rollup 能够生成多种格式（如 CommonJS、ES Module 和 UMD），便于库在不同环境下使用。
+- **优化输出**：通过 Tree Shaking 和 Scope Hoisting，生成高效、轻量的代码。
+- **模块化项目**：Rollup 天然支持模块化开发，减少冗余依赖。
+
+### 与 Webpack 的对比
+
+| 特性           | Rollup.js              | Webpack                |
+|----------------|------------------------|------------------------|
+| 模块支持       | 原生支持 ES 模块       | 支持多种模块格式       |
+| Tree Shaking   | 优化效果显著          | 效果依赖插件和配置     |
+| 配置复杂度     | 简单清晰              | 功能强大但较复杂       |
+| 适用场景       | 库开发、小型应用       | 复杂项目和多场景应用   |
+
+## 安装和基础使用
+
+### 安装 Rollup.js
+
+你可以通过 npm 安装 Rollup.js：
+
+```bash
+npm install rollup --save-dev
+```
+
+### 基础命令
+
+Rollup 提供了简单的命令行接口，可以直接使用：
+
+```bash
+npx rollup src/main.js --file dist/bundle.js --format iife
+```
+
+上述命令会将 `src/main.js` 打包成一个 IIFE 格式的文件，输出到 `dist/bundle.js`。
+
+### 基本配置文件
+
+Rollup 推荐使用配置文件来管理打包选项。创建一个 `rollup.config.js` 文件：
+
+```javascript
+export default {
+  input: 'src/main.js',
+  output: {
+    file: 'dist/bundle.js',
+    format: 'cjs', // 输出格式，可选 'iife', 'esm', 'umd', 等
+  },
+  plugins: []
+};
+```
+
+然后运行以下命令：
+
+```bash
+npx rollup -c
+```
+
+## 插件体系
+
+Rollup 的插件系统非常强大，可以通过插件扩展其功能。例如，使用 `@rollup/plugin-babel` 来集成 Babel：
+
+### 安装 Babel 插件
+
+```bash
+npm install @rollup/plugin-babel @babel/core --save-dev
+```
+
+### 配置 Babel 插件
+
+在 `rollup.config.js` 中添加 Babel 插件：
+
+```javascript
+import babel from '@rollup/plugin-babel';
+
+export default {
+  input: 'src/main.js',
+  output: {
+    file: 'dist/bundle.js',
+    format: 'esm',
+  },
+  plugins: [
+    babel({
+      babelHelpers: 'bundled',
+      exclude: 'node_modules/**',
+    })
+  ]
+};
+```
+
+## Tree Shaking 示例
+
+Rollup 会自动移除未使用的代码。例如：
+
+```javascript
+// src/utils.js
+export function usedFunction() {
+  console.log('This is used');
+}
+
+export function unusedFunction() {
+  console.log('This is unused');
+}
+
+// src/main.js
+import { usedFunction } from './utils.js';
+usedFunction();
+```
+
+打包后，Rollup 会移除 `unusedFunction`。
+
+## 常见问题
+
+### 如何处理 CommonJS 模块？
+
+Rollup 默认不支持 CommonJS 模块，需要使用插件 `@rollup/plugin-commonjs`：
+
+```bash
+npm install @rollup/plugin-commonjs --save-dev
+```
+
+在配置文件中：
+
+```javascript
+import commonjs from '@rollup/plugin-commonjs';
+
+export default {
+  input: 'src/main.js',
+  output: {
+    file: 'dist/bundle.js',
+    format: 'cjs',
+  },
+  plugins: [
+    commonjs()
+  ]
+};
+```
+
+### 如何处理第三方依赖？
+
+使用 `@rollup/plugin-node-resolve`：
+
+```bash
+npm install @rollup/plugin-node-resolve --save-dev
+```
+
+在配置文件中：
+
+```javascript
+import resolve from '@rollup/plugin-node-resolve';
+
+export default {
+  input: 'src/main.js',
+  output: {
+    file: 'dist/bundle.js',
+    format: 'esm',
+  },
+  plugins: [
+    resolve()
+  ]
+};
+```
+
+## 总结
+
+Rollup.js 是一个高效的 JavaScript 打包工具，尤其适合用于开发现代化的库和模块化应用。通过其插件体系和 ES 模块优化，开发者可以轻松创建轻量级、高性能的输出文件。如果你正在寻找一个专注于 ES 模块的打包工具，Rollup 会是一个理想的选择。

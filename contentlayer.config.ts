@@ -1,4 +1,5 @@
 import { defineDocumentType, makeSource } from "contentlayer/source-files";
+import rehypePrettyCode from "rehype-pretty-code";
 
 export const Post = defineDocumentType(() => ({
   name: "Post",
@@ -31,6 +32,10 @@ export const Post = defineDocumentType(() => ({
       required: false,
       default: 0,
     },
+    category: {
+      type: "string",
+      required: true,
+    },
   },
   computedFields: {
     url: {
@@ -53,4 +58,34 @@ export const Post = defineDocumentType(() => ({
 export default makeSource({
   contentDirPath: "content",
   documentTypes: [Post],
+  mdx: {
+    rehypePlugins: [
+      [
+        rehypePrettyCode as any,
+        {
+          theme: "github-dark",
+          onVisitLine(node: {
+            children: Array<{ type: string; value: string }>;
+          }) {
+            // 防止空行折叠
+            if (node.children.length === 0) {
+              node.children = [{ type: "text", value: " " }];
+            }
+          },
+          onVisitHighlightedLine(node: {
+            properties: { className: string[] };
+          }) {
+            // 添加高亮行的样式
+            node.properties.className.push("line--highlighted");
+          },
+          onVisitHighlightedWord(node: {
+            properties: { className: string[] };
+          }) {
+            // 添加高亮词的样式
+            node.properties.className = ["word--highlighted"];
+          },
+        },
+      ],
+    ],
+  },
 });

@@ -1,0 +1,161 @@
+---
+title: "Chart.js 概述"
+date: "2025-01-24"
+description: "全面介绍 Chart.js 的基础功能、使用方法及其在数据可视化中的应用场景。"
+tags: ["Chart.js", "JavaScript", "数据可视化"]
+category: "Visualization"
+---
+
+Chart.js 是一个简单而强大的开源 JavaScript 图表库，可帮助开发者快速创建响应式、交互式的图表。作为轻量级的库，Chart.js 拥有直观的 API 和丰富的图表类型，在 Web 应用中被广泛使用。
+
+## 什么是 Chart.js
+
+Chart.js 是一个开源的 JavaScript 图表库，提供了基于 HTML5 Canvas 的绘图功能。它最初由 Nick Downie 于 2013 年创建，并逐渐发展成为数据可视化领域的重要工具。
+
+主要特点包括：
+
+- **轻量级**：整个库的体积较小，仅几十 KB。
+- **简单易用**：API 设计直观，无需复杂配置即可快速上手。
+- **响应式**：支持响应式布局，可自动调整图表大小以适应不同设备。
+- **多种图表类型**：支持折线图、柱状图、饼图、雷达图、散点图等常见图表类型。
+- **插件系统**：支持扩展功能，例如自定义工具提示和交互行为。
+- **活跃的社区**：拥有丰富的文档和活跃的开发者社区。
+
+## 安装 Chart.js
+
+您可以通过 npm 或 CDN 安装 Chart.js：
+
+### 使用 npm 安装
+
+```bash
+npm install chart.js
+```
+
+### 使用 CDN 引入
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+```
+
+## 快速开始
+
+以下是一个使用 Chart.js 创建简单折线图的示例：
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chart.js 示例</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <canvas id="myChart" width="400" height="200"></canvas>
+  <script>
+    const ctx = document.getElementById('myChart').getContext('2d');
+    const myChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['January', 'February', 'March', 'April', 'May', 'June'],
+        datasets: [{
+          label: '示例数据',
+          data: [12, 19, 3, 5, 2, 3],
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 2,
+          fill: false
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'top',
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
+```
+
+## 图表类型
+
+Chart.js 支持以下几种主要图表类型：
+
+1. **折线图（Line Chart）**：适合显示趋势数据。
+2. **柱状图（Bar Chart）**：用于比较分类数据。
+3. **饼图和环形图（Pie & Doughnut Charts）**：展示占比数据。
+4. **雷达图（Radar Chart）**：展示多维度数据。
+5. **散点图（Scatter Chart）**：适合展示二维数据的分布。
+6. **气泡图（Bubble Chart）**：类似散点图，可用大小表示额外维度。
+
+每种图表都有丰富的选项，支持自定义外观和交互行为。
+
+## 配置选项
+
+Chart.js 的配置分为三个主要部分：
+
+1. **数据（data）**：定义图表的数据结构，包括标签和数据集。
+2. **类型（type）**：指定图表类型，例如 `'line'`、`'bar'`。
+3. **选项（options）**：配置图表的外观和行为，例如工具提示、缩放和动画。
+
+### 示例：自定义柱状图
+
+```javascript
+const config = {
+  type: 'bar',
+  data: {
+    labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
+    datasets: [{
+      label: 'Votes',
+      data: [12, 19, 3, 5, 2, 3],
+      backgroundColor: [
+        'rgba(255, 99, 132, 0.2)',
+        'rgba(54, 162, 235, 0.2)',
+        'rgba(255, 206, 86, 0.2)',
+        'rgba(75, 192, 192, 0.2)',
+        'rgba(153, 102, 255, 0.2)',
+        'rgba(255, 159, 64, 0.2)'
+      ],
+      borderColor: [
+        'rgba(255, 99, 132, 1)',
+        'rgba(54, 162, 235, 1)',
+        'rgba(255, 206, 86, 1)',
+        'rgba(75, 192, 192, 1)',
+        'rgba(153, 102, 255, 1)',
+        'rgba(255, 159, 64, 1)'
+      ],
+      borderWidth: 1
+    }]
+  },
+  options: {
+    scales: {
+      y: {
+        beginAtZero: true
+      }
+    }
+  }
+};
+
+const myBarChart = new Chart(
+  document.getElementById('myBarChart'),
+  config
+);
+```
+
+## 高级功能
+
+1. **动画和交互**：
+   - 提供内置的动画效果，可以通过配置 `animation` 选项自定义。
+
+2. **插件支持**：
+   - 通过自定义插件扩展功能，例如添加水印、热力图效果等。
+
+3. **混合图表**：
+   - 支持在同一图表中混合多种图表类型，例如柱状图和折线图。
+
+## 总结
+
+Chart.js 是一个强大且易用的数据可视化工具，特别适合中小型项目。其轻量级和丰富的功能使其成为许多开发者的首选。如果您正在寻找一个简单但功能强大的图表库，不妨试试 Chart.js！
