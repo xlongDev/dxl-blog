@@ -55,11 +55,15 @@ export default function BingHero() {
 
       // 将新获取的壁纸追加到现有壁纸列表中
       setWallpapers((prev) => {
-        // 检查新数据是否已经存在，避免重复追加
-        const newUrls = wallpaperData.map((w: BingWallpaper) => w.url); // 为 w 指定类型
-        const existingUrls = prev.map((w: BingWallpaper) => w.url); // 为 w 指定类型
+        // 如果是初始加载（offset为0），直接使用新数据
+        if (offset === 0) {
+          return wallpaperData;
+        }
+
+        // 否则检查新数据是否已经存在，避免重复追加
+        const existingUrls = prev.map((w: BingWallpaper) => w.url);
         const uniqueWallpaperData = wallpaperData.filter(
-          (w: BingWallpaper) => !existingUrls.includes(w.url) // 为 w 指定类型
+          (w: BingWallpaper) => !existingUrls.includes(w.url)
         );
 
         return [...prev, ...uniqueWallpaperData];
@@ -74,7 +78,12 @@ export default function BingHero() {
 
   // 初始化时获取第一批壁纸
   useEffect(() => {
-    fetchBingWallpapers(offset);
+    const initWallpapers = async () => {
+      await fetchBingWallpapers(offset);
+      // 设置 currentIndex 为0，因为最新的壁纸在数组的开始位置
+      setCurrentIndex(0);
+    };
+    initWallpapers();
   }, []);
 
   // 预加载下一组壁纸
@@ -149,6 +158,10 @@ export default function BingHero() {
   }
 
   const currentWallpaper = wallpapers[currentIndex];
+  if (!currentWallpaper) {
+    setCurrentIndex(0);
+    return null;
+  }
 
   return (
     <div className="relative w-full" style={{ height: "100vh" }}>
