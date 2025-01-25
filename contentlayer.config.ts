@@ -48,6 +48,7 @@ export const Post = defineDocumentType(() => ({
     category: {
       type: "string",
       resolve: (post) => {
+        if (post.category) return post.category;
         const pathSegments = post._raw.flattenedPath.split("/");
         return pathSegments.length > 1 ? pathSegments[0] : "未分类";
       },

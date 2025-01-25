@@ -86,22 +86,38 @@ export default function BingHero() {
     initWallpapers();
   }, []);
 
-  // 预加载下一组壁纸
+  // 预加载下一组壁纸和图片
   useEffect(() => {
-    // 当用户浏览到当前组壁纸的后半部分时（例如第6张），预加载下一组壁纸
+    // 当用户浏览到当前组壁纸的后半部分时预加载下一组壁纸
     if (currentIndex >= wallpapers.length - 3 && !isPreloading) {
       let newOffset = offset + 8;
-
-      // 如果 offset 超过 16，重置为 0
-      if (newOffset > 16) {
-        newOffset = 0;
-      }
+      if (newOffset > 16) newOffset = 0;
 
       setOffset(newOffset);
-      setIsPreloading(true); // 标记为正在预加载
+      setIsPreloading(true);
       fetchBingWallpapers(newOffset);
+
+      // 预加载下一张图片
+      if (currentIndex < wallpapers.length - 1) {
+        const nextImage = new Image();
+        nextImage.src = wallpapers[currentIndex + 1].url;
+      }
     }
-  }, [currentIndex, wallpapers.length, isPreloading, offset]);
+
+    // 预加载当前显示的图片的前后各一张
+    const preloadImages = () => {
+      if (currentIndex > 0) {
+        const prevImage = new Image();
+        prevImage.src = wallpapers[currentIndex - 1].url;
+      }
+      if (currentIndex < wallpapers.length - 1) {
+        const nextImage = new Image();
+        nextImage.src = wallpapers[currentIndex + 1].url;
+      }
+    };
+
+    preloadImages();
+  }, [currentIndex, wallpapers.length, isPreloading, offset, wallpapers]);
 
   // 滚动到内容区域
   const scrollToContent = () => {
