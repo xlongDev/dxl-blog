@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export default function AboutPage() {
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-3xl mx-auto mt-8">
       <h1 className="text-3xl font-bold mb-8">关于我</h1>
       <div className="prose dark:prose-invert">
         <div className="flex items-center gap-6 mb-8">
@@ -36,7 +36,7 @@ export default function AboutPage() {
           <li>
             GitHub:{" "}
             <Link href="https://github.com/xLongDev" target="_blank">
-              xLongDev
+              xlongDev
             </Link>
           </li>
           {/* <li>

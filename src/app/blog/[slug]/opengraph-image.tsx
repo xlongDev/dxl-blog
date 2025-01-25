@@ -1,5 +1,4 @@
 import { ImageResponse } from "@vercel/og";
-import { allPosts } from "contentlayer/generated";
 
 export const runtime = "edge";
 export const contentType = "image/png";
@@ -9,8 +8,6 @@ export default async function OpenGraphImage({
 }: {
   params: { slug: string };
 }) {
-  const post = allPosts.find((post) => post._raw.flattenedPath === params.slug);
-
   return new ImageResponse(
     (
       <div
@@ -31,7 +28,7 @@ export default async function OpenGraphImage({
             color: "#1a202c",
           }}
         >
-          {post?.title}
+          {decodeURIComponent(params.slug).split("-").join(" ")}
         </h1>
         <p
           style={{
@@ -40,7 +37,7 @@ export default async function OpenGraphImage({
             marginTop: "20px",
           }}
         >
-          {post?.description}
+          晓龙的技术博客
         </p>
       </div>
     ),
