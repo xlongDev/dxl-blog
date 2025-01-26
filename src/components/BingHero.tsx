@@ -10,6 +10,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { quotes } from "@/data/quotes";
 import TypewriterQuote from "./TypewriterQuote";
+import OptimizedImage from "./OptimizedImage";
 
 interface BingWallpaper {
   url: string;
