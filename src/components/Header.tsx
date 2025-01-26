@@ -4,7 +4,13 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useTheme } from "next-themes";
-import { MoonIcon, SunIcon } from "@heroicons/react/24/outline";
+import {
+  MoonIcon,
+  SunIcon,
+  ChevronDownIcon,
+  SearchIcon,
+  GithubIcon,
+} from "@/components/icons/HeaderIcons";
 import Search from "@/components/Search";
 import { allPosts } from "contentlayer/generated";
 
@@ -24,93 +30,81 @@ export default function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+      <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-gray-200/50 dark:border-gray-700/50 shadow-lg transition-all duration-300">
         <nav className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-3 group">
               <Image
                 src="/ava.jpg"
                 alt="晓龙"
                 width={32}
                 height={32}
-                className="rounded-full"
+                className="rounded-full transform transition-transform duration-300 group-hover:scale-110"
               />
-              <span className="text-xl font-bold truncate min-w-[3rem]">
+              <span className="text-xl font-bold truncate min-w-[3rem] bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent transition-all duration-300 group-hover:from-purple-600 group-hover:to-pink-600">
                 晓龙的blog
               </span>
             </Link>
             <div className="flex items-center space-x-6">
-              <Link href="/blog" className="hover:text-blue-500">
+              <Link
+                href="/blog"
+                className="relative py-1 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-gradient-to-r after:from-blue-600 after:to-purple-600 after:transition-all after:duration-300"
+              >
                 博客
               </Link>
               <div className="relative group">
-                <button className="hover:text-blue-500">分类</button>
-                <div className="absolute left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-in-out transform group-hover:translate-y-0 translate-y-1">
-                  {categories.map((category) => (
-                    <Link
-                      key={category}
-                      href={`/blog/category/${category.toLowerCase()}`}
-                      className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    >
-                      {category}
-                    </Link>
-                  ))}
+                <button className="relative py-1 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 group-hover:after:w-full after:bg-gradient-to-r after:from-blue-600 after:to-purple-600 after:transition-all after:duration-300 flex items-center gap-1">
+                  分类
+                  <ChevronDownIcon className="h-4 w-4 transition-transform duration-300 group-hover:rotate-180 opacity-70 group-hover:opacity-100" />
+                </button>
+                <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-[280px] bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-xl py-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out transform group-hover:translate-y-0 translate-y-2 border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 pointer-events-none" />
+                  <div className="grid grid-cols-2 gap-1 relative z-10">
+                    {categories.map((category) => (
+                      <Link
+                        key={category}
+                        href={`/blog/category/${category.toLowerCase()}`}
+                        className="mx-2 px-4 py-2 rounded-xl hover:bg-gradient-to-r hover:from-blue-500/10 hover:via-purple-500/10 hover:to-pink-500/10 transition-all duration-300 group/item"
+                      >
+                        <div className="font-medium text-gray-800 dark:text-gray-200 group-hover/item:bg-gradient-to-r group-hover/item:from-blue-600 group-hover/item:via-purple-600 group-hover/item:to-pink-600 group-hover/item:bg-clip-text group-hover/item:text-transparent transition-all duration-300">
+                          {category}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               </div>
-              <Link href="/about" className="hover:text-blue-500">
+              <Link
+                href="/about"
+                className="relative py-1 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-gradient-to-r after:from-blue-600 after:to-purple-600 after:transition-all after:duration-300"
+              >
                 关于
               </Link>
 
-              {/* GitHub 链接 */}
               <a
                 href="https://github.com/xLongDev"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors duration-300"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <GithubIcon className="w-5 h-5 transform transition-transform duration-300 hover:scale-110" />
               </a>
 
-              {/* 搜索按钮 */}
               <button
                 onClick={() => setIsSearchOpen(true)}
-                className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors duration-300"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
+                <SearchIcon className="w-5 h-5 transform transition-transform duration-300 hover:scale-110" />
               </button>
 
-              {/* 主题切换按钮 */}
               <button
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors duration-300"
               >
                 {mounted && theme === "dark" ? (
-                  <SunIcon className="w-5 h-5" />
+                  <SunIcon className="w-5 h-5 transform transition-transform duration-300 hover:scale-110" />
                 ) : (
-                  <MoonIcon className="w-5 h-5" />
+                  <MoonIcon className="w-5 h-5 transform transition-transform duration-300 hover:scale-110" />
                 )}
               </button>
             </div>

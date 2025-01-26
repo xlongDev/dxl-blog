@@ -71,7 +71,7 @@ export default function BlogPostClient({ post }: BlogPostClientProps) {
           </div>
         </div>
         <MobileTableOfContents />
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
           <Comments />
           <RelatedPosts currentPost={post} allPosts={allPosts} />
         </div>

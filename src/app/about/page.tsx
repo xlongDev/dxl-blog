@@ -93,7 +93,7 @@ export default function AboutPage() {
 
   return (
     <motion.div
-      className="max-w-6xl mx-auto px-4 py-16"
+      className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
@@ -122,7 +122,7 @@ export default function AboutPage() {
       </motion.div>
 
       <motion.div
-        className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl p-10 mb-16 border border-gray-200/50 dark:border-gray-700/50"
+        className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 sm:p-10 mb-12 sm:mb-16 border border-gray-200/50 dark:border-gray-700/50"
         variants={itemVariants}
       >
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
@@ -138,8 +138,8 @@ export default function AboutPage() {
                   <Image
                     src="/ava.jpg"
                     alt="晓龙"
-                    width={240}
-                    height={240}
+                    width={200}
+                    height={200}
                     className="rounded-full ring-4 ring-blue-500/20 shadow-lg relative z-10"
                     priority
                   />
@@ -149,7 +149,7 @@ export default function AboutPage() {
                 </div>
               </motion.div>
               <motion.h2
-                className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent"
+                className="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent"
                 variants={itemVariants}
                 whileHover={{ scale: 1.05 }}
                 transition={{ duration: 0.2 }}
@@ -157,13 +157,13 @@ export default function AboutPage() {
                 晓龙
               </motion.h2>
               <motion.p
-                className="text-gray-600 dark:text-gray-400 text-xl mb-4 font-medium"
+                className="text-gray-600 dark:text-gray-400 text-lg sm:text-xl mb-3 sm:mb-4 font-medium"
                 variants={itemVariants}
               >
                 前端开发者 / 跑者
               </motion.p>
               <motion.p
-                className="text-gray-500 dark:text-gray-400 text-lg leading-relaxed max-w-md mx-auto"
+                className="text-gray-500 dark:text-gray-400 text-base sm:text-lg leading-relaxed max-w-md mx-auto"
                 variants={itemVariants}
               >
                 热爱技术，专注于前端开发。致力于创造优秀的用户体验和高质量的代码。
@@ -171,33 +171,81 @@ export default function AboutPage() {
             </div>
 
             <motion.div variants={itemVariants} className="space-y-6">
-              <h3 className="text-2xl font-semibold text-blue-600 dark:text-blue-400 text-center lg:text-left">
-                联系方式
-              </h3>
+              <div className="flex items-center gap-4 mb-6">
+                <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent text-center lg:text-left">
+                  联系方式
+                </h3>
+                <div className="hidden lg:block h-0.5 flex-grow bg-gradient-to-r from-blue-600/50 to-transparent" />
+              </div>
               <motion.div
-                className="p-6 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:shadow-lg transition-all duration-300"
-                whileHover={{ scale: 1.02 }}
+                className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:shadow-lg transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm"
+                whileHover={{ scale: 1.02, translateY: -5 }}
               >
                 <div className="flex items-center gap-4 justify-center lg:justify-start">
-                  <span className="font-medium">GitHub:</span>
-                  <Link
-                    href="https://github.com/xLongDev"
-                    target="_blank"
-                    className="text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    xlongDev
-                  </Link>
+                  <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg">
+                    <TechStackIcon category="github" className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                      GitHub
+                    </div>
+                    <Link
+                      href="https://github.com/xLongDev"
+                      target="_blank"
+                      className="text-lg font-medium bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent hover:opacity-80 transition-opacity"
+                    >
+                      xlongDev
+                    </Link>
+                  </div>
                 </div>
               </motion.div>
               <motion.div
-                className="p-6 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:shadow-lg transition-all duration-300"
-                whileHover={{ scale: 1.02 }}
+                className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:shadow-lg transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm group relative"
+                whileHover={{ scale: 1.02, translateY: -5 }}
               >
                 <div className="flex items-center gap-4 justify-center lg:justify-start">
-                  <span className="font-medium">Email:</span>
-                  <span className="text-blue-600 dark:text-blue-400">
-                    byte7956@gmail.com
-                  </span>
+                  <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-lg">
+                    <TechStackIcon category="wechat" className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                      WeChat
+                    </div>
+                    <div className="text-lg font-medium bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
+                      CAV_EMPT
+                    </div>
+                  </div>
+                </div>
+                <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-full opacity-0 group-hover:opacity-100 group-hover:translate-y-[-120%] transition-all duration-300 ease-in-out z-50 backdrop-blur-sm bg-white/30 dark:bg-gray-800/30 p-4 rounded-2xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50">
+                  <Image
+                    src="/wechat.jpg"
+                    alt="WeChat QR Code"
+                    width={200}
+                    height={200}
+                    className="rounded-xl shadow-lg"
+                    priority
+                  />
+                  <div className="text-sm text-center mt-2 text-gray-600 dark:text-gray-400">
+                    扫码添加微信
+                  </div>
+                </div>
+              </motion.div>
+              <motion.div
+                className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:shadow-lg transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm"
+                whileHover={{ scale: 1.02, translateY: -5 }}
+              >
+                <div className="flex items-center gap-4 justify-center lg:justify-start">
+                  <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg">
+                    <TechStackIcon category="email" className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                      Email
+                    </div>
+                    <div className="text-lg font-medium bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                      byte7956@gmail.com
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             </motion.div>
@@ -207,7 +255,7 @@ export default function AboutPage() {
           <div className="lg:col-span-8">
             <motion.div variants={itemVariants}>
               <div className="flex items-center gap-4 mb-8">
-                <h3 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent text-center lg:text-left">
+                <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent text-center lg:text-left">
                   技术栈
                 </h3>
                 <div className="hidden lg:block h-0.5 flex-grow bg-gradient-to-r from-blue-600/50 to-transparent" />
@@ -217,7 +265,7 @@ export default function AboutPage() {
                   return (
                     <motion.div
                       key={index}
-                      className="p-6 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:shadow-lg transition-all duration-300"
+                      className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:shadow-lg transition-all duration-300"
                       whileHover={{ scale: 1.02, translateY: -5 }}
                     >
                       <div className="flex items-center gap-3 mb-3">
