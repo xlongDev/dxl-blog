@@ -5,6 +5,8 @@ import PostCard from "@/components/PostCard";
 import Hero from "@/components/Hero";
 import BingHero from "@/components/BingHero";
 import PopularPosts from "@/components/PopularPosts";
+import TechCategories from "@/components/TechCategories";
+import LatestPosts from "@/components/LatestPosts";
 
 export default function Home() {
   const posts = allPosts
@@ -27,25 +29,13 @@ export default function Home() {
         </section>
 
         {/* Featured Posts */}
-        <section className="space-y-8 mt-16">
-          <h2 className="text-2xl font-bold">最新文章</h2>
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {posts.map((post) => (
-              <PostCard key={post._id} post={post} />
-            ))}
-          </div>
-          <div className="text-center">
-            <Link
-              href="/blog"
-              className="inline-block px-6 py-3 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors"
-            >
-              查看所有文章
-            </Link>
-          </div>
-        </section>
+        <LatestPosts posts={posts} />
+
+        {/* 技术分类 */}
+        <TechCategories />
 
         {/* 热门文章 */}
-        {/* <PopularPosts /> */}
+        <PopularPosts />
       </div>
     </>
   );

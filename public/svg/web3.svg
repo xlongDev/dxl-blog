@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <!-- 背景圆形 -->
+  <circle cx="100" cy="100" r="90" fill="#0d0d0d" />
+
+  <!-- 文字 "Web3" -->
+  <text x="100" y="120" font-family="Arial, sans-serif" font-size="50" font-weight="bold" fill="#00ffcc" text-anchor="middle">
+    Web
+    <tspan font-size="60" fill="#ffffff">3</tspan>
+  </text>
+
+  <!-- 装饰性科技感线条 -->
+  <line x1="50" y1="140" x2="150" y2="140" stroke="#00ffcc" stroke-width="3" stroke-linecap="round" />
+  <line x1="50" y1="145" x2="150" y2="145" stroke="#ffffff" stroke-width="3" stroke-linecap="round" />
+</svg>

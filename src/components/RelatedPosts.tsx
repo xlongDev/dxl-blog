@@ -32,7 +32,7 @@ export default function RelatedPosts({
         {relatedPosts.map((post) => (
           <Link
             key={post._id}
-            href={post.url}
+            href={`/blog/${post._raw.flattenedPath}`}
             className="block p-4 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-blue-500 dark:hover:border-blue-500 transition-colors"
           >
             <h3 className="font-medium mb-2 line-clamp-2">{post.title}</h3>

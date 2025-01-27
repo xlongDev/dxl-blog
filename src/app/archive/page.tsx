@@ -36,7 +36,7 @@ export default function ArchivePage() {
                   className="flex items-center justify-between"
                 >
                   <Link
-                    href={post.url}
+                    href={`/blog/${post._raw.flattenedPath}`}
                     className="hover:text-blue-500 transition-colors"
                   >
                     <h3 className="font-medium">{post.title}</h3>

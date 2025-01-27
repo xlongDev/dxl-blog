@@ -19,7 +19,7 @@ export default function SeriesNav({
         {seriesPosts.map((post: Post, index: number) => (
           <li key={post._id}>
             <Link
-              href={post.url}
+              href={`/blog/${post._raw.flattenedPath}`}
               className={`flex items-center space-x-2 ${
                 post._id === currentPost._id
                   ? "text-blue-500 font-medium"

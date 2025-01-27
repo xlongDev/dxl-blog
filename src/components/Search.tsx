@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Post } from "contentlayer/generated";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { debounce } from "lodash-es";
+import { useRouter } from "next/navigation";
 
 interface SearchProps {
   posts: Post[];
@@ -14,7 +16,30 @@ interface SearchProps {
 export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Post[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const router = useRouter();
 
+  // 防抖搜索函数，避免频繁触发搜索
+  const debouncedSearch = useCallback(
+    debounce((searchQuery: string) => {
+      if (!searchQuery) {
+        setResults([]);
+        return;
+      }
+
+      const searchResults = posts.filter((post) => {
+        const searchContent = `${post.title} ${post.description} ${
+          post.tags?.join(" ") || ""
+        }`.toLowerCase();
+        return searchContent.includes(searchQuery.toLowerCase());
+      });
+
+      setResults(searchResults);
+    }, 100), // 搜索延迟时间为100ms
+    [posts]
+  );
+
+  // 监听键盘事件，支持快捷键打开/关闭搜索框
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
@@ -30,21 +55,51 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, setIsOpen]);
 
+  // 当查询变化时触发搜索
   useEffect(() => {
-    if (!query) {
-      setResults([]);
-      return;
-    }
+    debouncedSearch(query);
+    setSelectedIndex(-1); // 重置选中索引
+  }, [query, debouncedSearch]);
 
-    const searchResults = posts.filter((post) => {
-      const searchContent = `${post.title} ${post.description} ${
-        post.tags?.join(" ") || ""
-      }`.toLowerCase();
-      return searchContent.includes(query.toLowerCase());
-    });
+  // 处理键盘导航（上下键选择，回车键跳转）
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          setSelectedIndex((prev) =>
+            prev < results.length - 1 ? prev + 1 : prev
+          );
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setSelectedIndex((prev) => (prev > 0 ? prev - 1 : prev));
+          break;
+        case "Enter":
+          if (selectedIndex >= 0 && results[selectedIndex]) {
+            router.push(`/blog/${results[selectedIndex]._raw.flattenedPath}`);
+            setIsOpen(false);
+          }
+          break;
+      }
+    },
+    [results, selectedIndex, router, setIsOpen]
+  );
 
-    setResults(searchResults);
-  }, [query, posts]);
+  // 高亮匹配的文本
+  const highlightMatch = (text: string) => {
+    if (!query) return text;
+    const parts = text.split(new RegExp(`(${query})`, "gi"));
+    return parts.map((part, i) =>
+      part.toLowerCase() === query.toLowerCase() ? (
+        <span key={i} className="bg-yellow-200 dark:bg-yellow-800">
+          {part}
+        </span>
+      ) : (
+        part
+      )
+    );
+  };
 
   return (
     <AnimatePresence>
@@ -76,6 +131,7 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
                   placeholder="搜索文章... (Esc 关闭, ⌘K 打开)"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   autoFocus
                 />
                 <button
@@ -87,38 +143,24 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
               </div>
               {results.length > 0 && (
                 <ul className="max-h-[60vh] overflow-auto p-2">
-                  {results.map((post) => {
-                    const titleHighlight = post.title.replace(
-                      new RegExp(query, "gi"),
-                      (match) =>
-                        `<mark class="bg-yellow-200 dark:bg-yellow-800">${match}</mark>`
-                    );
-                    const descriptionHighlight = post.description.replace(
-                      new RegExp(query, "gi"),
-                      (match) =>
-                        `<mark class="bg-yellow-200 dark:bg-yellow-800">${match}</mark>`
-                    );
-                    return (
-                      <li key={post._id}>
-                        <Link
-                          href={post.url}
-                          className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-                          onClick={() => setIsOpen(false)}
-                        >
-                          <h3
-                            className="font-medium"
-                            dangerouslySetInnerHTML={{ __html: titleHighlight }}
-                          />
-                          <p
-                            className="text-sm text-gray-500 dark:text-gray-400"
-                            dangerouslySetInnerHTML={{
-                              __html: descriptionHighlight,
-                            }}
-                          />
-                        </Link>
-                      </li>
-                    );
-                  })}
+                  {results.map((post, index) => (
+                    <li key={post._id}>
+                      <Link
+                        href={`/blog/${post._raw.flattenedPath}`}
+                        className={`block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded ${
+                          index === selectedIndex ? "bg-gray-100 dark:bg-gray-700" : ""
+                        }`}
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <h3 className="font-medium">
+                          {highlightMatch(post.title)}
+                        </h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {highlightMatch(post.description)}
+                        </p>
+                      </Link>
+                    </li>
+                  ))}
                 </ul>
               )}
               {query && results.length === 0 && (

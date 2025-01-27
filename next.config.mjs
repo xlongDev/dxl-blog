@@ -11,17 +11,37 @@ const nextConfig = {
     ],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    formats: ["image/webp"],
+    formats: ["image/webp", "image/avif"],
+    minimumCacheTTL: 60,
+    dangerouslyAllowSVG: true,
+    contentDispositionType: "attachment",
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   experimental: {
     serverComponentsExternalPackages: ["@contentlayer/core"],
     optimizeCss: true,
-    optimizePackageImports: ["@heroicons/react"],
+    optimizePackageImports: [
+      "@heroicons/react",
+      "lucide-react",
+      "@headlessui/react",
+      "framer-motion",
+    ],
+    scrollRestoration: true,
+    typedRoutes: true,
+    mdxRs: true,
+    webVitalsAttribution: ["CLS", "LCP"],
   },
   swcMinify: true,
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === "production",
+  },
+  onDemandEntries: {
+    maxInactiveAge: 60 * 60 * 1000,
+    pagesBufferLength: 5,
+  },
 };
 
 export default withContentlayer(nextConfig);

@@ -1,0 +1,177 @@
+---
+title: "MongoDB 概述"
+date: "2022-04-30"
+description: "全面介绍 MongoDB 的基础概念、工作原理和前端应用示例。"
+tags: ["MongoDB", "数据库", "前端开发"]
+category: "DB"
+---
+
+MongoDB 是一种面向文档的 NoSQL 数据库系统，以其高性能、灵活性和易扩展性而闻名。自 2009 年发布以来，MongoDB 在 Web 应用开发中被广泛采用，是现代开发者常用的数据库之一。本文将深入探讨 MongoDB 的核心概念、工作原理，以及它在前端开发中的典型应用。
+
+## 什么是 MongoDB
+
+MongoDB 是一个基于分布式架构的 NoSQL 数据库，其主要特点包括：
+
+- **面向文档**：MongoDB 使用类似 JSON 的 BSON（二进制 JSON）格式存储数据。
+- **灵活的 Schema**：无需预定义数据结构，可以动态添加字段。
+- **分布式特性**：内置高可用性和分片功能，支持水平扩展。
+- **丰富的查询功能**：支持复杂的查询、聚合操作和全文检索。
+- **跨平台支持**：兼容多种操作系统（Linux、Windows、macOS 等）。
+
+## MongoDB 的核心概念
+
+### 文档
+MongoDB 中的数据存储单元是文档，每个文档使用 BSON 格式，类似于 JSON。例如：
+
+```json
+{
+  "_id": "12345",
+  "name": "John Doe",
+  "age": 30,
+  "hobbies": ["reading", "coding"]
+}
+```
+
+### 集合
+集合是文档的容器，类似于关系型数据库中的表。集合中的文档可以具有不同的结构，这赋予了 MongoDB 极大的灵活性。
+
+### 数据库
+一个 MongoDB 实例可以包含多个数据库，每个数据库又包含多个集合。
+
+### _id 字段
+每个文档都有一个唯一的 `_id` 字段，用于标识该文档。如果未指定 `_id`，MongoDB 会自动生成一个 ObjectId 类型的值。
+
+### 索引
+MongoDB 支持创建单字段、多字段和全文检索索引，提高查询性能。例如：
+
+```javascript
+db.users.createIndex({ name: 1 }); // 为 name 字段创建升序索引
+```
+
+### 聚合框架
+MongoDB 的聚合框架提供了强大的数据处理能力，包括分组、过滤、排序和计算字段。例如：
+
+```javascript
+db.orders.aggregate([
+  { $match: { status: "shipped" } },
+  { $group: { _id: "$customerId", totalSpent: { $sum: "$amount" } } },
+  { $sort: { totalSpent: -1 } }
+]);
+```
+
+## MongoDB 的工作原理
+
+### 存储引擎
+MongoDB 默认使用 WiredTiger 存储引擎，它提供：
+
+- **文档级并发控制**：支持高并发读写操作。
+- **压缩**：减少磁盘使用量，提高性能。
+- **事务支持**：自 MongoDB 4.0 起，支持多文档事务。
+
+### 数据分片
+分片是 MongoDB 的核心特性之一，用于处理大规模数据集。MongoDB 将数据分布到多个分片（服务器）上，以实现水平扩展。
+
+- **分片键**：用于决定数据如何分布。
+- **路由器 (mongos)**：客户端和分片之间的中间层，负责查询路由。
+
+### 复制集
+复制集是实现高可用性的基础，通过维护多个副本节点来确保数据冗余。
+
+- **主节点**：处理读写请求。
+- **从节点**：复制主节点的数据，用于故障切换。
+- **仲裁节点**：参与选举但不存储数据。
+
+## MongoDB 在前端开发中的应用
+
+### 实现实时数据更新
+使用 MongoDB 的 Change Streams 功能，前端可以实时接收数据库更新。例如，在一个聊天应用中，当用户发送消息时，其他用户的界面可以实时刷新。
+
+```javascript
+const pipeline = [{ $match: { "operationType": "insert" } }];
+const changeStream = db.collection("messages").watch(pipeline);
+
+changeStream.on("change", (change) => {
+  console.log("New message: ", change.fullDocument);
+});
+```
+
+### 搭配 GraphQL 和 Apollo
+MongoDB 与 GraphQL 配合使用，可以通过 Apollo Server 提供灵活的 API。例如：
+
+```javascript
+const { ApolloServer, gql } = require("apollo-server");
+const { MongoClient } = require("mongodb");
+
+const typeDefs = gql`
+  type User {
+    id: ID!
+    name: String!
+    age: Int
+  }
+
+  type Query {
+    users: [User]
+  }
+`;
+
+const resolvers = {
+  Query: {
+    users: async () => {
+      const users = await db.collection("users").find().toArray();
+      return users;
+    },
+  },
+};
+
+const server = new ApolloServer({ typeDefs, resolvers });
+server.listen().then(({ url }) => {
+  console.log(`Server ready at ${url}`);
+});
+```
+
+### 结合前端框架构建 CRUD 应用
+以 Vue.js 为例，通过 Axios 调用后端 API，与 MongoDB 交互。
+
+```javascript
+<template>
+  <div>
+    <form @submit.prevent="addUser">
+      <input v-model="newUser.name" placeholder="Name" />
+      <input v-model="newUser.age" type="number" placeholder="Age" />
+      <button type="submit">Add User</button>
+    </form>
+
+    <ul>
+      <li v-for="user in users" :key="user._id">
+        {{ user.name }} - {{ user.age }}
+      </li>
+    </ul>
+  </div>
+</template>
+
+<script>
+import axios from "axios";
+export default {
+  data() {
+    return {
+      users: [],
+      newUser: { name: "", age: null },
+    };
+  },
+  async created() {
+    this.users = await axios.get("/api/users").then((res) => res.data);
+  },
+  methods: {
+    async addUser() {
+      const user = await axios.post("/api/users", this.newUser).then((res) => res.data);
+      this.users.push(user);
+      this.newUser = { name: "", age: null };
+    },
+  },
+};
+</script>
+```
+
+## 总结
+
+MongoDB 以其高效、灵活和可扩展的特点，成为现代 Web 应用开发的重要工具。通过本文的介绍，你可以了解 MongoDB 的核心概念、工作原理，以及它在前端开发中的实际应用。如果你正在构建一个需要快速开发和高性能支持的项目，MongoDB 无疑是一个值得考虑的选择。

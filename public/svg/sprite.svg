@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <symbol id="icon-edge" viewBox="0 0 512 512">
+      <use href="/svg/edge.svg"/>
+    </symbol>
+    <symbol id="icon-vitejs" viewBox="0 0 512 512">
+      <use href="/svg/vitejs.svg"/>
+    </symbol>
+    <symbol id="icon-next-js" viewBox="0 0 512 512">
+      <use href="/svg/next-js.svg"/>
+    </symbol>
+    <symbol id="icon-nuxt-js" viewBox="0 0 512 512">
+      <use href="/svg/nuxt-js.svg"/>
+    </symbol>
+    <symbol id="icon-react" viewBox="0 0 512 512">
+      <use href="/svg/react.svg"/>
+    </symbol>
+    <symbol id="icon-bun" viewBox="0 0 512 512">
+      <use href="/svg/bun.svg"/>
+    </symbol>
+    <symbol id="icon-css" viewBox="0 0 512 512">
+      <use href="/svg/css-3.svg"/>
+    </symbol>
+    <symbol id="icon-docker" viewBox="0 0 512 512">
+      <use href="/svg/docker.svg"/>
+    </symbol>
+    <symbol id="icon-data" viewBox="0 0 512 512">
+      <use href="/svg/data.svg"/>
+    </symbol>
+    <symbol id="icon-deno" viewBox="0 0 512 512">
+      <use href="/svg/deno.svg"/>
+    </symbol>
+    <symbol id="icon-javascript" viewBox="0 0 512 512">
+      <use href="/svg/javascript.svg"/>
+    </symbol>
+    <symbol id="icon-mysql" viewBox="0 0 512 512">
+      <use href="/svg/mysql-logo.svg"/>
+    </symbol>
+    <symbol id="icon-nestjs" viewBox="0 0 512 512">
+      <use href="/svg/nestjs.svg"/>
+    </symbol>
+    <symbol id="icon-nodejs" viewBox="0 0 512 512">
+      <use href="/svg/nodejs.svg"/>
+    </symbol>
+    <symbol id="icon-threejs" viewBox="0 0 512 512">
+      <use href="/svg/threejs.svg"/>
+    </symbol>
+    <symbol id="icon-axios" viewBox="0 0 512 512">
+      <use href="/svg/axios.svg"/>
+    </symbol>
+    <symbol id="icon-typescript" viewBox="0 0 512 512">
+      <use href="/svg/typescript.svg"/>
+    </symbol>
+    <symbol id="icon-vue" viewBox="0 0 512 512">
+      <use href="/svg/vue.svg"/>
+    </symbol>
+    <symbol id="icon-web3" viewBox="0 0 512 512">
+      <use href="/svg/web3.svg"/>
+    </symbol>
+    <symbol id="icon-webpack" viewBox="0 0 512 512">
+      <use href="/svg/webpack.svg"/>
+    </symbol>
+    <symbol id="icon-fe" viewBox="0 0 512 512">
+      <use href="/svg/FE.svg"/>
+    </symbol>
+  </defs>
+</svg>
