@@ -6,13 +6,29 @@
   :root {
     --background: 210 20% 98%;
     --foreground: 215 25% 27%;
+    --primary: 222 47% 11%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
     --code-bg: #1a1b26;
     --code-text: #a9b1d6;
   }
 
   .dark {
     --background: 222.2 84% 4.9%;
-    --foreground: 0 0% 100%;
+    --foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
     --code-bg: #0d1117;
     --code-text: #c9d1d9;
   }
@@ -111,7 +127,7 @@ code {
 
 /* 保留你原有的部分样式 */
 .prose a {
-  @apply text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300;
+  @apply text-blue-600/90 dark:text-blue-400/90 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-300;
 }
 
 .prose h1,
@@ -127,7 +143,7 @@ code {
 }
 
 .prose blockquote {
-  @apply italic border-l-4 pl-4 my-6 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700;
+  @apply italic border-l-4 pl-4 my-6 text-gray-600/90 dark:text-gray-300/90 border-gray-200/80 dark:border-gray-700/80 bg-gray-50/50 dark:bg-gray-800/30 py-2 rounded-r-lg;
 }
 
 .prose table {

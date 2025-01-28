@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { motion, useInView, useAnimation } from "framer-motion";
+import { motion } from "framer-motion";
 
 interface FadeInProps {
   children: React.ReactNode;
@@ -14,21 +13,11 @@ export default function FadeIn({
   className = "",
   delay = 0,
 }: FadeInProps) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true });
-  const controls = useAnimation();
-
-  useEffect(() => {
-    if (isInView) {
-      controls.start("visible");
-    }
-  }, [isInView, controls]);
-
   return (
     <motion.div
-      ref={ref}
       initial="hidden"
-      animate={controls}
+      whileInView="visible"
+      viewport={{ once: true, margin: "-20px" }}
       variants={{
         hidden: { opacity: 0, y: 20 },
         visible: {

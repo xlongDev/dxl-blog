@@ -27,7 +27,7 @@ export default function BlogFilter({ posts }: BlogFilterProps) {
 
   return (
     <div className="space-y-8">
-      <FadeIn delay={0.1} className="flex flex-col sm:flex-row gap-4">
+      <FadeIn className="flex flex-col sm:flex-row gap-4">
         <input
           type="text"
           placeholder="搜索文章..."
@@ -50,13 +50,13 @@ export default function BlogFilter({ posts }: BlogFilterProps) {
       </FadeIn>
       <div className="grid gap-8 md:grid-cols-2">
         {filteredPosts.map((post, index) => (
-          <FadeIn key={post._id} delay={0.2 + index * 0.1}>
+          <FadeIn key={post._id}>
             <PostCard post={post} />
           </FadeIn>
         ))}
       </div>
       {filteredPosts.length === 0 && (
-        <FadeIn delay={0.2}>
+        <FadeIn>
           <p className="text-center text-gray-500">未找到匹配的文章</p>
         </FadeIn>
       )}

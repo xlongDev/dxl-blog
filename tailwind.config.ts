@@ -10,6 +10,43 @@ const config: Config = {
   darkMode: "class",
   theme: {
     extend: {
+      colors: {
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+      },
+      keyframes: {
+        "gradient-slow": {
+          "0%, 100%": { transform: "rotate(0deg)" },
+          "50%": { transform: "rotate(180deg)" },
+        },
+        "gradient-reverse": {
+          "0%, 100%": { transform: "rotate(0deg)" },
+          "50%": { transform: "rotate(-180deg)" },
+        },
+      },
+      animation: {
+        "gradient-slow": "gradient-slow 8s linear infinite",
+        "gradient-reverse": "gradient-reverse 8s linear infinite",
+      },
       typography: {
         DEFAULT: {
           css: {

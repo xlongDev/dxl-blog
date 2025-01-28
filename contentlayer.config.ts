@@ -32,6 +32,11 @@ export const Post = defineDocumentType(() => ({
       required: false,
       default: 0,
     },
+    likes: {
+      type: "number",
+      required: false,
+      default: 0,
+    },
     category: {
       type: "string",
       required: true,

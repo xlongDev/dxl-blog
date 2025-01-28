@@ -18,14 +18,18 @@ export function generateStaticParams() {
 
 export default function CategoryPage({ params }: Props) {
   const { category } = params;
+  const decodedCategory = decodeURIComponent(category);
   const posts = allPosts
-    .filter((post) => post.category?.toLowerCase() === category)
+    .filter(
+      (post) => post.category?.toLowerCase() === decodedCategory.toLowerCase()
+    )
     .sort((a, b) => compareDesc(new Date(a.date), new Date(b.date)));
 
   // 获取原始分类名称
   const originalCategory =
-    allPosts.find((post) => post.category?.toLowerCase() === category)
-      ?.category || category;
+    allPosts.find(
+      (post) => post.category?.toLowerCase() === decodedCategory.toLowerCase()
+    )?.category || decodedCategory;
 
   return (
     <div className="space-y-8 container mx-auto px-4 sm:px-6 lg:px-8 py-12">
