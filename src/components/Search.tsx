@@ -148,7 +148,9 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
                       <Link
                         href={`/blog/${post._raw.flattenedPath}`}
                         className={`block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded ${
-                          index === selectedIndex ? "bg-gray-100 dark:bg-gray-700" : ""
+                          index === selectedIndex
+                            ? "bg-gray-100 dark:bg-gray-700"
+                            : ""
                         }`}
                         onClick={() => setIsOpen(false)}
                       >

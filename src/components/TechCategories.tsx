@@ -64,12 +64,10 @@ export default function TechCategories() {
               className="block p-6 rounded-2xl bg-gradient-to-br from-white/80 to-gray-50/80 dark:from-gray-800/80 dark:to-gray-900/80 hover:shadow-xl transition-all duration-300 text-center group border border-gray-200/30 dark:border-gray-700/30 hover:border-blue-500/50 dark:hover:border-blue-500/50 backdrop-blur-sm relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <div className="relative z-10 mb-4 transform transition-all duration-300 group-hover:scale-110 p-3 rounded-xl bg-gradient-to-br from-white/50 to-gray-50/50 dark:from-gray-800/50 dark:to-gray-900/50 border border-gray-200/20 dark:border-gray-700/20">
-                <TechCategoryIcon
-                  category={category.name}
-                  className="w-8 h-8 mx-auto text-blue-500 dark:text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-300"
-                />
-              </div>
+              <TechCategoryIcon
+                category={category.name}
+                className="w-10 h-10 mx-auto mb-4 text-blue-500 dark:text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-300 transform transition-all duration-300 group-hover:scale-110"
+              />
               <span className="relative z-10 font-medium text-sm text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-300 transition-colors">
                 {category.name}
               </span>

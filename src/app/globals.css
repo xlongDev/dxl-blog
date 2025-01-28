@@ -40,12 +40,33 @@
   .prose h1,
   .prose h2,
   .prose h3,
-  .prose h4 {
-    @apply transition-colors duration-200 ease-in-out;
+  .prose h4,
+  button,
+  input,
+  select,
+  textarea,
+  .bg-white,
+  .bg-gray-800,
+  .border,
+  .shadow-lg,
+  .backdrop-blur-sm {
+    @apply transition-all duration-300 ease-in-out;
   }
 
   body {
     @apply antialiased bg-[rgb(var(--background))] text-[rgb(var(--foreground))];
+  }
+  :root {
+    --foreground-rgb: 0, 0, 0;
+    --background-start-rgb: 255, 255, 255;
+    --background-end-rgb: 255, 255, 255;
+    transition: color 0.3s ease-in-out, background-color 0.3s ease-in-out;
+  }
+
+  [data-theme="dark"] {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
   }
 }
 

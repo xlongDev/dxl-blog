@@ -79,24 +79,24 @@ const BlogStats = ({ posts }: BlogStatsProps) => {
   }, [posts]);
 
   return (
-    <div className="w-full max-w-6xl mx-auto bg-gradient-to-br from-white via-white to-blue-50 dark:from-gray-800 dark:via-gray-800 dark:to-blue-900/20 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 p-10 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm relative overflow-hidden group">
+    <div className="md:block w-full max-w-6xl mx-auto bg-gradient-to-br from-white via-white to-blue-50 dark:from-gray-800 dark:via-gray-800 dark:to-blue-900/20 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 p-10 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm relative overflow-hidden group">
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
         <BasicStats
           totalPosts={stats.totalPosts}
           totalCategories={stats.totalCategories}
           totalTags={stats.totalTags}
         />
-        <div className="lg:col-span-1">
+        <div className="md:col-span-1">
           <TimeStats
             latestUpdate={stats.latestUpdate}
             avgReadingTime={stats.avgReadingTime}
           />
         </div>
-        <div className="lg:col-span-1">
+        <div className="md:col-span-1">
           <PopularPosts topPosts={stats.topPosts} />
         </div>
-        <div className="lg:col-span-3 mt-8">
+        <div className="col-span-1 md:col-span-2 lg:col-span-3 mt-6 lg:mt-8">
           <ExtendedStats
             totalViews={stats.totalViews}
             totalWords={stats.totalWords}
