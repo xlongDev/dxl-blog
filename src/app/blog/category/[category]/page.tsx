@@ -10,9 +10,11 @@ type Props = {
 };
 
 export function generateStaticParams() {
-  const categories = Array.from(new Set(allPosts.map((post) => post.category)));
+  const categories = Array.from(
+    new Set(allPosts.map((post) => post.category).filter(Boolean))
+  );
   return categories.map((category) => ({
-    category: category?.toLowerCase(),
+    category: category,
   }));
 }
 

@@ -15,7 +15,9 @@ export function generateStaticParams() {
 }
 
 export default function BlogPost({ params }: Props) {
-  const slug = params.slug.join("/");
+  const slug = params.slug
+    .map((segment) => decodeURIComponent(segment))
+    .join("/");
   const post = allPosts.find((post) => post._raw.flattenedPath === slug);
 
   if (!post) {
