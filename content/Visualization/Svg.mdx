@@ -1,0 +1,106 @@
+---
+title: "SVG 全面指南"
+date: "2021-09-01"
+description: "深入讲解 SVG（可缩放矢量图形）的基本概念、常见用法、核心技术及最佳实践。"
+tags: ["SVG", "前端开发", "矢量图形", "HTML", "可视化"]
+category: "前端技术"
+---
+
+SVG（Scalable Vector Graphics，可缩放矢量图形）是一种基于 XML 的图像格式，广泛应用于 Web 开发、数据可视化和 UI 设计。SVG 具有分辨率无关、文件体积小、可交互和可动画化等优势，是现代前端开发的重要组成部分。
+
+## 什么是 SVG？
+
+SVG 是一种基于 XML 语法的矢量图形格式，它通过描述形状、路径、文本和样式来渲染图像。与位图（如 PNG、JPG）不同，SVG 具有以下特点：
+
+- **无限缩放**：不论放大多少倍，SVG 图像都不会失真。
+- **文本可读**：SVG 内部使用 XML 结构，文本可被搜索和索引。
+- **可编辑**：可以用文本编辑器修改 SVG 代码。
+- **可交互**：支持 JavaScript 事件处理，可以制作动画。
+- **小文件体积**：相比 PNG 或 JPG，SVG 通常体积更小。
+
+## 基本语法与结构
+
+SVG 代码通常嵌入 HTML 中，或单独保存为 `.svg` 文件，基本结构如下：
+
+```xml
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="100" cy="100" r="50" fill="blue" />
+</svg>
+```
+
+### 常见元素
+
+| 元素  | 描述 |
+|-------|------|
+| `<svg>` | 定义 SVG 图像的根元素 |
+| `<circle>` | 绘制圆形 |
+| `<rect>` | 绘制矩形 |
+| `<line>` | 画直线 |
+| `<polyline>` | 画折线 |
+| `<polygon>` | 画多边形 |
+| `<path>` | 复杂路径 |
+| `<text>` | 显示文本 |
+
+## 基本形状示例
+
+### 画一个矩形
+
+```xml
+<svg width="200" height="200">
+  <rect x="50" y="50" width="100" height="100" fill="red" stroke="black" stroke-width="2" />
+</svg>
+```
+
+### 画一条直线
+
+```xml
+<svg width="200" height="200">
+  <line x1="10" y1="10" x2="190" y2="190" stroke="black" stroke-width="2" />
+</svg>
+```
+
+## 高级用法
+
+### 使用 `path` 画复杂图形
+
+```xml
+<svg width="200" height="200">
+  <path d="M10 80 C40 10, 65 10, 95 80 S150 150, 180 80" stroke="black" fill="transparent" />
+</svg>
+```
+
+### SVG 动画（`animate`）
+
+```xml
+<svg width="200" height="200">
+  <circle cx="50" cy="100" r="20" fill="blue">
+    <animate attributeName="cx" from="50" to="150" dur="2s" repeatCount="indefinite" />
+  </circle>
+</svg>
+```
+
+## 交互性（使用 JavaScript 操作 SVG）
+
+可以使用 JavaScript 操作 SVG，如动态更改颜色或位置。
+
+```html
+<svg id="mysvg" width="200" height="200">
+  <circle id="mycircle" cx="100" cy="100" r="50" fill="green" />
+</svg>
+<script>
+  document.getElementById('mycircle').addEventListener('click', function() {
+    this.setAttribute('fill', 'red');
+  });
+</script>
+```
+
+## SVG 在前端开发中的应用
+
+1. **图标（Icon）**：如使用 `SVG sprite` 提高性能。
+2. **动画（Animation）**：制作流畅的 UI 交互动画。
+3. **数据可视化（D3.js、ECharts）**：动态渲染图表。
+4. **响应式设计**：结合 `viewBox` 和 `media queries` 适配不同设备。
+
+## 结语
+
+SVG 是前端开发中强大而灵活的工具，掌握它可以提升 Web 页面质量和交互体验。建议结合 CSS、JavaScript 深入学习，探索更高级的 SVG 应用！

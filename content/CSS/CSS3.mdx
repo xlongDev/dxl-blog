@@ -1,0 +1,102 @@
+---
+title: "CSS3 全面介绍"
+date: "2022-07-13"
+description: "详细介绍 CSS3 的核心概念、特性、使用技巧及示例。"
+tags: ["CSS3", "前端开发", "Web 设计"]
+category: "CSS"
+---
+
+CSS3（Cascading Style Sheets Level 3）是 CSS（层叠样式表）的最新版本，它引入了大量新的特性，使得 Web 开发更加灵活、高效，并且能够实现更加丰富的视觉效果。本文将全面介绍 CSS3 的核心概念、特性及实际应用。
+
+## CSS3 简介
+CSS3 作为 CSS 规范的升级版，增加了许多新的模块，使开发者可以更轻松地实现复杂的页面样式。它的主要特点包括：
+
+- **模块化**：CSS3 被拆分为多个模块，如选择器、背景和边框、文本效果等，使得开发更加灵活。
+- **增强的选择器**：CSS3 引入了更多强大的选择器，例如 `:nth-child()`、`:not()`、`:target` 等。
+- **新增样式属性**：新增了 `border-radius`、`box-shadow`、`text-shadow` 等属性，提供更多样式选择。
+- **动画和过渡**：CSS3 允许开发者使用 `@keyframes`、`transition` 等创建动画效果。
+- **响应式设计**：新增 `media queries`，可以根据设备的不同尺寸调整页面布局。
+
+## CSS3 选择器
+CSS3 选择器提供了更精确的方式来选择 HTML 元素。例如：
+
+```css
+/* 选择所有偶数索引的 <li> 元素 */
+li:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+/* 选中没有特定 class 的 <p> 元素 */
+p:not(.special) {
+  color: gray;
+}
+```
+
+## CSS3 新增属性
+### 边框和背景
+CSS3 允许开发者创建更丰富的边框和背景效果。例如：
+
+```css
+/* 圆角边框 */
+div {
+  width: 200px;
+  height: 100px;
+  border: 2px solid #000;
+  border-radius: 15px;
+}
+```
+
+### 盒子阴影
+```css
+div {
+  width: 300px;
+  height: 150px;
+  box-shadow: 10px 10px 5px rgba(0, 0, 0, 0.3);
+}
+```
+
+## CSS3 过渡与动画
+CSS3 允许创建流畅的过渡效果，提升用户体验。例如：
+
+```css
+button {
+  background-color: blue;
+  color: white;
+  padding: 10px 20px;
+  transition: background-color 0.5s ease;
+}
+
+button:hover {
+  background-color: darkblue;
+}
+```
+
+### CSS3 动画
+```css
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+div {
+  animation: fadeIn 2s ease-in-out;
+}
+```
+
+## CSS3 响应式设计
+使用 `media queries`，可以针对不同设备优化页面布局。例如：
+
+```css
+@media (max-width: 600px) {
+  body {
+    background-color: lightgray;
+  }
+}
+```
+
+## 结论
+CSS3 的引入使 Web 开发更加现代化、灵活化，同时减少了对 JavaScript 的依赖，提高了开发效率。掌握 CSS3 的各种特性，能让你在前端开发中更具优势。

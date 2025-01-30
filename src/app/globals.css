@@ -50,7 +50,9 @@
   .border,
   .shadow-lg,
   .backdrop-blur-sm {
-    @apply transition-all duration-300 ease-in-out;
+    @apply transition-all duration-300 ease-in-out will-change-auto;
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 
   body {
@@ -60,7 +62,7 @@
     --foreground-rgb: 0, 0, 0;
     --background-start-rgb: 255, 255, 255;
     --background-end-rgb: 255, 255, 255;
-    transition: color 0.3s ease-in-out, background-color 0.3s ease-in-out;
+    transition: color 0.2s ease-out, background-color 0.2s ease-out;
   }
 
   [data-theme="dark"] {

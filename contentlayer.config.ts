@@ -46,8 +46,21 @@ export const Post = defineDocumentType(() => ({
     url: {
       type: "string",
       resolve: (post) => {
+        return `/blog/${post._raw.flattenedPath}`;
+      },
+    },
+    category: {
+      type: "string",
+      resolve: (post) => {
         const pathSegments = post._raw.flattenedPath.split("/");
-        return `/blog/${pathSegments.join("/")}`;
+        return pathSegments[0];
+      },
+    },
+    subcategory: {
+      type: "string",
+      resolve: (post) => {
+        const pathSegments = post._raw.flattenedPath.split("/");
+        return pathSegments.length > 1 ? pathSegments[1] : null;
       },
     },
   },

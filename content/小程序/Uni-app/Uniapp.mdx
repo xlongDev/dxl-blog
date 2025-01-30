@@ -1,0 +1,135 @@
+---
+title: "UniApp 全面介绍"
+date: "2022-06-19"
+description: "详细介绍 UniApp 的特点、架构、开发流程及示例代码。"
+tags: ["UniApp", "Vue", "跨端开发", "前端开发"]
+category: "Uni-app"
+---
+
+UniApp 是 DCloud 推出的基于 Vue.js 的跨端开发框架，支持一次编码，多端运行，包括 H5、小程序（微信、支付宝、百度、字节跳动等）、App（Android/iOS）、快应用等。
+
+## UniApp 简介
+
+UniApp 是一个使用 Vue 语法编写的前端框架，它的主要特点包括：
+
+- **跨端开发**：一套代码可编译到多个平台。
+- **基于 Vue 语法**：兼容 Vue 2，部分支持 Vue 3。
+- **丰富的 API**：提供各种内置 API 访问原生功能，如文件操作、网络请求、存储等。
+- **生态完善**：支持 NPM 包、支持 Vue 组件库、拥有丰富的插件市场。
+- **性能优化**：采用原生渲染，在 App 端性能优于 H5 方案。
+
+## UniApp 架构
+
+UniApp 主要由以下几部分组成：
+
+1. **Vue 代码层**：开发者编写基于 Vue 语法的代码。
+2. **编译层**：编译器将代码转换为对应平台的格式，如小程序的 `wxml`、`wxss`，App 的 `native` 代码等。
+3. **渲染层**：H5 使用 WebView 渲染，小程序使用各自的 WebView 或原生组件渲染，App 端则使用 WebView 或原生渲染。
+4. **通信层**：提供 JSBridge 机制，实现 JS 和 Native 之间的通信。
+
+## UniApp 开发流程
+
+### 1. 安装 HBuilderX（推荐）
+
+HBuilderX 是 DCloud 官方推荐的 UniApp 开发工具，集成了调试、编译等功能。
+
+### 2. 创建 UniApp 项目
+
+使用 HBuilderX 创建项目，或者使用 Vue CLI：
+
+```bash
+npx degit dcloudio/uni-preset-vue my-uniapp-project
+cd my-uniapp-project
+npm install
+```
+
+### 3. 编写页面
+
+在 `pages` 目录下创建 `index.vue` 文件：
+
+```vue
+<template>
+  <view class="container">
+    <text>{{ message }}</text>
+  </view>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      message: "Hello, UniApp!"
+    };
+  }
+};
+</script>
+
+<style>
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 20px;
+}
+</style>
+```
+
+### 4. 运行项目
+
+在 HBuilderX 或者使用 CLI 运行项目：
+
+```bash
+npm run dev:h5   # 运行 H5 版本
+npm run dev:mp-weixin   # 运行微信小程序
+npm run dev:app   # 运行 App
+```
+
+## UniApp API 示例
+
+### 1. 网络请求
+
+```js
+uni.request({
+  url: 'https://jsonplaceholder.typicode.com/todos/1',
+  method: 'GET',
+  success(res) {
+    console.log(res.data);
+  }
+});
+```
+
+### 2. 本地存储
+
+```js
+uni.setStorageSync('key', 'value');
+console.log(uni.getStorageSync('key'));
+```
+
+### 3. 页面跳转
+
+```js
+uni.navigateTo({
+  url: '/pages/detail/detail'
+});
+```
+
+## 发布与打包
+
+UniApp 支持 HBuilderX 直接打包 App，也可以通过 `uni-pack` 工具进行 CI/CD 集成。
+
+### 发布到小程序
+
+```bash
+npm run build:mp-weixin
+```
+
+### 发布到 H5
+
+```bash
+npm run build:h5
+```
+
+## 总结
+
+UniApp 作为一款强大的跨端框架，大大提升了前端开发效率，适用于多端统一开发的场景。掌握 UniApp 可以帮助开发者快速构建跨平台应用，提高项目交付速度。

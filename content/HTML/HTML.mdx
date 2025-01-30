@@ -1,0 +1,136 @@
+---
+title: "HTML 全面指南"
+date: "2020-05-18"
+description: "全面介绍 HTML 的基础概念、语法结构、常见标签、最佳实践及示例代码。"
+tags: ["HTML", "前端开发", "Web开发"]
+category: "HTML"
+---
+
+HTML（HyperText Markup Language，超文本标记语言）是构建 Web 页面和 Web 应用的标准标记语言。它定义了网页的基本结构，并与 CSS 和 JavaScript 共同构成现代 Web 技术的基础。
+
+## HTML 基础概念
+
+HTML 由一系列的**标签（tags）**组成，标签用来描述网页的结构和内容。HTML 文档通常以 `.html` 为扩展名，并由以下基本结构组成：
+
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的第一个 HTML 页面</title>
+</head>
+<body>
+    <h1>欢迎来到 HTML 的世界</h1>
+    <p>这是一个基本的 HTML 页面结构。</p>
+</body>
+</html>
+```
+
+## HTML 常见标签
+
+### 1. 结构性标签
+
+- `<html>`：定义 HTML 文档的根元素。
+- `<head>`：包含页面的元信息，如标题、字符集、CSS 引用等。
+- `<body>`：包含网页的可见内容。
+
+### 2. 文本标签
+
+- `<h1>` - `<h6>`：标题标签，`<h1>` 最高，`<h6>` 最小。
+- `<p>`：段落标签。
+- `<span>`：用于行内元素，不改变布局。
+- `<strong>` / `<b>`：加粗文本（`<strong>` 语义化更强）。
+- `<em>` / `<i>`：斜体文本（`<em>` 表示强调）。
+
+示例：
+
+```html
+<h1>我是标题</h1>
+<p>这是一个 <strong>加粗</strong> 和 <em>强调</em> 的段落。</p>
+```
+
+### 3. 超链接和列表
+
+- `<a href="URL">`：超链接。
+- `<ul>` / `<ol>` / `<li>`：无序/有序列表。
+
+示例：
+
+```html
+<a href="https://www.example.com">点击访问 Example</a>
+
+<ul>
+    <li>苹果</li>
+    <li>香蕉</li>
+    <li>橙子</li>
+</ul>
+```
+
+### 4. 图像和多媒体
+
+- `<img src="URL" alt="描述">`：插入图片。
+- `<audio>` / `<video>`：音频和视频播放。
+
+示例：
+
+```html
+<img src="image.jpg" alt="描述性文本" width="300">
+<audio controls>
+    <source src="audio.mp3" type="audio/mpeg">
+</audio>
+```
+
+### 5. 表单和输入
+
+- `<form>`：表单容器。
+- `<input>` / `<textarea>` / `<select>`：表单控件。
+- `<button>`：按钮。
+
+示例：
+
+```html
+<form action="/submit" method="post">
+    <label for="name">姓名：</label>
+    <input type="text" id="name" name="name" required>
+    <button type="submit">提交</button>
+</form>
+```
+
+## HTML5 新特性
+
+HTML5 引入了一些新的标签和 API，如：
+
+- 语义化标签：`<header>`、`<article>`、`<section>`、`<footer>`。
+- 多媒体支持：`<audio>`、`<video>`。
+- 表单增强：新的输入类型（如 `email`、`date`）。
+- Canvas API：`<canvas>` 用于绘图。
+
+示例：
+
+```html
+<header>
+    <h1>欢迎来到我的网站</h1>
+</header>
+<section>
+    <article>
+        <h2>HTML5 的新特性</h2>
+        <p>HTML5 让 Web 开发更简单、更强大。</p>
+    </article>
+</section>
+<footer>
+    <p>&copy; 2025 我的博客</p>
+</footer>
+```
+
+## HTML 最佳实践
+
+1. **使用语义化标签**，提高可读性和 SEO。
+2. **保持代码结构清晰**，使用缩进和空行。
+3. **优化图片**，使用 `alt` 属性，提高可访问性。
+4. **避免使用 `table` 进行布局**，推荐 CSS 布局。
+5. **遵循 HTML 标准**，使用 W3C 验证工具检查代码。
+
+## 结论
+
+HTML 是 Web 开发的基石，掌握 HTML 是成为前端开发者的第一步。结合 CSS 和 JavaScript，你可以创建功能强大、用户体验良好的 Web 页面。

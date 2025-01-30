@@ -1,0 +1,95 @@
+---
+title: "HTML5 全面介绍"
+date: "2020-05-30"
+description: "全面介绍 HTML5 的新特性、API 以及示例应用。"
+tags: ["HTML5", "Web 开发", "前端技术"]
+category: "HTML"
+---
+
+HTML5 是 Web 开发的核心技术之一，它引入了许多新的特性和 API，使得前端开发更加高效和现代化。本文将详细介绍 HTML5 的核心概念、语义化标签、新增 API 以及相关示例。
+
+## HTML5 简介
+
+HTML5 是 HTML（超文本标记语言）的第五个主要版本，旨在改善 Web 开发体验。它由 W3C 和 WHATWG 共同制定，目标是提供更强大的 Web 结构和更丰富的多媒体支持。
+
+## HTML5 的新特性
+
+### 1. 语义化标签
+HTML5 引入了一些新的语义化标签，使页面结构更加清晰，提高可读性和 SEO 友好性。
+
+```html
+<header>
+    <h1>网站标题</h1>
+</header>
+<nav>
+    <ul>
+        <li><a href="#">首页</a></li>
+        <li><a href="#">关于我们</a></li>
+        <li><a href="#">联系我们</a></li>
+    </ul>
+</nav>
+<section>
+    <article>
+        <h2>文章标题</h2>
+        <p>这是文章的内容。</p>
+    </article>
+</section>
+<footer>
+    <p>版权所有 &copy; 2025</p>
+</footer>
+```
+
+### 2. 多媒体标签
+HTML5 内置了 `<audio>` 和 `<video>` 标签，方便开发者嵌入多媒体内容。
+
+```html
+<video controls>
+    <source src="video.mp4" type="video/mp4">
+    浏览器不支持视频播放。
+</video>
+
+<audio controls>
+    <source src="audio.mp3" type="audio/mpeg">
+    浏览器不支持音频播放。
+</audio>
+```
+
+### 3. 表单增强
+HTML5 对表单进行了优化，新增了许多类型，如 `email`、`number`、`date`。
+
+```html
+<form>
+    <label for="email">电子邮件:</label>
+    <input type="email" id="email" name="email" required>
+    <br>
+    <label for="birthdate">生日:</label>
+    <input type="date" id="birthdate" name="birthdate">
+    <br>
+    <button type="submit">提交</button>
+</form>
+```
+
+### 4. Canvas 绘图
+`<canvas>` 元素提供了一个用于绘图的 2D API，适用于图表、游戏等应用。
+
+```html
+<canvas id="myCanvas" width="400" height="200" style="border:1px solid #000;"></canvas>
+<script>
+    const canvas = document.getElementById("myCanvas");
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "red";
+    ctx.fillRect(50, 50, 100, 100);
+</script>
+```
+
+### 5. 本地存储
+HTML5 引入了 `localStorage` 和 `sessionStorage`，用于存储用户数据。
+
+```javascript
+localStorage.setItem("username", "DuanXiaolong");
+console.log(localStorage.getItem("username"));
+```
+
+## 结论
+
+HTML5 通过新增语义化标签、多媒体支持、增强的表单、Canvas 绘图和本地存储等特性，使 Web 开发更加现代化。掌握这些特性，有助于构建更高效、用户友好的 Web 应用。

@@ -1,7 +1,8 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import { useState } from "react";
 import Link from "next/link";
 import {
   CodeBracketIcon,
@@ -16,6 +17,8 @@ import {
 import { TechStackIcon } from "@/components/TechStackIcons";
 
 export default function AboutPage() {
+  const [isWeChatQRVisible, setIsWeChatQRVisible] = useState(false);
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -200,8 +203,9 @@ export default function AboutPage() {
                 </div>
               </motion.div>
               <motion.div
-                className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:shadow-lg transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm group relative"
+                className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:shadow-lg transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm relative"
                 whileHover={{ scale: 1.02, translateY: -5 }}
+                onClick={() => setIsWeChatQRVisible(!isWeChatQRVisible)}
               >
                 <div className="flex items-center gap-4 justify-center lg:justify-start">
                   <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-lg">
@@ -216,19 +220,36 @@ export default function AboutPage() {
                     </div>
                   </div>
                 </div>
-                <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-full opacity-0 group-hover:opacity-100 group-hover:translate-y-[-120%] transition-all duration-300 ease-in-out z-50 backdrop-blur-sm bg-white/30 dark:bg-gray-800/30 p-4 rounded-2xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50">
-                  <Image
-                    src="/wechat.jpg"
-                    alt="WeChat QR Code"
-                    width={200}
-                    height={200}
-                    className="rounded-xl shadow-lg"
-                    priority
-                  />
-                  <div className="text-sm text-center mt-2 text-gray-600 dark:text-gray-400">
-                    扫码添加微信
-                  </div>
-                </div>
+                <AnimatePresence>
+                  {isWeChatQRVisible && (
+                    <motion.div
+                      className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-full backdrop-blur-sm bg-white/30 dark:bg-gray-800/30 p-4 rounded-2xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 z-50"
+                      initial={{ opacity: 0, y: -60, scale: 0.8 }}
+                      animate={{ opacity: 1, y: -120, scale: 1 }}
+                      exit={{ opacity: 0, y: -60, scale: 0.8 }}
+                      transition={{
+                        duration: 0.4,
+                        ease: [0.4, 0, 0.2, 1],
+                        scale: {
+                          duration: 0.35,
+                          ease: [0.34, 1.56, 0.64, 1],
+                        },
+                      }}
+                    >
+                      <Image
+                        src="/wechat.jpg"
+                        alt="WeChat QR Code"
+                        width={200}
+                        height={200}
+                        className="rounded-xl shadow-lg"
+                        priority
+                      />
+                      <div className="text-sm text-center mt-2 text-gray-600 dark:text-gray-400">
+                        扫码添加微信
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
               <motion.div
                 className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:shadow-lg transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm"

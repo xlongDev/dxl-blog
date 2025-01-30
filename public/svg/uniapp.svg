@@ -1,0 +1,6 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景绿色方块 -->
+  <rect width="200" height="200" fill="#0E7D31" rx="20"/>
+  <!-- 白色 U 形 -->
+  <path d="M60 50 V140 Q60 160 80 160 H120 Q140 160 140 140 V50" stroke="white" stroke-width="20" fill="none"/>
+</svg>

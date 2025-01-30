@@ -33,9 +33,15 @@ const getCategoryInfo = (): CategoryInfo[] => {
     categoryMap.set(post.category, info);
   });
 
-  return Array.from(categoryMap.values()).sort((a, b) =>
-    a.name.localeCompare(b.name)
-  );
+  return Array.from(categoryMap.values()).sort((a, b) => {
+    const isChineseA = /[\u4e00-\u9fa5]/.test(a.name);
+    const isChineseB = /[\u4e00-\u9fa5]/.test(b.name);
+
+    if (isChineseA === isChineseB) {
+      return a.name.localeCompare(b.name);
+    }
+    return isChineseA ? 1 : -1;
+  });
 };
 
 const categories = getCategoryInfo();

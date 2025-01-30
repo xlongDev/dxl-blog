@@ -1,0 +1,143 @@
+---
+title: "Canvas 全面介绍"
+date: "2021-08-18"
+description: "详细介绍 HTML5 Canvas 的基本概念、API、进阶用法及优化技巧。"
+tags: ["Canvas", "HTML5", "JavaScript", "Web 绘图"]
+category: "Web 开发"
+---
+
+Canvas 是 HTML5 提供的一个强大的 2D 绘图 API，适用于图像处理、游戏开发、数据可视化等场景。它允许开发者使用 JavaScript 在画布上绘制图形、文本、图像等。本文将深入介绍 Canvas 的基本概念、常用 API、高级技巧及优化策略。
+
+## 1. Canvas 基础
+
+### 1.1 什么是 Canvas？
+Canvas 是 HTML5 提供的 `<canvas>` 元素，它可以通过 JavaScript 进行绘图。Canvas 主要用于：
+
+- 绘制基本图形（矩形、圆形、线条等）
+- 处理图像（裁剪、滤镜、像素操作）
+- 动画和游戏开发
+- 数据可视化（图表、统计图）
+
+### 1.2 如何使用 Canvas？
+要使用 Canvas，需要在 HTML 中创建 `<canvas>` 元素，并通过 JavaScript 获取 `canvas` 对象和 `context`。
+
+```html
+<canvas id="myCanvas" width="500" height="300"></canvas>
+<script>
+  const canvas = document.getElementById("myCanvas");
+  const ctx = canvas.getContext("2d"); // 获取 2D 上下文
+</script>
+```
+
+## 2. Canvas 基本绘图 API
+
+### 2.1 绘制矩形
+Canvas 提供了 3 种绘制矩形的方法：
+
+```javascript
+ctx.fillStyle = "blue";
+ctx.fillRect(50, 50, 150, 100); // 绘制填充矩形
+
+ctx.strokeStyle = "red";
+ctx.strokeRect(220, 50, 150, 100); // 绘制边框矩形
+
+ctx.clearRect(80, 80, 50, 50); // 清除矩形区域
+```
+
+### 2.2 绘制路径（线条）
+使用 `beginPath()` 开始路径，`moveTo()` 移动画笔，`lineTo()` 画线，最后 `stroke()` 绘制。
+
+```javascript
+ctx.beginPath();
+ctx.moveTo(50, 150);
+ctx.lineTo(200, 250);
+ctx.lineTo(300, 100);
+ctx.closePath();
+ctx.strokeStyle = "green";
+ctx.stroke();
+```
+
+### 2.3 绘制圆形和弧线
+使用 `arc()` 方法绘制圆形。
+
+```javascript
+ctx.beginPath();
+ctx.arc(250, 150, 50, 0, Math.PI * 2);
+ctx.fillStyle = "purple";
+ctx.fill();
+```
+
+### 2.4 绘制文本
+Canvas 支持绘制文本：
+
+```javascript
+ctx.font = "30px Arial";
+ctx.fillText("Hello Canvas", 50, 50);
+ctx.strokeText("Hello Canvas", 50, 100);
+```
+
+### 2.5 绘制图片
+使用 `drawImage()` 方法加载并绘制图片。
+
+```javascript
+const img = new Image();
+img.src = "image.png";
+img.onload = function() {
+  ctx.drawImage(img, 100, 100, 200, 150);
+};
+```
+
+## 3. 进阶用法
+
+### 3.1 动画
+使用 `requestAnimationFrame()` 创建流畅动画。
+
+```javascript
+let x = 0;
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(x, 100, 50, 50);
+  x += 2;
+  requestAnimationFrame(animate);
+}
+animate();
+```
+
+### 3.2 图像像素处理
+获取和修改 Canvas 像素数据。
+
+```javascript
+const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+const data = imageData.data;
+for (let i = 0; i < data.length; i += 4) {
+  data[i] = 255 - data[i];     // 反转红色通道
+  data[i + 1] = 255 - data[i + 1]; // 反转绿色通道
+  data[i + 2] = 255 - data[i + 2]; // 反转蓝色通道
+}
+ctx.putImageData(imageData, 0, 0);
+```
+
+## 4. Canvas 性能优化
+
+### 4.1 使用离屏 Canvas
+创建离屏 Canvas 进行预渲染，提高性能。
+
+```javascript
+const offCanvas = document.createElement("canvas");
+offCanvas.width = 500;
+offCanvas.height = 300;
+const offCtx = offCanvas.getContext("2d");
+offCtx.fillRect(0, 0, 100, 100);
+ctx.drawImage(offCanvas, 0, 0);
+```
+
+### 4.2 避免频繁重绘
+减少 `clearRect()` 和 `fillRect()` 调用次数。
+
+### 4.3 使用 WebGL（如果 2D 性能不够）
+如果 2D Canvas 性能不足，可以使用 `WebGL` 来提高绘图性能。
+
+## 5. 总结
+Canvas 是 Web 开发中非常强大的绘图工具，适用于各种 2D 绘图场景。掌握基本 API、动画、像素处理和优化技巧，能帮助开发者更高效地使用 Canvas。
+
+希望本文能帮助你深入理解 Canvas！

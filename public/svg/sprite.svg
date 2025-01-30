@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <symbol id="icon-html" viewBox="0 0 512 512">
+      <use href="/svg/html.svg"/>
+    </symbol>
     <symbol id="icon-edge" viewBox="0 0 512 512">
       <use href="/svg/edge.svg"/>
     </symbol>
@@ -63,6 +66,15 @@
     </symbol>
     <symbol id="icon-fe" viewBox="0 0 512 512">
       <use href="/svg/FE.svg"/>
+    </symbol>
+    <symbol id="icon-miniapp" viewBox="0 0 512 512">
+      <use href="/svg/uniapp.svg"/>
+    </symbol>
+    <symbol id="icon-flutter" viewBox="0 0 512 512">
+      <use href="/svg/flutter.svg"/>
+    </symbol>
+    <symbol id="icon-react-native" viewBox="0 0 512 512">
+      <use href="/svg/react-native.svg"/>
     </symbol>
   </defs>
 </svg>

@@ -1,0 +1,162 @@
+---
+title: "CSS 概述"
+date: "2020-06-29"
+description: "全面介绍 CSS（层叠样式表）的基础概念、核心特性和实际应用。"
+tags: ["CSS", "前端开发", "Web 技术"]
+category: "CSS"
+---
+
+CSS（Cascading Style Sheets，层叠样式表）是用于控制 HTML 及 XML 文档样式的语言。它与 HTML、JavaScript 共同构成 Web 开发的三大核心技术，使网页具有良好的视觉表现和用户体验。
+
+## 什么是 CSS
+
+CSS 允许开发者定义页面的布局、颜色、字体、动画等样式。其核心优势包括：
+
+- **结构与样式分离**：提高代码可维护性，减少 HTML 代码冗余。
+- **层叠性（Cascading）**：不同层级的样式规则可相互影响，形成最终样式。
+- **响应式设计**：通过媒体查询适配不同设备。
+- **动画与交互**：CSS3 提供了过渡（transition）、动画（animation）等功能。
+
+## CSS 的基本语法
+
+CSS 规则由选择器（selector）和声明块（declaration block）组成，如下所示：
+
+```css
+selector {
+  property: value;
+}
+```
+
+示例：
+
+```css
+body {
+  background-color: #f0f0f0;
+  font-size: 16px;
+  color: #333;
+}
+```
+
+## CSS 选择器
+
+CSS 提供了多种选择器来精确定位 HTML 元素，包括：
+
+- **基础选择器**：
+  - `*`（通配符选择器）
+  - `tag`（元素选择器，如 `p`、`div`）
+  - `#id`（ID 选择器）
+  - `.class`（类选择器）
+- **组合选择器**：
+  - `div p`（后代选择器）
+  - `div > p`（子选择器）
+  - `div + p`（相邻兄弟选择器）
+  - `div ~ p`（通用兄弟选择器）
+- **属性选择器**：`input[type="text"]` 选择所有 `type="text"` 的输入框。
+- **伪类与伪元素**：
+  - `:hover`、`:focus` 等用户交互伪类
+  - `::before`、`::after` 等伪元素
+
+示例：
+
+```css
+button:hover {
+  background-color: blue;
+  color: white;
+}
+```
+
+## CSS 布局
+
+CSS 提供多种布局方式，包括：
+
+### 1. 普通文档流
+默认情况下，HTML 元素按顺序排列，块级元素占满整行，行内元素仅占内容宽度。
+
+### 2. 浮动布局（Float）
+`float` 可用于实现简单的多列布局，但需要 `clear` 解决浮动影响。
+
+```css
+img {
+  float: left;
+  margin-right: 10px;
+}
+```
+
+### 3. Flexbox（弹性布局）
+Flexbox 提供强大的 1D 布局能力，适用于行或列方向排列的内容。
+
+```css
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+```
+
+### 4. Grid（网格布局）
+Grid 提供 2D 布局能力，适用于复杂的页面结构。
+
+```css
+.container {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+}
+```
+
+## 响应式设计
+
+使用 **媒体查询（Media Queries）** 适配不同屏幕尺寸：
+
+```css
+@media (max-width: 600px) {
+  body {
+    font-size: 14px;
+  }
+}
+```
+
+## CSS 动画
+
+CSS3 引入了动画功能，如 `transition` 和 `@keyframes`。
+
+### 1. 过渡（Transition）
+
+```css
+button {
+  transition: background-color 0.3s ease;
+}
+```
+
+### 2. 关键帧动画（Keyframes）
+
+```css
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.box {
+  animation: fadeIn 1s ease-in-out;
+}
+```
+
+## CSS 预处理器
+
+常见的 CSS 预处理器有 **Sass**、**Less**，它们提供变量、嵌套、函数等特性，提高样式管理的灵活性。
+
+示例（Less）：
+
+```less
+@primary-color: blue;
+.button {
+  background-color: @primary-color;
+}
+```
+
+## 结论
+
+CSS 是前端开发的重要组成部分，它的发展极大提升了网页的表现力。掌握 CSS 选择器、布局、响应式设计及动画等核心概念，将帮助开发者构建更加精美、适配性强的网页。
+
+---
+
+希望这篇文章对你有所帮助！如果有任何问题或建议，欢迎留言交流。

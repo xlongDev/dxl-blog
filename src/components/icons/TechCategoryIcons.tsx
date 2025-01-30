@@ -98,6 +98,17 @@ export default function TechCategoryIcon({
             <image href="/svg/css-3.svg" width="512" height="512" />
           </motion.svg>
         );
+      case "HTML":
+        return (
+          <motion.svg
+            viewBox="0 0 512 512"
+            className={className}
+            variants={iconVariants}
+            whileHover="hover"
+          >
+            <image href="/svg/html.svg" width="512" height="512" />
+          </motion.svg>
+        );
       case "DB":
         return (
           <motion.svg
@@ -132,6 +143,28 @@ export default function TechCategoryIcon({
               fill="currentColor"
               d="M12 3C7.58 3 4 4.79 4 7s3.58 4 8 4 8-1.79 8-4-3.58-4-8-4zM4 9v3c0 2.21 3.58 4 8 4s8-1.79 8-4V9c0 2.21-3.58 4-8 4s-8-1.79-8-4zm0 5v3c0 2.21 3.58 4 8 4s8-1.79 8-4v-3c0 2.21-3.58 4-8 4s-8-1.79-8-4z"
             />
+          </motion.svg>
+        );
+      case "Flutter":
+        return (
+          <motion.svg
+            viewBox="0 0 512 512"
+            className={className}
+            variants={iconVariants}
+            whileHover="hover"
+          >
+            <image href="/svg/flutter.svg" width="512" height="512" />
+          </motion.svg>
+        );
+      case "React-Native":
+        return (
+          <motion.svg
+            viewBox="0 0 512 512"
+            className={className}
+            variants={iconVariants}
+            whileHover="hover"
+          >
+            <image href="/svg/react-native.svg" width="512" height="512" />
           </motion.svg>
         );
       case "DSA":
@@ -229,6 +262,28 @@ export default function TechCategoryIcon({
               fill="currentColor"
               d="M12 3C7.58 3 4 4.79 4 7s3.58 4 8 4 8-1.79 8-4-3.58-4-8-4zM4 9v3c0 2.21 3.58 4 8 4s8-1.79 8-4V9c0 2.21-3.58 4-8 4s-8-1.79-8-4zm0 5v3c0 2.21 3.58 4 8 4s8-1.79 8-4v-3c0 2.21-3.58 4-8 4s-8-1.79-8-4z"
             />
+          </motion.svg>
+        );
+      case "Flutter":
+        return (
+          <motion.svg
+            viewBox="0 0 512 512"
+            className={className}
+            variants={iconVariants}
+            whileHover="hover"
+          >
+            <image href="/svg/flutter.svg" width="512" height="512" />
+          </motion.svg>
+        );
+      case "React-Native":
+        return (
+          <motion.svg
+            viewBox="0 0 512 512"
+            className={className}
+            variants={iconVariants}
+            whileHover="hover"
+          >
+            <image href="/svg/react-native.svg" width="512" height="512" />
           </motion.svg>
         );
       case "DSA":
@@ -425,6 +480,17 @@ export default function TechCategoryIcon({
       case "Web3":
         return (
           <motion.svg
+            viewBox="0 0 512 512"
+            className={className}
+            variants={iconVariants}
+            whileHover="hover"
+          >
+            <image href="/svg/web3.svg" width="512" height="512" />
+          </motion.svg>
+        );
+      case "Node.js":
+        return (
+          <motion.svg
             viewBox="0 0 24 24"
             className={className}
             variants={iconVariants}
@@ -487,6 +553,17 @@ export default function TechCategoryIcon({
               fill="currentColor"
               d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"
             />
+          </motion.svg>
+        );
+      case "小程序":
+        return (
+          <motion.svg
+            viewBox="0 0 512 512"
+            className={className}
+            variants={iconVariants}
+            whileHover="hover"
+          >
+            <image href="/svg/uniapp.svg" width="512" height="512" />
           </motion.svg>
         );
       case "JavaScript":

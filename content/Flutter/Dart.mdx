@@ -1,0 +1,156 @@
+---
+title: "Dart 语言概述"
+date: "2024-04-10"
+description: "全面介绍 Dart 语言的基础概念、语法特性、应用场景及示例代码。"
+tags: ["Dart", "Flutter", "编程语言"]
+category: "Flutter"
+---
+
+Dart 是 Google 开发的一种开源、跨平台编程语言，主要用于构建 Web 和移动应用程序。Dart 语言的设计目标是提供高效、稳定的开发体验，同时兼具面向对象和函数式编程的特性。Dart 也是 Flutter 框架的主要开发语言。
+
+## Dart 语言概述
+
+### 主要特点
+
+- **强类型**：支持静态和动态类型检查，提高代码安全性。
+- **面向对象**：所有内容都是对象，支持类、继承和混入（Mixin）。
+- **垃圾回收**：自动管理内存，减少手动干预。
+- **并发支持**：使用 `Future` 和 `async/await` 处理异步操作，同时支持 `Isolate` 进行并行计算。
+- **跨平台**：可编译为原生代码（AOT）或 JIT 运行，提高性能。
+
+### 安装 Dart
+
+在 macOS、Windows 或 Linux 上，你可以通过以下方式安装 Dart：
+
+```sh
+# 通过 Homebrew 安装（macOS）
+brew install dart
+
+# 通过 APT 安装（Linux）
+sudo apt update && sudo apt install dart
+```
+
+### Hello, Dart!
+
+创建一个简单的 Dart 程序：
+
+```dart
+void main() {
+  print('Hello, Dart!');
+}
+```
+
+## Dart 语法基础
+
+### 变量与数据类型
+
+Dart 提供了一些常见的数据类型：
+
+```dart
+void main() {
+  int age = 26;
+  double price = 19.99;
+  String name = 'Dart';
+  bool isActive = true;
+  List<int> numbers = [1, 2, 3, 4, 5];
+  Map<String, String> person = {'name': 'Alice', 'city': 'Shanghai'};
+  
+  print('$name is active: $isActive');
+}
+```
+
+### 控制流语句
+
+Dart 支持常见的控制流语句，如 `if`、`for`、`while` 和 `switch`：
+
+```dart
+void main() {
+  int score = 85;
+  
+  if (score >= 90) {
+    print('A');
+  } else if (score >= 80) {
+    print('B');
+  } else {
+    print('C');
+  }
+}
+```
+
+### 函数与可选参数
+
+Dart 允许函数具有可选参数，并支持箭头函数：
+
+```dart
+void greet(String name, [String? message = 'Hello']) {
+  print('$message, $name!');
+}
+
+void main() {
+  greet('Dart'); // Hello, Dart!
+  greet('Flutter', 'Welcome'); // Welcome, Flutter!
+}
+```
+
+## 面向对象编程（OOP）
+
+### 类与对象
+
+```dart
+class Person {
+  String name;
+  int age;
+
+  Person(this.name, this.age);
+  
+  void introduce() {
+    print('Hi, I am $name, and I am $age years old.');
+  }
+}
+
+void main() {
+  var person = Person('Alice', 30);
+  person.introduce();
+}
+```
+
+### 继承与抽象类
+
+```dart
+abstract class Animal {
+  void makeSound();
+}
+
+class Dog extends Animal {
+  @override
+  void makeSound() {
+    print('Woof!');
+  }
+}
+
+void main() {
+  var dog = Dog();
+  dog.makeSound();
+}
+```
+
+## 异步编程
+
+Dart 提供 `Future` 和 `async/await` 处理异步操作。
+
+```dart
+Future<String> fetchData() async {
+  await Future.delayed(Duration(seconds: 2));
+  return 'Data received';
+}
+
+void main() async {
+  print('Fetching data...');
+  String data = await fetchData();
+  print(data);
+}
+```
+
+## 结语
+
+Dart 语言凭借其简洁的语法、强大的性能以及良好的工具支持，成为现代应用开发的优秀选择。尤其在 Flutter 生态系统中，Dart 已经成为主流语言。如果你想深入学习 Dart，可以参考 [Dart 官方文档](https://dart.dev)。
