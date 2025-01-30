@@ -15,13 +15,16 @@ async function connectDB() {
 
   try {
     const opts = {
-      bufferCommands: false,
+      bufferCommands: true,
       maxPoolSize: 10,
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 30000,
       socketTimeoutMS: 45000,
       ssl: true,
       retryWrites: true,
       w: 1,
+      retryReads: true,
+      connectTimeoutMS: 30000,
+      heartbeatFrequencyMS: 2000
     };
 
     const conn = await mongoose.connect(MONGODB_URI as string, opts);

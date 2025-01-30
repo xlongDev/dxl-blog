@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { allPosts } from "contentlayer/generated";
 import PostCard from "@/components/PostCard";
 import { TrendingUp, Eye, MessageSquare, ThumbsUp } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface HeatScore {
   views: number;
@@ -10,12 +13,41 @@ interface HeatScore {
   score: number;
 }
 
+interface ArticleStats {
+  views: number;
+  likes: number;
+  comments: number;
+}
+
 export default function PopularPosts() {
+  const [articleStats, setArticleStats] = useState<
+    Record<string, ArticleStats>
+  >({});
+
+  useEffect(() => {
+    const fetchArticleStats = async () => {
+      try {
+        const response = await fetch("/api/article-stats");
+        const data = await response.json();
+        setArticleStats(data);
+      } catch (error) {
+        console.error("获取文章统计数据失败:", error);
+      }
+    };
+
+    fetchArticleStats();
+  }, []);
+
   // 计算文章热度分数
   const calculateHeatScore = (post: any): HeatScore => {
-    const views = post.views || 0;
-    const likes = post.likes || 0;
-    const comments = post.comments || 0;
+    const stats = articleStats[post._raw.flattenedPath] || {
+      views: 0,
+      likes: 0,
+      comments: 0,
+    };
+    const views = stats.views || 0;
+    const likes = stats.likes || 0;
+    const comments = stats.comments || 0;
     // 根据不同指标权重计算热度分数
     const score = views * 1 + likes * 2 + comments * 3;
     return { views, likes, comments, score };
