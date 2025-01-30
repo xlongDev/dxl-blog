@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getUserId } from "@/lib/user";
 
 interface ArticleStats {
   slug: string;
@@ -24,11 +25,26 @@ export function useArticleStats(slug: string) {
   useEffect(() => {
     if (!slug) return;
 
-    // 初始化加载数据
-    fetchStats();
-    // 记录浏览量
-    recordView();
+    const userId = getUserId();
+    if (!userId) return;
+
+    const initializeStats = async () => {
+      // 初始化加载数据
+      await fetchStats();
+      // 记录浏览量
+      await recordView();
+    };
+
+    initializeStats();
   }, [slug]);
+
+  // 单独处理点赞状态
+  useEffect(() => {
+    const userId = getUserId();
+    if (stats?.likedBy && userId) {
+      setHasLiked(stats.likedBy.includes(userId));
+    }
+  }, [stats?.likedBy]);
 
   const fetchStats = async () => {
     try {
@@ -54,6 +70,9 @@ export function useArticleStats(slug: string) {
   };
 
   const handleLike = async () => {
+    const userId = getUserId();
+    if (!userId) return;
+
     try {
       const action = hasLiked ? "unlike" : "like";
       const response = await fetch(
