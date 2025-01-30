@@ -33,10 +33,10 @@ export default function PopularPosts() {
   return (
     <section className="space-y-8 mt-16">
       <div className="flex items-center gap-3">
-        <div className="p-2.5 rounded-xl bg-gradient-to-r from-red-500 to-pink-500 text-white">
+        <div className="p-2.5 rounded-xl bg-gradient-to-r from-orange-400 to-rose-500 text-white">
           <TrendingUp className="w-5 h-5" />
         </div>
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-rose-600 bg-clip-text text-transparent">
           热门文章
         </h2>
       </div>
@@ -60,8 +60,8 @@ export default function PopularPosts() {
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
-                <TrendingUp className="w-4 h-4 text-red-500" />
-                <span className="font-medium text-red-500">
+                <TrendingUp className="w-4 h-4 text-orange-500" />
+                <span className="font-medium text-orange-500">
                   {post.heatScore.score}
                 </span>
               </div>
@@ -72,7 +72,7 @@ export default function PopularPosts() {
       <div className="text-center">
         <Link
           href="/blog"
-          className="inline-block px-6 py-3 rounded-full bg-gradient-to-r from-red-500 to-pink-500 text-white hover:from-red-600 hover:to-pink-600 transition-all duration-300 hover:shadow-lg"
+          className="inline-block px-6 py-3 rounded-full bg-gradient-to-r from-orange-400 to-rose-500 text-white hover:from-orange-500 hover:to-rose-600 transition-all duration-300 hover:shadow-lg"
         >
           查看所有文章
         </Link>

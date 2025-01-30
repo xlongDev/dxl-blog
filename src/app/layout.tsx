@@ -5,6 +5,7 @@ import { Providers } from "./providers";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
+import PageTransition from "@/components/PageTransition";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "段晓龙的博客",
+    title: "晓龙的blog",
   },
   viewport: "width=device-width, initial-scale=1, maximum-scale=1",
 };
@@ -37,12 +38,14 @@ export default function RootLayout({
         className={`${inter.className} bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans`}
       >
         <Providers>
-          <div className="min-h-screen flex flex-col">
-            <Header />
-            <main className="flex-grow">{children}</main>
-            <Footer />
-            <BackToTop />
-          </div>
+          <PageTransition>
+            <div className="min-h-screen flex flex-col">
+              <Header />
+              <main className="flex-grow">{children}</main>
+              <Footer />
+              <BackToTop />
+            </div>
+          </PageTransition>
         </Providers>
       </body>
     </html>
