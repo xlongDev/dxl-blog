@@ -2,6 +2,9 @@
 title: "Next.js 15 新特性全面解析"
 date: "2024-12-01"
 description: "深入介绍 Next.js 15 的最新特性，涵盖性能改进、全新 API 和实用功能。"
+keywords: "Next.js 15, React Server Components, TurboPack, 服务端渲染, SSR, 静态资源优化, API 路由"
+author: "段晓龙"
+image: "/images/hero/nextjs15.jpg"
 tags: ["Next.js", "React", "前端开发"]
 category: "Next.js"
 ---
@@ -19,6 +22,7 @@ TurboPack 是在 Next.js 13 中首次引入的全新构建工具，旨在取代 
 - **支持更多文件类型**：新增对 SVG、图片等资源的直接导入支持。
 
 #### 示例：配置 TurboPack
+
 ```javascript
 // next.config.js
 module.exports = {
@@ -36,6 +40,7 @@ module.exports = {
 - **增强的嵌套路由支持**：可以在嵌套路由中更精细地控制数据加载和 UI 渲染。
 
 #### 示例：动态布局切换
+
 ```javascript
 // app/layout.js
 export default function RootLayout({ children }) {
@@ -69,14 +74,15 @@ Next.js 15 对服务器端渲染的流式处理做出了改进，使得页面加
 - **数据流控制**：支持更细粒度的流控制，提升复杂页面的渲染效率。
 
 #### 示例：启用流式渲染
+
 ```javascript
 // pages/api/stream.js
 export default function handler(req, res) {
-  res.setHeader('Content-Type', 'text/html');
-  res.write('<div>Loading...</div>');
+  res.setHeader("Content-Type", "text/html");
+  res.write("<div>Loading...</div>");
 
   setTimeout(() => {
-    res.write('<div>Data loaded!</div>');
+    res.write("<div>Data loaded!</div>");
     res.end();
   }, 2000);
 }
@@ -90,18 +96,13 @@ Next.js 15 提供了更智能的静态资源管理：
 - **CSS 和 JS 的体积优化**：通过代码拆分和 Tree Shaking 减少打包体积。
 
 #### 示例：使用改进的 `next/image`
+
 ```javascript
-import Image from 'next/image';
+import Image from "next/image";
 
 export default function HomePage() {
   return (
-    <Image
-      src="/example.jpg"
-      alt="Example"
-      width={500}
-      height={300}
-      priority
-    />
+    <Image src="/example.jpg" alt="Example" width={500} height={300} priority />
   );
 }
 ```
@@ -114,16 +115,17 @@ API 路由在 Next.js 15 中更加强大：
 - **边缘运行时（Edge Runtime）支持**：使 API 路由的响应速度更快。
 
 #### 示例：边缘运行时 API
+
 ```javascript
 export const config = {
-  runtime: 'edge',
+  runtime: "edge",
 };
 
 export default async function handler(req) {
-  return new Response(JSON.stringify({ message: 'Hello from the Edge!' }), {
+  return new Response(JSON.stringify({ message: "Hello from the Edge!" }), {
     status: 200,
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
   });
 }

@@ -22,6 +22,19 @@ export const Post = defineDocumentType(() => ({
       type: "string",
       required: true,
     },
+    keywords: {
+      type: "string",
+      required: false,
+    },
+    author: {
+      type: "string",
+      required: false,
+      default: "晓龙",
+    },
+    image: {
+      type: "string",
+      required: false,
+    },
     tags: {
       type: "list",
       of: { type: "string" },
