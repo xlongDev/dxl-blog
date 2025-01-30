@@ -6,12 +6,11 @@ export default function HeroTitle() {
   const tags = [
     "React",
     "Next.js",
+    "JavaScript",
     "TypeScript",
     "Node.js",
     "Vue",
-    "Web3",
-    "前端工程化",
-    "性能优化",
+    "小程序",
   ];
 
   return (

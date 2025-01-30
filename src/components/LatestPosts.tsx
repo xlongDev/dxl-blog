@@ -15,7 +15,7 @@ export default function LatestPosts({ posts }: LatestPostsProps) {
         <div className="p-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 text-white">
           <Clock className="w-5 h-5" />
         </div>
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
           最新文章
         </h2>
       </div>

@@ -72,7 +72,6 @@ export default function BlogPage() {
           <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
             所有文章
           </h1>
-          <div className="hidden sm:block h-0.5 w-32 bg-gradient-to-r from-blue-600/50 to-transparent" />
         </div>
       </FadeIn>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">

@@ -92,7 +92,10 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
     const parts = text.split(new RegExp(`(${query})`, "gi"));
     return parts.map((part, i) =>
       part.toLowerCase() === query.toLowerCase() ? (
-        <span key={i} className="bg-yellow-200 dark:bg-yellow-800">
+        <span
+          key={i}
+          className="bg-gradient-to-r from-orange-200/50 to-rose-200/50 dark:from-orange-900/30 dark:to-rose-900/30 rounded px-1"
+        >
           {part}
         </span>
       ) : (
