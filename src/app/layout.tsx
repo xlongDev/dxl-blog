@@ -5,7 +5,6 @@ import { Providers } from "./providers";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
-import PageTransition from "@/components/PageTransition";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -38,14 +37,12 @@ export default function RootLayout({
         className={`${inter.className} bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans`}
       >
         <Providers>
-          <PageTransition>
             <div className="min-h-screen flex flex-col">
               <Header />
               <main className="flex-grow">{children}</main>
               <Footer />
               <BackToTop />
             </div>
-          </PageTransition>
         </Providers>
       </body>
     </html>
