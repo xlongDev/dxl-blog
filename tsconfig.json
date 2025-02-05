@@ -22,7 +22,11 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "contentlayer/generated": ["./.contentlayer/generated"]
+      "contentlayer/generated": ["./.contentlayer/generated"],
+      "monaco-editor": ["node_modules/monaco-editor"],
+      "monaco-editor/esm/vs/basic-languages/*": [
+        "node_modules/monaco-editor/esm/vs/basic-languages/*"
+      ]
     },
     "typeRoots": ["./node_modules/@types", "./types"]
   },

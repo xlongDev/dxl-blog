@@ -1,0 +1,141 @@
+---
+title: "JavaScript 递归详解：概念、用法与实战"
+date: "2022-02-15"
+description: "深入介绍 JavaScript 递归的核心概念、常见应用场景，以及如何优化递归以提高性能。"
+keywords: "JavaScript, 递归, 递归函数, 递归优化, 尾递归, 递归应用"
+author: "晓龙"
+image: "/images/hero/js-recursion.jpg"
+tags: ["JavaScript", "算法", "数据结构"]
+category: "JavaScript"
+---
+
+## 什么是递归？
+
+递归（Recursion）是一种编程技巧，指的是函数调用自身以解决问题。递归通常用于分解复杂问题，使其变得更容易解决。
+
+递归函数一般包含两个关键部分：
+1. **终止条件（Base Case）** - 递归必须有终止条件，否则会导致无限递归。
+2. **递归调用（Recursive Case）** - 处理当前问题后，调用自身解决子问题。
+
+## 递归的基本示例
+
+### 计算阶乘
+
+```js
+function factorial(n) {
+  if (n === 0) return 1; // 终止条件
+  return n * factorial(n - 1); // 递归调用
+}
+
+console.log(factorial(5)); // 120
+```
+
+### 斐波那契数列
+
+```js
+function fibonacci(n) {
+  if (n <= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+console.log(fibonacci(6)); // 8
+```
+
+## 递归的应用场景
+
+### 1. 遍历嵌套数据结构（树、DOM 树等）
+```js
+const tree = {
+  value: "root",
+  children: [
+    { value: "child1", children: [] },
+    { value: "child2", children: [
+        { value: "grandchild1", children: [] }
+    ] }
+  ]
+};
+
+function traverseTree(node) {
+  console.log(node.value);
+  node.children.forEach(traverseTree);
+}
+
+traverseTree(tree);
+```
+
+### 2. 反转字符串
+```js
+function reverseString(str) {
+  if (str.length === 0) return "";
+  return str[str.length - 1] + reverseString(str.slice(0, -1));
+}
+
+console.log(reverseString("hello")); // "olleh"
+```
+
+### 3. 深拷贝对象
+```js
+function deepClone(obj) {
+  if (typeof obj !== "object" || obj === null) return obj;
+  
+  const clone = Array.isArray(obj) ? [] : {};
+  for (let key in obj) {
+    clone[key] = deepClone(obj[key]);
+  }
+  return clone;
+}
+
+const obj1 = { a: 1, b: { c: 2 } };
+const obj2 = deepClone(obj1);
+console.log(obj2);
+```
+
+## 递归优化
+
+### 1. 记忆化（Memoization）优化斐波那契数列
+```js
+function fibonacciMemo(n, memo = {}) {
+  if (n in memo) return memo[n];
+  if (n <= 1) return n;
+  memo[n] = fibonacciMemo(n - 1, memo) + fibonacciMemo(n - 2, memo);
+  return memo[n];
+}
+
+console.log(fibonacciMemo(50));
+```
+
+### 2. 尾递归优化
+```js
+function factorialTail(n, total = 1) {
+  if (n === 0) return total;
+  return factorialTail(n - 1, n * total);
+}
+
+console.log(factorialTail(5)); // 120
+```
+
+## 递归 vs. 迭代
+
+递归代码通常更直观，但可能导致栈溢出。某些情况下，迭代可以替代递归，提高性能。
+
+**斐波那契数列的迭代实现：**
+```js
+function fibonacciIterative(n) {
+  let a = 0, b = 1;
+  for (let i = 2; i <= n; i++) {
+    [a, b] = [b, a + b];
+  }
+  return b;
+}
+
+console.log(fibonacciIterative(50));
+```
+
+## 总结
+
+- 递归适用于问题分解，如树遍历、深拷贝等。
+- 递归需要终止条件，否则会导致无限调用。
+- 递归可能带来性能问题，可通过 **记忆化** 和 **尾递归优化** 解决。
+- 在可能的情况下，考虑使用迭代方式代替递归。
+
+递归是 JavaScript 及其他编程语言中非常强大的工具，掌握递归能够帮助你解决各种复杂问题，提高代码可读性和简洁性。

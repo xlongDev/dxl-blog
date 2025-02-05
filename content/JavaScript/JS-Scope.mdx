@@ -1,0 +1,169 @@
+---
+title: "JavaScript 作用域详解"
+date: "2021-06-16"
+description: "深入解析 JavaScript 作用域，包括全局作用域、局部作用域、块级作用域、词法作用域、作用域链等概念，附带丰富示例。"
+keywords: "JavaScript 作用域, 作用域链, 词法作用域, 闭包, ES6, var let const"
+author: "晓龙"
+image: "/images/hero/js-scope.jpg"
+tags: ["JavaScript", "前端开发", "作用域"]
+category: "JavaScript"
+---
+
+JavaScript 作用域（Scope）是变量、函数在代码中的可访问范围，它直接影响了变量的生命周期和可见性。理解作用域是掌握 JavaScript 语言的关键之一，尤其是在现代 JavaScript 发展中（ES6+），块级作用域、词法作用域和闭包等概念变得越来越重要。
+
+## 什么是作用域？
+
+作用域指的是代码执行时变量和函数的可访问范围。在 JavaScript 中，作用域主要分为以下几种：
+
+- **全局作用域**
+- **函数作用域（局部作用域）**
+- **块级作用域（ES6+）**
+- **词法作用域**
+- **作用域链**
+- **闭包**
+
+---
+
+## 1. 全局作用域
+
+**定义：** 在 JavaScript 代码中，任何在函数之外声明的变量都属于全局作用域，可以在代码的任何地方访问。
+
+```js
+var globalVar = "我是全局变量";
+
+function showGlobal() {
+    console.log(globalVar);
+}
+
+showGlobal(); // 输出：我是全局变量
+console.log(globalVar); // 仍然可访问
+```
+
+**注意：**
+- 任何未使用 `var`、`let` 或 `const` 关键字声明的变量都会自动成为全局变量。
+- 全局变量容易被污染，因此在大型项目中应尽量减少使用。
+
+---
+
+## 2. 函数作用域（局部作用域）
+
+**定义：** 在函数内部定义的变量只能在该函数内部访问，称为局部变量，具备函数作用域。
+
+```js
+function localScope() {
+    var localVar = "我是局部变量";
+    console.log(localVar);
+}
+
+localScope(); // 输出：我是局部变量
+console.log(localVar); // 报错：localVar is not defined
+```
+
+**特点：**
+- 变量 `localVar` 只在 `localScope` 函数内部可访问。
+- 函数执行完毕后，局部变量会被销毁。
+
+---
+
+## 3. 块级作用域（ES6+）
+
+ES6 引入了 `let` 和 `const` 关键字，支持块级作用域（Block Scope），即变量只在代码块 `{}` 内有效。
+
+```js
+{
+    let blockVar = "我是块级变量";
+    console.log(blockVar); // 正常输出
+}
+
+console.log(blockVar); // 报错：blockVar is not defined
+```
+
+**`var` vs `let` vs `const` 作用域比较：**
+
+| 变量声明 | 作用域类型 | 变量提升 | 可重复声明 |
+|----------|------------|----------|------------|
+| `var` | 函数作用域 | 是 | 允许 |
+| `let` | 块级作用域 | 否 | 不允许 |
+| `const` | 块级作用域 | 否 | 不允许（且不可修改） |
+
+---
+
+## 4. 词法作用域（Lexical Scope）
+
+**定义：** JavaScript 采用词法作用域，也称静态作用域，即作用域在代码书写时已经确定，而非运行时动态决定。
+
+```js
+function outer() {
+    let outerVar = "外部变量";
+    
+    function inner() {
+        console.log(outerVar);
+    }
+    
+    inner();
+}
+
+outer(); // 输出：外部变量
+```
+
+**特点：**
+- 内部函数可以访问外部函数的变量。
+- 作用域的解析发生在代码定义时，而不是调用时。
+
+---
+
+## 5. 作用域链（Scope Chain）
+
+当 JavaScript 代码在某个作用域中访问变量时，会沿着作用域链向上查找，直到找到变量或到达全局作用域。
+
+```js
+var globalVar = "全局变量";
+
+function first() {
+    var firstVar = "第一层变量";
+    
+    function second() {
+        var secondVar = "第二层变量";
+        console.log(globalVar, firstVar, secondVar);
+    }
+    
+    second();
+}
+
+first(); // 输出：全局变量 第一层变量 第二层变量
+```
+
+**查找顺序：**
+1. 先查找自身作用域。
+2. 若未找到，则向上查找父作用域。
+3. 直到找到变量或到达全局作用域。
+
+---
+
+## 6. 闭包（Closure）
+
+**定义：** 闭包是指能够访问外部函数变量的内部函数，即使外部函数已经执行完毕。
+
+```js
+function createCounter() {
+    let count = 0;
+    return function() {
+        count++;
+        console.log(count);
+    };
+}
+
+const counter = createCounter();
+counter(); // 输出：1
+counter(); // 输出：2
+```
+
+**闭包的作用：**
+- **数据封装**：变量 `count` 只能通过 `counter` 访问，避免全局污染。
+- **数据持久化**：即使 `createCounter` 执行结束，`count` 依然存在。
+
+---
+
+## 结语
+
+JavaScript 作用域是核心概念，影响代码的执行逻辑。理解不同类型的作用域（全局、局部、块级、词法作用域）及其特性，对于编写高质量 JavaScript 代码至关重要。希望本篇文章能帮助你掌握 JavaScript 作用域的精髓！

@@ -1,0 +1,303 @@
+---
+title: "JavaScript Fetch API 全面解析"
+date: "2022-01-01"
+description: "详解 JavaScript 的 Fetch API，包括基础用法、配置选项、错误处理、高级技巧以及与传统 XMLHttpRequest 的对比，帮助你更高效地进行网络请求。"
+keywords: "JavaScript, Fetch API, HTTP 请求, 前端开发, 异步编程, 网络编程"
+author: "晓龙"
+image: "/images/hero/fetch-api.jpg"
+tags: ["JavaScript", "Fetch API", "HTTP", "前端开发", "异步编程"]
+category: "JavaScript"
+---
+
+Fetch API 是现代 JavaScript 中进行网络请求的重要工具，它基于 Promise 设计，使得异步操作更加直观、优雅。本篇博客将详细介绍 Fetch API 的基本用法、配置项、错误处理、跨域请求、以及在实际项目中的一些应用案例。无论你是初学者还是资深开发者，都能从中找到有用的知识点。
+
+## 1. Fetch API 简介
+
+Fetch API 于 2015 年正式引入，它提供了一种更加现代和简洁的方式来发起 HTTP 请求。与传统的 `XMLHttpRequest` 不同，Fetch 使用 Promise 机制，使得链式调用和错误处理更加清晰。
+
+**优点：**
+- **基于 Promise：** 方便链式调用和错误捕获。
+- **语法简洁：** 更容易理解和使用。
+- **灵活性高：** 支持多种 HTTP 方法、请求头和请求体的配置。
+
+**缺点：**
+- **不支持进度监控：** 与 `XMLHttpRequest` 相比，Fetch 在处理上传和下载进度时稍显不足（不过可以结合其他 API 实现）。
+- **错误处理需特别注意：** 对 HTTP 错误状态不会自动 reject，需要自行判断响应状态。
+
+## 2. 基本用法
+
+Fetch API 的基本使用非常简单，只需要调用全局的 `fetch` 方法，并传入 URL 即可。
+
+### 示例：GET 请求
+
+```js
+fetch('https://api.example.com/data')
+  .then(response => {
+    // 判断响应是否成功
+    if (!response.ok) {
+      throw new Error(`网络响应失败，状态码: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log('数据获取成功：', data);
+  })
+  .catch(error => {
+    console.error('请求出现错误：', error);
+  });
+```
+
+在上面的代码中，我们发起了一个 GET 请求，使用 `.then()` 处理响应，并利用 `.catch()` 捕获网络错误或状态异常。
+
+### 示例：POST 请求
+
+对于需要发送数据的请求，可以传入第二个配置参数。
+
+```js
+fetch('https://api.example.com/users', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    name: '张三',
+    age: 25
+  })
+})
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`网络响应失败，状态码: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log('用户创建成功：', data);
+  })
+  .catch(error => {
+    console.error('请求出现错误：', error);
+  });
+```
+
+此示例中，我们构造了一个 POST 请求，发送 JSON 格式的数据，并设置了相应的请求头。
+
+## 3. Fetch 的配置选项
+
+Fetch 接受一个可选的配置对象，用于定制请求行为。常用的配置选项包括：
+
+- **method:** 请求方法，如 `GET`, `POST`, `PUT`, `DELETE` 等。
+- **headers:** 请求头对象，通常用来设置内容类型、授权信息等。
+- **body:** 请求体，仅在 `POST`、`PUT` 等方法中使用，可以是字符串、FormData、Blob、BufferSource 或 URLSearchParams。
+- **credentials:** 用于指定是否发送 Cookie，如 `omit`、`same-origin`、`include`。
+- **cache:** 缓存模式，如 `default`、`no-store`、`reload`、`no-cache`、`force-cache` 或 `only-if-cached`。
+- **redirect:** 重定向模式，如 `follow`、`error`、`manual`。
+- **mode:** 请求模式，如 `cors`、`no-cors` 或 `same-origin`。
+
+### 示例：自定义请求配置
+
+```js
+fetch('https://api.example.com/secure-data', {
+  method: 'GET',
+  headers: {
+    'Authorization': 'Bearer your-token-here',
+    'Accept': 'application/json'
+  },
+  credentials: 'include', // 包含跨域请求时的 cookie
+  cache: 'no-cache',
+  mode: 'cors'
+})
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`网络响应失败，状态码: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log('安全数据：', data);
+  })
+  .catch(error => {
+    console.error('请求出现错误：', error);
+  });
+```
+
+在这个例子中，我们演示了如何发送带有授权头和 cookie 的请求，同时禁用了缓存并指定了跨域模式。
+
+## 4. 响应处理
+
+Fetch 返回的是一个 `Response` 对象，该对象包含了响应的状态码、响应头以及响应体。常用的方法包括：
+
+- **response.json():** 将响应体解析为 JSON 对象。
+- **response.text():** 将响应体解析为纯文本。
+- **response.blob():** 将响应体解析为 Blob 对象（用于文件下载等场景）。
+- **response.arrayBuffer():** 将响应体解析为 ArrayBuffer（用于二进制数据处理）。
+- **response.formData():** 将响应体解析为 FormData 对象。
+
+### 示例：处理不同类型的响应数据
+
+```js
+// 处理 JSON 数据
+fetch('https://api.example.com/data.json')
+  .then(response => response.json())
+  .then(data => {
+    console.log('JSON 数据：', data);
+  });
+
+// 处理文本数据
+fetch('https://api.example.com/readme.txt')
+  .then(response => response.text())
+  .then(text => {
+    console.log('文本数据：', text);
+  });
+
+// 处理二进制数据（如图片或文件）
+fetch('https://api.example.com/image.png')
+  .then(response => response.blob())
+  .then(blob => {
+    const url = URL.createObjectURL(blob);
+    const img = document.createElement('img');
+    img.src = url;
+    document.body.appendChild(img);
+  });
+```
+
+## 5. 错误处理
+
+Fetch 只会在网络故障或者请求被阻止时 reject promise，对于 HTTP 状态码错误（如 404、500 等）不会自动 reject。因此，建议手动判断 `response.ok` 属性来捕捉这些错误。
+
+### 示例：统一错误处理
+
+```js
+fetch('https://api.example.com/data')
+  .then(response => {
+    if (!response.ok) {
+      // 构造自定义错误对象
+      const error = new Error(`HTTP 错误: ${response.status}`);
+      error.status = response.status;
+      throw error;
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log('获取数据成功：', data);
+  })
+  .catch(error => {
+    // 统一处理网络和 HTTP 错误
+    console.error('请求失败：', error);
+  });
+```
+
+这种处理方式可以让你在 catch 块中统一捕获所有错误，便于日志记录和用户提示。
+
+## 6. 高级用法
+
+### 6.1. 使用 Async/Await
+
+借助 async/await，可以让代码更简洁，逻辑更接近同步写法。
+
+```js
+async function fetchData() {
+  try {
+    const response = await fetch('https://api.example.com/data');
+    if (!response.ok) {
+      throw new Error(`HTTP 错误: ${response.status}`);
+    }
+    const data = await response.json();
+    console.log('获取数据成功：', data);
+  } catch (error) {
+    console.error('请求失败：', error);
+  }
+}
+
+fetchData();
+```
+
+### 6.2. 超时控制
+
+Fetch 本身没有内置超时机制，可以通过 `Promise.race` 来实现。
+
+```js
+function fetchWithTimeout(url, options = {}, timeout = 5000) {
+  return Promise.race([
+    fetch(url, options),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('请求超时')), timeout)
+    )
+  ]);
+}
+
+fetchWithTimeout('https://api.example.com/data')
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP 错误: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log('数据获取成功：', data);
+  })
+  .catch(error => {
+    console.error('请求出现错误：', error);
+  });
+```
+
+### 6.3. 并行请求
+
+使用 `Promise.all` 可以同时发起多个请求，并在全部完成后统一处理返回的数据。
+
+```js
+Promise.all([
+  fetch('https://api.example.com/data1').then(res => res.json()),
+  fetch('https://api.example.com/data2').then(res => res.json())
+])
+  .then(([data1, data2]) => {
+    console.log('数据1：', data1);
+    console.log('数据2：', data2);
+  })
+  .catch(error => {
+    console.error('请求失败：', error);
+  });
+```
+
+## 7. Fetch 与 XMLHttpRequest 的对比
+
+虽然 Fetch API 有很多优点，但在某些场景下 `XMLHttpRequest` 依然有其适用之处：
+
+- **进度监控：** `XMLHttpRequest` 可以监控上传和下载进度，而 Fetch 需要借助额外的 API（如 Streams）实现。
+- **兼容性：** 在一些较老的浏览器中，`XMLHttpRequest` 可能仍然是唯一可用的选择，不过现在大部分现代浏览器都已支持 Fetch。
+- **响应处理：** Fetch 默认不会 reject HTTP 错误，需要开发者手动判断，而 `XMLHttpRequest` 则可以通过状态码直接得知请求是否成功。
+
+总体来说，对于大多数前端开发场景，Fetch 提供了更为简洁和现代的解决方案。
+
+## 8. 实际案例：调用第三方 API
+
+假设我们需要调用 GitHub 的用户 API 来获取用户信息，可以使用 Fetch API 如下实现：
+
+```js
+async function getGitHubUser(username) {
+  try {
+    const response = await fetch(`https://api.github.com/users/${username}`, {
+      headers: {
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+    if (!response.ok) {
+      throw new Error(`GitHub 用户请求失败，状态码: ${response.status}`);
+    }
+    const userData = await response.json();
+    console.log('GitHub 用户数据：', userData);
+  } catch (error) {
+    console.error('请求 GitHub 用户数据失败：', error);
+  }
+}
+
+getGitHubUser('octocat');
+```
+
+通过这个实际案例，你可以看到 Fetch API 在调用第三方 API 时的便捷性和灵活性。
+
+## 9. 总结
+
+在这篇博客中，我们详细介绍了 JavaScript Fetch API 的基本用法、常用配置选项、响应和错误处理以及一些高级用法，如 async/await、超时控制和并行请求。Fetch API 为现代前端开发提供了一种简洁、直观的网络请求方式，是替代 `XMLHttpRequest` 的优秀选择。
+
+掌握 Fetch API 后，你可以更高效地进行网络编程，并应对各种实际开发场景。如果你有更多的问题或经验，欢迎在评论区留言交流！
+
+Happy Coding!

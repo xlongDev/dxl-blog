@@ -2,8 +2,45 @@ import { withContentlayer } from "next-contentlayer";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // 设置全局的重新验证时间
-  revalidate: 3600, // 每小时重新验证一次
+  webpack: (config, { isServer }) => {
+    // Monaco Editor Webpack 配置
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      // 优化 Monaco Editor 的加载，只加载核心模块
+      "monaco-editor": "monaco-editor/esm/vs/editor/editor.main",
+    };
+
+    // 优化 Monaco Editor 的 chunk 分割
+    config.optimization = {
+      ...config.optimization,
+      splitChunks: {
+        ...config.optimization?.splitChunks,
+        cacheGroups: {
+          ...config.optimization?.splitChunks?.cacheGroups,
+          monacoEditor: {
+            test: /[\\]node_modules[\\]monaco-editor[\\]/,
+            name: "monaco-editor",
+            chunks: "async",
+            priority: 10,
+          },
+        },
+      },
+    };
+
+    // 添加 Monaco Editor 的语言模块支持
+    config.module = {
+      ...config.module,
+      rules: [
+        ...config.module.rules,
+        {
+          test: /\.ttf$/,
+          type: "asset/resource",
+        },
+      ],
+    };
+
+    return config;
+  },
   staticPageGenerationTimeout: 180, // 增加静态页面生成超时时间
   images: {
     remotePatterns: [

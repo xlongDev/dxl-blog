@@ -1,0 +1,103 @@
+---
+title: "全面解析 JavaScript XHR (XMLHttpRequest)"
+date: "2022-03-04"
+description: "深入介绍 JavaScript 的 XMLHttpRequest (XHR)，包括其基本用法、异步处理、请求与响应、错误处理以及实际示例。"
+keywords: "JavaScript, XHR, XMLHttpRequest, AJAX, 异步请求, Web API, HTTP 请求"
+author: "晓龙"
+image: "/images/hero/xhr.jpg"
+tags: ["JavaScript", "XHR", "Web API", "前端开发"]
+category: "JavaScript"
+---
+
+XMLHttpRequest (XHR) 是 JavaScript 提供的一个用于与服务器通信的 API，它允许 Web 应用程序在不重新加载页面的情况下请求数据或将数据发送到服务器。尽管现代 Web 开发更多使用 `fetch` API 和 `Axios` 等库，但 XHR 仍然是理解 AJAX 请求机制的关键。
+
+## 1. XHR 基础概念
+
+XMLHttpRequest (XHR) 是用于执行 HTTP 请求的 JavaScript 对象，可以进行以下操作：
+
+- 发送 `GET` 和 `POST` 请求
+- 处理服务器响应
+- 监听请求状态的变化
+- 处理同步和异步请求
+- 设置请求头（headers）
+
+## 2. 创建 XHR 请求
+
+要使用 XHR，首先需要创建 `XMLHttpRequest` 实例：
+
+```js
+const xhr = new XMLHttpRequest();
+```
+
+## 3. XHR 请求生命周期
+
+XHR 具有以下 5 种状态（`readyState`）：
+
+| 状态码 | 状态名          | 描述 |
+|--------|---------------|-------------------------------|
+| 0      | UNSENT        | XHR 被创建，但未调用 `open()` |
+| 1      | OPENED        | 调用 `open()`，但未发送请求 |
+| 2      | HEADERS_RECEIVED | `send()` 已调用，响应头已收到 |
+| 3      | LOADING       | 服务器正在发送响应数据 |
+| 4      | DONE         | 请求完成，响应已接收 |
+
+## 4. 发送 GET 请求
+
+```js
+const xhr = new XMLHttpRequest();
+xhr.open('GET', 'https://jsonplaceholder.typicode.com/posts', true);
+xhr.onreadystatechange = function () {
+  if (xhr.readyState === 4 && xhr.status === 200) {
+    console.log(JSON.parse(xhr.responseText));
+  }
+};
+xhr.send();
+```
+
+## 5. 发送 POST 请求
+
+```js
+const xhr = new XMLHttpRequest();
+xhr.open('POST', 'https://jsonplaceholder.typicode.com/posts', true);
+xhr.setRequestHeader('Content-Type', 'application/json');
+xhr.onreadystatechange = function () {
+  if (xhr.readyState === 4 && xhr.status === 201) {
+    console.log(JSON.parse(xhr.responseText));
+  }
+};
+const data = JSON.stringify({ title: 'Hello', body: 'World', userId: 1 });
+xhr.send(data);
+```
+
+## 6. 处理错误
+
+```js
+xhr.onerror = function () {
+  console.error('请求失败');
+};
+```
+
+## 7. 取消请求
+
+```js
+const xhr = new XMLHttpRequest();
+xhr.open('GET', 'https://jsonplaceholder.typicode.com/posts', true);
+xhr.send();
+xhr.abort();
+```
+
+## 8. XHR 与 Fetch API 对比
+
+| 特性         | XHR | Fetch |
+|-------------|-----|-------|
+| 是否基于 Promise | 否  | 是    |
+| 语法复杂度   | 高  | 低    |
+| 是否支持流处理 | 否  | 是    |
+
+尽管 XHR 仍然可用，但 `fetch` API 在现代 Web 开发中更为推荐。
+
+## 9. 结论
+
+XHR 是 Web 开发中的基础 API，了解它有助于理解 AJAX 机制。然而，现代 Web 开发更倾向于使用 `fetch` API 和 `Axios`，因为它们提供了更简洁、现代化的接口。
+
+希望这篇文章能帮助你更好地理解 XHR！

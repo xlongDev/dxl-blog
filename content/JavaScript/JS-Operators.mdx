@@ -1,0 +1,134 @@
+---
+title: "JavaScript 操作符全面解析"
+date: "2021-07-05"
+description: "深入介绍 JavaScript 的各种操作符，包括算术、比较、逻辑、位运算、赋值、字符串、展开、逗号等操作符，提供详细示例和应用场景。"
+keywords: "JavaScript, 操作符, 算术运算, 逻辑运算, 位运算, 赋值运算, 比较运算, 逗号运算符, 展开运算符"
+author: "晓龙"
+image: "/images/hero/js-operators.jpg"
+tags: ["JavaScript", "前端开发", "编程基础"]
+category: "JavaScript"
+---
+
+JavaScript 提供了丰富的操作符，涵盖了数学运算、逻辑运算、赋值、比较、位运算等多个方面。在编写 JavaScript 代码时，熟练掌握各种操作符的用法至关重要。本文将详细介绍 JavaScript 操作符的类型及其应用，并配以示例说明。
+
+## 1. 算术运算符
+
+算术运算符用于执行数学计算，主要包括加、减、乘、除、取余、指数等。
+
+```js
+let a = 10;
+let b = 3;
+console.log(a + b); // 13
+console.log(a - b); // 7
+console.log(a * b); // 30
+console.log(a / b); // 3.3333...
+console.log(a % b); // 1  (取余)
+console.log(a ** b); // 1000 (指数运算)
+```
+
+## 2. 赋值运算符
+
+赋值运算符用于给变量赋值。
+
+```js
+let x = 5;
+x += 3;  // 等同于 x = x + 3;
+console.log(x); // 8
+```
+
+常见赋值运算符：
+
+| 操作符 | 说明          | 示例      |
+|--------|-------------|----------|
+| =      | 赋值         | x = y    |
+| +=     | 加法赋值     | x += y   |
+| -=     | 减法赋值     | x -= y   |
+| *=     | 乘法赋值     | x *= y   |
+| /=     | 除法赋值     | x /= y   |
+| %=     | 取余赋值     | x %= y   |
+| **=    | 指数赋值     | x **= y  |
+
+## 3. 比较运算符
+
+用于比较两个值，返回 `true` 或 `false`。
+
+```js
+console.log(5 == "5"); // true (值相等，类型不同)
+console.log(5 === "5"); // false (值和类型都要相等)
+console.log(5 != "5"); // false
+console.log(5 !== "5"); // true
+console.log(5 > 3); // true
+console.log(5 < 3); // false
+```
+
+## 4. 逻辑运算符
+
+用于处理布尔逻辑。
+
+```js
+console.log(true && false); // false
+console.log(true || false); // true
+console.log(!true); // false
+```
+
+## 5. 位运算符
+
+位运算符直接操作二进制。
+
+```js
+console.log(5 & 1); // 1
+console.log(5 | 1); // 5
+console.log(5 ^ 1); // 4
+console.log(~5);    // -6
+console.log(5 << 1); // 10
+console.log(5 >> 1); // 2
+```
+
+## 6. 逗号运算符
+
+用于在一个语句中计算多个表达式，返回最后一个表达式的值。
+
+```js
+let y = (1, 2, 3);
+console.log(y); // 3
+```
+
+## 7. 展开运算符（`...`）
+
+用于展开数组或对象。
+
+```js
+let arr1 = [1, 2, 3];
+let arr2 = [...arr1, 4, 5];
+console.log(arr2); // [1, 2, 3, 4, 5]
+```
+
+## 8. 三元运算符
+
+用于条件判断，语法：`条件 ? 表达式1 : 表达式2`。
+
+```js
+let age = 18;
+let status = age >= 18 ? "成人" : "未成年";
+console.log(status); // 成人
+```
+
+## 9. 可选链运算符（`?.`）
+
+用于简化对象访问，避免 `undefined` 错误。
+
+```js
+let user = {};
+console.log(user?.address?.city); // undefined
+```
+
+## 10. 逻辑空值合并运算符（`??`）
+
+用于提供默认值。
+
+```js
+let val = null;
+console.log(val ?? "默认值"); // 默认值
+```
+
+JavaScript 提供了丰富的操作符，每种操作符都有其独特的作用和应用场景。掌握这些操作符的用法，可以让代码更简洁、高效。
