@@ -126,3 +126,160 @@ Node.js 提供了一个强大的 CLI 环境，可以用来开发自动化脚本�
 ## 总结
 
 Node.js 是现代 Web 开发的重要工具，其非阻塞 I/O 和单线程架构使其在高并发场景下表现出色。无论是构建 Web 应用、开发微服务，还是实现自动化工具，Node.js 都是一个强大的选择。
+
+## 性能优化最佳实践
+
+### 1. 内存管理
+
+- **内存泄漏防范**：
+
+  - 避免全局变量的过度使用
+  - 及时清理事件监听器
+  - 合理使用流式处理大文件
+
+- **垃圾回收优化**：
+  ```javascript
+  // 手动触发垃圾回收（仅开发环境使用）
+  if (global.gc) {
+    global.gc();
+  }
+  ```
+
+### 2. 集群模式
+
+利用多核 CPU 提升性能：
+
+```javascript
+const cluster = require("cluster");
+const http = require("http");
+const numCPUs = require("os").cpus().length;
+
+if (cluster.isMaster) {
+  // 主进程
+  for (let i = 0; i < numCPUs; i++) {
+    cluster.fork();
+  }
+} else {
+  // 工作进程
+  http
+    .createServer((req, res) => {
+      res.writeHead(200);
+      res.end("Hello from Worker " + process.pid);
+    })
+    .listen(8000);
+}
+```
+
+### 3. 异步操作优化
+
+- **使用异步迭代器处理大数据集**：
+
+  ```javascript
+  async function* generateData() {
+    for (let i = 0; i < 1000000; i++) {
+      yield i;
+    }
+  }
+
+  async function processData() {
+    for await (const data of generateData()) {
+      // 处理数据
+    }
+  }
+  ```
+
+- **Promise 并发控制**：
+  ```javascript
+  async function throttlePromises(tasks, limit) {
+    const results = [];
+    const executing = new Set();
+
+    for (const task of tasks) {
+      const promise = Promise.resolve().then(() => task());
+      results.push(promise);
+      executing.add(promise);
+
+      const clean = () => executing.delete(promise);
+      promise.then(clean, clean);
+
+      if (executing.size >= limit) {
+        await Promise.race(executing);
+      }
+    }
+
+    return Promise.all(results);
+  }
+  ```
+
+### 4. 缓存策略
+
+- **使用 Redis 进行数据缓存**
+- **实现内存缓存**：
+
+  ```javascript
+  const cache = new Map();
+  const TTL = 60 * 1000; // 1分钟过期
+
+  function getCachedData(key) {
+    const cached = cache.get(key);
+    if (cached && Date.now() - cached.timestamp < TTL) {
+      return cached.data;
+    }
+    return null;
+  }
+  ```
+
+## 开发最佳实践
+
+### 1. 错误处理
+
+```javascript
+process.on("uncaughtException", (err) => {
+  console.error("未捕获的异常:", err);
+  // 执行清理操作
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("未处理的 Promise 拒绝:", reason);
+});
+```
+
+### 2. 安全性考虑
+
+- **输入验证**
+- **参数消毒**
+- **防止 SQL 注入**
+- **设置安全响应头**
+
+```javascript
+const helmet = require("helmet");
+app.use(helmet()); // Express/Koa 中使用
+```
+
+### 3. 日志管理
+
+```javascript
+const winston = require("winston");
+
+const logger = winston.createLogger({
+  level: "info",
+  format: winston.format.json(),
+  transports: [
+    new winston.transports.File({ filename: "error.log", level: "error" }),
+    new winston.transports.File({ filename: "combined.log" }),
+  ],
+});
+```
+
+### 4. 环境配置
+
+```javascript
+require("dotenv").config();
+
+const config = {
+  port: process.env.PORT || 3000,
+  dbUrl: process.env.DB_URL,
+  nodeEnv: process.env.NODE_ENV || "development",
+};
+```

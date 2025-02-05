@@ -29,12 +29,12 @@ Rollup.js 通常被选择用于以下场景：
 
 ### 与 Webpack 的对比
 
-| 特性           | Rollup.js              | Webpack                |
-|----------------|------------------------|------------------------|
-| 模块支持       | 原生支持 ES 模块       | 支持多种模块格式       |
-| Tree Shaking   | 优化效果显著          | 效果依赖插件和配置     |
-| 配置复杂度     | 简单清晰              | 功能强大但较复杂       |
-| 适用场景       | 库开发、小型应用       | 复杂项目和多场景应用   |
+| 特性         | Rollup.js        | Webpack              |
+| ------------ | ---------------- | -------------------- |
+| 模块支持     | 原生支持 ES 模块 | 支持多种模块格式     |
+| Tree Shaking | 优化效果显著     | 效果依赖插件和配置   |
+| 配置复杂度   | 简单清晰         | 功能强大但较复杂     |
+| 适用场景     | 库开发、小型应用 | 复杂项目和多场景应用 |
 
 ## 安装和基础使用
 
@@ -62,12 +62,12 @@ Rollup 推荐使用配置文件来管理打包选项。创建一个 `rollup.conf
 
 ```javascript
 export default {
-  input: 'src/main.js',
+  input: "src/main.js",
   output: {
-    file: 'dist/bundle.js',
-    format: 'cjs', // 输出格式，可选 'iife', 'esm', 'umd', 等
+    file: "dist/bundle.js",
+    format: "cjs", // 输出格式，可选 'iife', 'esm', 'umd', 等
   },
-  plugins: []
+  plugins: [],
 };
 ```
 
@@ -92,20 +92,20 @@ npm install @rollup/plugin-babel @babel/core --save-dev
 在 `rollup.config.js` 中添加 Babel 插件：
 
 ```javascript
-import babel from '@rollup/plugin-babel';
+import babel from "@rollup/plugin-babel";
 
 export default {
-  input: 'src/main.js',
+  input: "src/main.js",
   output: {
-    file: 'dist/bundle.js',
-    format: 'esm',
+    file: "dist/bundle.js",
+    format: "esm",
   },
   plugins: [
     babel({
-      babelHelpers: 'bundled',
-      exclude: 'node_modules/**',
-    })
-  ]
+      babelHelpers: "bundled",
+      exclude: "node_modules/**",
+    }),
+  ],
 };
 ```
 
@@ -116,15 +116,15 @@ Rollup 会自动移除未使用的代码。例如：
 ```javascript
 // src/utils.js
 export function usedFunction() {
-  console.log('This is used');
+  console.log("This is used");
 }
 
 export function unusedFunction() {
-  console.log('This is unused');
+  console.log("This is unused");
 }
 
 // src/main.js
-import { usedFunction } from './utils.js';
+import { usedFunction } from "./utils.js";
 usedFunction();
 ```
 
@@ -143,17 +143,15 @@ npm install @rollup/plugin-commonjs --save-dev
 在配置文件中：
 
 ```javascript
-import commonjs from '@rollup/plugin-commonjs';
+import commonjs from "@rollup/plugin-commonjs";
 
 export default {
-  input: 'src/main.js',
+  input: "src/main.js",
   output: {
-    file: 'dist/bundle.js',
-    format: 'cjs',
+    file: "dist/bundle.js",
+    format: "cjs",
   },
-  plugins: [
-    commonjs()
-  ]
+  plugins: [commonjs()],
 };
 ```
 
@@ -168,20 +166,180 @@ npm install @rollup/plugin-node-resolve --save-dev
 在配置文件中：
 
 ```javascript
-import resolve from '@rollup/plugin-node-resolve';
+import resolve from "@rollup/plugin-node-resolve";
 
 export default {
-  input: 'src/main.js',
+  input: "src/main.js",
   output: {
-    file: 'dist/bundle.js',
-    format: 'esm',
+    file: "dist/bundle.js",
+    format: "esm",
+  },
+  plugins: [resolve()],
+};
+```
+
+## 高级特性和最佳实践
+
+### 1. 代码分割
+
+Rollup 支持动态导入和代码分割：
+
+```javascript
+// rollup.config.js
+export default {
+  input: "src/main.js",
+  output: {
+    dir: "dist",
+    format: "es",
+    manualChunks: {
+      lodash: ["lodash"],
+      react: ["react", "react-dom"],
+    },
+  },
+};
+
+// 使用动态导入
+async function loadModule() {
+  const { default: module } = await import("./heavy-module.js");
+  return module;
+}
+```
+
+### 2. 性能优化
+
+#### 构建性能优化
+
+```javascript
+export default {
+  input: "src/main.js",
+  output: {
+    dir: "dist",
+    format: "es",
+    sourcemap: true,
+    compact: true,
+    chunkFileNames: "[name]-[hash].js",
+  },
+  cache: true, // 启用缓存
+  perf: true, // 性能分析
+  treeshake: {
+    moduleSideEffects: false,
+    propertyReadSideEffects: false,
+  },
+};
+```
+
+#### 使用 terser 进行代码压缩
+
+```javascript
+import { terser } from "rollup-plugin-terser";
+
+export default {
+  plugins: [
+    terser({
+      compress: {
+        pure_funcs: ["console.log"],
+      },
+      format: {
+        comments: false,
+      },
+    }),
+  ],
+};
+```
+
+## 实际应用场景
+
+### 1. 组件库开发
+
+```javascript
+// rollup.config.js
+import typescript from "@rollup/plugin-typescript";
+import dts from "rollup-plugin-dts";
+
+export default [
+  {
+    input: "src/index.ts",
+    output: [
+      {
+        file: "dist/index.js",
+        format: "esm",
+      },
+      {
+        file: "dist/index.cjs.js",
+        format: "cjs",
+      },
+    ],
+    plugins: [typescript()],
+  },
+  {
+    input: "src/index.ts",
+    output: {
+      file: "dist/index.d.ts",
+      format: "es",
+    },
+    plugins: [dts()],
+  },
+];
+```
+
+### 2. 多入口打包
+
+```javascript
+import glob from "glob";
+
+const entries = glob.sync("src/pages/**/index.js");
+
+export default entries.map((entry) => ({
+  input: entry,
+  output: {
+    file: entry.replace("src/", "dist/").replace(".js", ".bundle.js"),
+    format: "iife",
+    name: "bundle",
+  },
+}));
+```
+
+### 3. 微前端应用
+
+```javascript
+import html from "@rollup/plugin-html";
+import serve from "rollup-plugin-serve";
+
+export default {
+  input: "src/index.js",
+  output: {
+    dir: "dist",
+    format: "system",
+    sourcemap: true,
   },
   plugins: [
-    resolve()
-  ]
+    html({
+      template: ({ files }) => `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Micro Frontend</title>
+            <script type="systemjs-importmap">
+              {
+                "imports": {
+                  "app": "./index.js"
+                }
+              }
+            </script>
+          </head>
+          <body>
+            <div id="root"></div>
+            <script src="system.js"></script>
+            <script>System.import('app');</script>
+          </body>
+        </html>
+      `,
+    }),
+    serve("dist"),
+  ],
 };
 ```
 
 ## 总结
 
-Rollup.js 是一个高效的 JavaScript 打包工具，尤其适合用于开发现代化的库和模块化应用。通过其插件体系和 ES 模块优化，开发者可以轻松创建轻量级、高性能的输出文件。如果你正在寻找一个专注于 ES 模块的打包工具，Rollup 会是一个理想的选择。
+Rollup.js 是一个强大而灵活的 JavaScript 打包工具，特别适合用于开发现代化的库和模块化应用。通过其先进的 Tree Shaking、代码分割和丰富的插件生态系统，开发者可以构建高性能、轻量级的应用。随着前端开发的不断发展，Rollup 在组件库开发、微前端架构等场景中的应用也越来越广泛。掌握 Rollup 的高级特性和最佳实践，将帮助你更好地优化项目构建流程，提升开发效率。

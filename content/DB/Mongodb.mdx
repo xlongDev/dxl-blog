@@ -21,6 +21,7 @@ MongoDB 是一个基于分布式架构的 NoSQL 数据库，其主要特点包�
 ## MongoDB 的核心概念
 
 ### 文档
+
 MongoDB 中的数据存储单元是文档，每个文档使用 BSON 格式，类似于 JSON。例如：
 
 ```json
@@ -33,15 +34,19 @@ MongoDB 中的数据存储单元是文档，每个文档使用 BSON 格式，类
 ```
 
 ### 集合
+
 集合是文档的容器，类似于关系型数据库中的表。集合中的文档可以具有不同的结构，这赋予了 MongoDB 极大的灵活性。
 
 ### 数据库
+
 一个 MongoDB 实例可以包含多个数据库，每个数据库又包含多个集合。
 
-### _id 字段
+### \_id 字段
+
 每个文档都有一个唯一的 `_id` 字段，用于标识该文档。如果未指定 `_id`，MongoDB 会自动生成一个 ObjectId 类型的值。
 
 ### 索引
+
 MongoDB 支持创建单字段、多字段和全文检索索引，提高查询性能。例如：
 
 ```javascript
@@ -49,19 +54,21 @@ db.users.createIndex({ name: 1 }); // 为 name 字段创建升序索引
 ```
 
 ### 聚合框架
+
 MongoDB 的聚合框架提供了强大的数据处理能力，包括分组、过滤、排序和计算字段。例如：
 
 ```javascript
 db.orders.aggregate([
   { $match: { status: "shipped" } },
   { $group: { _id: "$customerId", totalSpent: { $sum: "$amount" } } },
-  { $sort: { totalSpent: -1 } }
+  { $sort: { totalSpent: -1 } },
 ]);
 ```
 
 ## MongoDB 的工作原理
 
 ### 存储引擎
+
 MongoDB 默认使用 WiredTiger 存储引擎，它提供：
 
 - **文档级并发控制**：支持高并发读写操作。
@@ -69,12 +76,14 @@ MongoDB 默认使用 WiredTiger 存储引擎，它提供：
 - **事务支持**：自 MongoDB 4.0 起，支持多文档事务。
 
 ### 数据分片
+
 分片是 MongoDB 的核心特性之一，用于处理大规模数据集。MongoDB 将数据分布到多个分片（服务器）上，以实现水平扩展。
 
 - **分片键**：用于决定数据如何分布。
 - **路由器 (mongos)**：客户端和分片之间的中间层，负责查询路由。
 
 ### 复制集
+
 复制集是实现高可用性的基础，通过维护多个副本节点来确保数据冗余。
 
 - **主节点**：处理读写请求。
@@ -84,94 +93,521 @@ MongoDB 默认使用 WiredTiger 存储引擎，它提供：
 ## MongoDB 在前端开发中的应用
 
 ### 实现实时数据更新
-使用 MongoDB 的 Change Streams 功能，前端可以实时接收数据库更新。例如，在一个聊天应用中，当用户发送消息时，其他用户的界面可以实时刷新。
+
+使用 MongoDB 的 Change Streams 功能，前端可以实时接收数据库更新。以下是一个完整的实时聊天应用示例：
 
 ```javascript
-const pipeline = [{ $match: { "operationType": "insert" } }];
-const changeStream = db.collection("messages").watch(pipeline);
+// 后端实现（Node.js + Express + MongoDB）
+const express = require("express");
+const { MongoClient } = require("mongodb");
+const WebSocket = require("ws");
 
-changeStream.on("change", (change) => {
-  console.log("New message: ", change.fullDocument);
-});
+const app = express();
+const wss = new WebSocket.Server({ port: 8080 });
+
+// 连接 MongoDB
+const client = new MongoClient("mongodb://localhost:27017");
+let db;
+
+async function connectDB() {
+  await client.connect();
+  db = client.db("chatapp");
+  // 监听消息集合的变更
+  const changeStream = db.collection("messages").watch();
+  changeStream.on("change", (change) => {
+    // 广播新消息给所有连接的客户端
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify(change.fullDocument));
+      }
+    });
+  });
+}
+
+connectDB();
+
+// 前端实现（React + WebSocket）
+import { useState, useEffect } from "react";
+
+function ChatApp() {
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState("");
+
+  useEffect(() => {
+    const ws = new WebSocket("ws://localhost:8080");
+
+    ws.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      setMessages((prev) => [...prev, message]);
+    };
+
+    return () => ws.close();
+  }, []);
+
+  const sendMessage = async () => {
+    await fetch("/api/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: newMessage }),
+    });
+    setNewMessage("");
+  };
+
+  return (
+    <div>
+      <div className="messages">
+        {messages.map((msg) => (
+          <div key={msg._id}>{msg.content}</div>
+        ))}
+      </div>
+      <input
+        value={newMessage}
+        onChange={(e) => setNewMessage(e.target.value)}
+      />
+      <button onClick={sendMessage}>发送</button>
+    </div>
+  );
+}
 ```
 
 ### 搭配 GraphQL 和 Apollo
-MongoDB 与 GraphQL 配合使用，可以通过 Apollo Server 提供灵活的 API。例如：
+
+MongoDB 与 GraphQL 的集成不仅支持基本的查询，还可以实现实时订阅功能：
 
 ```javascript
-const { ApolloServer, gql } = require("apollo-server");
-const { MongoClient } = require("mongodb");
-
+// Schema 定义
 const typeDefs = gql`
+  type Message {
+    id: ID!
+    content: String!
+    createdAt: String!
+    user: User!
+  }
+
   type User {
     id: ID!
     name: String!
-    age: Int
+    messages: [Message!]!
   }
 
   type Query {
-    users: [User]
+    messages: [Message!]!
+    user(id: ID!): User
+  }
+
+  type Mutation {
+    sendMessage(content: String!, userId: ID!): Message!
+  }
+
+  type Subscription {
+    newMessage: Message!
   }
 `;
 
+// Resolver 实现
 const resolvers = {
   Query: {
-    users: async () => {
-      const users = await db.collection("users").find().toArray();
-      return users;
+    messages: async () => {
+      return await db.collection("messages").find().toArray();
+    },
+    user: async (_, { id }) => {
+      return await db.collection("users").findOne({ _id: ObjectId(id) });
+    },
+  },
+  Mutation: {
+    sendMessage: async (_, { content, userId }) => {
+      const message = {
+        content,
+        userId: ObjectId(userId),
+        createdAt: new Date().toISOString(),
+      };
+      const result = await db.collection("messages").insertOne(message);
+      pubsub.publish("NEW_MESSAGE", { newMessage: message });
+      return message;
+    },
+  },
+  Subscription: {
+    newMessage: {
+      subscribe: () => pubsub.asyncIterator(["NEW_MESSAGE"]),
     },
   },
 };
 
-const server = new ApolloServer({ typeDefs, resolvers });
-server.listen().then(({ url }) => {
-  console.log(`Server ready at ${url}`);
-});
+// 前端订阅实现
+function MessagesSubscription() {
+  const { data, loading } = useSubscription(gql`
+    subscription OnNewMessage {
+      newMessage {
+        id
+        content
+        user {
+          name
+        }
+      }
+    }
+  `);
+
+  if (loading) return <div>加载中...</div>;
+
+  return (
+    <div>
+      <h3>新消息：</h3>
+      {data?.newMessage && (
+        <div>
+          <strong>{data.newMessage.user.name}:</strong>
+          {data.newMessage.content}
+        </div>
+      )}
+    </div>
+  );
+}
 ```
 
 ### 结合前端框架构建 CRUD 应用
-以 Vue.js 为例，通过 Axios 调用后端 API，与 MongoDB 交互。
+
+以下是一个更完整的 Vue.js 示例，包含了状态管理和错误处理：
 
 ```javascript
 <template>
-  <div>
-    <form @submit.prevent="addUser">
-      <input v-model="newUser.name" placeholder="Name" />
-      <input v-model="newUser.age" type="number" placeholder="Age" />
-      <button type="submit">Add User</button>
+  <div class="user-management">
+    <div class="error" v-if="error">{{ error }}</div>
+
+    <form @submit.prevent="addUser" class="user-form">
+      <div class="form-group">
+        <input
+          v-model="newUser.name"
+          placeholder="姓名"
+          required
+          class="form-input"
+        />
+        <input
+          v-model.number="newUser.age"
+          type="number"
+          placeholder="年龄"
+          required
+          class="form-input"
+        />
+        <input
+          v-model="newUser.email"
+          type="email"
+          placeholder="邮箱"
+          required
+          class="form-input"
+        />
+      </div>
+      <button type="submit" :disabled="loading" class="submit-btn">
+        {{ loading ? '添加中...' : '添加用户' }}
+      </button>
     </form>
 
-    <ul>
-      <li v-for="user in users" :key="user._id">
-        {{ user.name }} - {{ user.age }}
-      </li>
-    </ul>
+    <div class="users-list">
+      <div v-for="user in users" :key="user._id" class="user-card">
+        <div class="user-info">
+          <h3>{{ user.name }}</h3>
+          <p>年龄: {{ user.age }}</p>
+          <p>邮箱: {{ user.email }}</p>
+        </div>
+        <div class="user-actions">
+          <button @click="editUser(user)" class="edit-btn">编辑</button>
+          <button @click="deleteUser(user._id)" class="delete-btn">删除</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import axios from "axios";
+import axios from 'axios';
+import { ref, reactive } from 'vue';
+
 export default {
-  data() {
-    return {
-      users: [],
-      newUser: { name: "", age: null },
+  setup() {
+    const users = ref([]);
+    const loading = ref(false);
+    const error = ref('');
+    const newUser = reactive({
+      name: '',
+      age: null,
+      email: ''
+    });
+
+    const fetchUsers = async () => {
+      try {
+        loading.value = true;
+        const response = await axios.get('/api/users');
+        users.value = response.data;
+      } catch (err) {
+        error.value = '获取用户列表失败';
+      } finally {
+        loading.value = false;
+      }
     };
-  },
-  async created() {
-    this.users = await axios.get("/api/users").then((res) => res.data);
-  },
-  methods: {
-    async addUser() {
-      const user = await axios.post("/api/users", this.newUser).then((res) => res.data);
-      this.users.push(user);
-      this.newUser = { name: "", age: null };
-    },
-  },
+
+    const addUser = async () => {
+      try {
+        loading.value = true;
+        const response = await axios.post('/api/users', newUser);
+        users.value.push(response.data);
+        Object.assign(newUser, { name: '', age: null, email: '' });
+      } catch (err) {
+        error.value = '添加用户失败';
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    const deleteUser = async (id) => {
+      try {
+        await axios.delete(`/api/users/${id}`);
+        users.value = users.value.filter(user => user._id !== id);
+      } catch (err) {
+        error.value = '删除用户失败';
+      }
+    };
+
+    const editUser = (user) => {
+      Object.assign(newUser, user);
+    };
+
+    // 初始加载用户列表
+    fetchUsers();
+
+    return {
+      users,
+      newUser,
+      loading,
+      error,
+      addUser,
+      deleteUser,
+      editUser
+    };
+  }
 };
 </script>
+
+<style scoped>
+.user-management {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.error {
+  color: red;
+  margin-bottom: 10px;
+}
+
+.user-form {
+  margin-bottom: 20px;
+}
+
+.form-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.form-input {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  flex: 1;
+}
+
+.submit-btn {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.submit-btn:disabled {
+  background-color: #cccccc;
+}
+
+.users-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.user-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.user-info h3 {
+  margin: 0 0 10px 0;
+}
+
+.user-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.edit-btn, .delete-btn {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.edit-btn {
+  background-color: #2196F3;
+  color: white;
+}
+
+.delete-btn {
+  background-color: #f44336;
+  color: white;
+}
+</style>
 ```
+
+## MongoDB 性能优化与最佳实践
+
+### 索引策略
+
+合理的索引设计对 MongoDB 性能至关重要：
+
+- **复合索引优化**：根据查询模式设计复合索引，遵循 ESR（Equality, Sort, Range）原则。
+- **索引覆盖查询**：设计索引时考虑是否可以覆盖常用查询。
+- **后台索引创建**：在生产环境中使用 `background` 选项创建索引。
+
+```javascript
+// 创建复合索引示例
+db.orders.createIndex({ userId: 1, orderDate: -1 }, { background: true });
+```
+
+### 查询优化
+
+- **投影优化**：只返回需要的字段，减少网络传输。
+- **批量操作**：使用批量写入和更新操作提高性能。
+- **游标优化**：合理使用 `limit()` 和 `skip()` 进行分页。
+
+```javascript
+// 查询优化示例
+db.users.find({ age: { $gte: 18 } }, { name: 1, email: 1, _id: 0 }).limit(20);
+```
+
+### 数据模型设计
+
+- **嵌入式文档**：适当使用嵌入式文档减少关联查询。
+- **引用关系**：大型文档或频繁更新的数据使用引用。
+- **模式验证**：使用 JSON Schema 验证数据一致性。
+
+```javascript
+db.createCollection("products", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["name", "price"],
+      properties: {
+        name: { bsonType: "string" },
+        price: { bsonType: "number", minimum: 0 },
+      },
+    },
+  },
+});
+```
+
+## MongoDB 6.0 新特性
+
+### 时间序列集合增强
+
+支持更灵活的时间序列数据处理：
+
+```javascript
+db.createCollection("sensors", {
+  timeseries: {
+    timeField: "timestamp",
+    metaField: "sensorId",
+    granularity: "hours",
+  },
+});
+```
+
+### 加密查询增强
+
+支持在加密数据上执行更多类型的查询操作：
+
+```javascript
+db.createCollection("encrypted_data", {
+  encryptedFields: {
+    fields: [
+      {
+        path: "ssn",
+        keyId: UUID(),
+        bsonType: "string",
+        queries: { equality: true },
+      },
+    ],
+  },
+});
+```
+
+## 高级应用场景
+
+### 全文搜索
+
+使用文本索引实现全文搜索功能：
+
+```javascript
+// 创建文本索引
+db.articles.createIndex({ content: "text" });
+
+// 执行全文搜索
+db.articles
+  .find(
+    { $text: { $search: "mongodb nosql" } },
+    { score: { $meta: "textScore" } }
+  )
+  .sort({ score: { $meta: "textScore" } });
+```
+
+### 地理空间查询
+
+实现基于位置的服务：
+
+```javascript
+// 创建地理空间索引
+db.places.createIndex({ location: "2dsphere" });
+
+// 查找附近的地点
+db.places.find({
+  location: {
+    $near: {
+      $geometry: {
+        type: "Point",
+        coordinates: [121.4737, 31.2304],
+      },
+      $maxDistance: 1000,
+    },
+  },
+});
+```
+
+## MongoDB vs 其他 NoSQL 数据库
+
+### 与 Redis 对比
+
+- **MongoDB**：适合存储结构化文档数据，支持复杂查询
+- **Redis**：适合缓存和简单键值对存储，响应更快
+
+### 与 Cassandra 对比
+
+- **MongoDB**：提供更灵活的查询能力和文档模型
+- **Cassandra**：在写入密集场景下表现更好，适合时序数据
+
+### 与 CouchDB 对比
+
+- **MongoDB**：查询性能更好，支持更复杂的索引
+- **CouchDB**：提供更好的多主复制和离线同步能力
 
 ## 总结
 
-MongoDB 以其高效、灵活和可扩展的特点，成为现代 Web 应用开发的重要工具。通过本文的介绍，你可以了解 MongoDB 的核心概念、工作原理，以及它在前端开发中的实际应用。如果你正在构建一个需要快速开发和高性能支持的项目，MongoDB 无疑是一个值得考虑的选择。
+MongoDB 以其高效、灵活和可扩展的特点，成为现代 Web 应用开发的重要工具。通过本文的介绍，你可以了解 MongoDB 的核心概念、工作原理，以及它在前端开发中的实际应用。特别是在性能优化、新特性应用和高级场景中的实践指南，将帮助你更好地使用 MongoDB 构建高性能的应用。如果你正在寻找一个功能丰富、易于扩展的数据库解决方案，MongoDB 无疑是一个值得考虑的选择。

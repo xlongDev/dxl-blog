@@ -66,7 +66,7 @@ let uninitialized: undefined = undefined;
 
 ```typescript
 let someValue: any = 42;
-someValue = "A string now";  // no error
+someValue = "A string now"; // no error
 ```
 
 ### `unknown`
@@ -117,7 +117,7 @@ value = 42;
 enum Color {
   Red = "red",
   Green = "green",
-  Blue = "blue"
+  Blue = "blue",
 }
 
 let color: Color = Color.Green;
@@ -139,7 +139,7 @@ let user: Person = {
   age: 25,
   greet() {
     console.log("Hello!");
-  }
+  },
 };
 ```
 
@@ -204,8 +204,8 @@ function identity<T>(value: T): T {
   return value;
 }
 
-let stringValue = identity("Hello");  // T is inferred as string
-let numberValue = identity(42);       // T is inferred as number
+let stringValue = identity("Hello"); // T is inferred as string
+let numberValue = identity(42); // T is inferred as number
 ```
 
 ### 泛型接口
@@ -235,7 +235,7 @@ class GenericContainer<T> {
 }
 
 let container = new GenericContainer(100);
-console.log(container.getValue());  // 100
+console.log(container.getValue()); // 100
 ```
 
 ## 类型推断
@@ -243,7 +243,7 @@ console.log(container.getValue());  // 100
 TypeScript 会尽量根据上下文来推断变量的类型。如果没有明确指定类型，TypeScript 会推断出合适的类型。
 
 ```typescript
-let message = "Hello, TypeScript!";  // TypeScript 推断 message 的类型为 string
+let message = "Hello, TypeScript!"; // TypeScript 推断 message 的类型为 string
 ```
 
 ## 类型别名（Type Aliases）
@@ -268,7 +268,7 @@ function isString(value: any): value is string {
 
 let result = "Hello";
 if (isString(result)) {
-  console.log(result.length);  // TypeScript 确保 result 是 string 类型
+  console.log(result.length); // TypeScript 确保 result 是 string 类型
 }
 ```
 
@@ -287,13 +287,177 @@ function isDog(animal: any): animal is Dog {
 
 let pet = new Dog();
 if (isDog(pet)) {
-  pet.bark();  // pet 被推断为 Dog 类型
+  pet.bark(); // pet 被推断为 Dog 类型
+}
+```
+
+## 高级类型系统特性
+
+### 条件类型
+
+条件类型允许我们根据类型关系创建新的类型。
+
+```typescript
+type IsString<T> = T extends string ? true : false;
+
+type A = IsString<"hello">; // true
+type B = IsString<42>; // false
+
+// 提取函数返回类型
+type ReturnType<T> = T extends (...args: any[]) => infer R ? R : never;
+
+function fetchUser() {
+  return { id: 1, name: "Alice" };
+}
+type UserType = ReturnType<typeof fetchUser>; // { id: number; name: string; }
+```
+
+### 映射类型
+
+映射类型可以基于现有类型创建新的类型。
+
+```typescript
+// 将所有属性变为可选
+type Partial<T> = {
+  [P in keyof T]?: T[P];
+};
+
+// 将所有属性变为只读
+type Readonly<T> = {
+  readonly [P in keyof T]: T[P];
+};
+
+interface User {
+  id: number;
+  name: string;
+}
+
+type PartialUser = Partial<User>; // { id?: number; name?: string; }
+```
+
+### 工具类型
+
+TypeScript 提供了许多内置的工具类型，帮助我们进行类型转换。
+
+```typescript
+// Pick：从类型中选择部分属性
+type Pick<T, K extends keyof T> = {
+  [P in K]: T[P];
+};
+
+// Omit：从类型中排除部分属性
+type Omit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>;
+
+interface Todo {
+  title: string;
+  description: string;
+  completed: boolean;
+}
+
+type TodoPreview = Pick<Todo, "title" | "completed">;
+type TodoInfo = Omit<Todo, "completed">;
+```
+
+### 字面量类型和模板字面量类型
+
+```typescript
+// 字面量类型
+type Direction = "north" | "south" | "east" | "west";
+
+// 模板字面量类型
+type EventName<T extends string> = `${T}Changed`;
+type MouseEvent = EventName<"mouse">; // "mouseChanged"
+
+// 组合使用
+type CSSValue = `${number}${"%" | "px" | "em" | "rem"}`;
+let width: CSSValue = "100px";
+```
+
+## 实际应用场景
+
+### 1. API 类型定义
+
+```typescript
+// API 响应类型
+interface ApiResponse<T> {
+  data: T;
+  status: number;
+  message: string;
+}
+
+// API 请求类型
+interface ApiRequest<T> {
+  params?: T;
+  headers?: Record<string, string>;
+}
+
+// 使用示例
+interface UserData {
+  id: number;
+  name: string;
+}
+
+async function fetchUser(request: ApiRequest<{ id: number }>) {
+  const response: ApiResponse<UserData> = await fetch("/api/user");
+  return response.data;
+}
+```
+
+### 2. 状态管理类型
+
+```typescript
+type ActionType = "INCREMENT" | "DECREMENT" | "RESET";
+
+interface Action {
+  type: ActionType;
+  payload?: number;
+}
+
+interface State {
+  count: number;
+}
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case "INCREMENT":
+      return { count: state.count + (action.payload ?? 1) };
+    case "DECREMENT":
+      return { count: state.count - (action.payload ?? 1) };
+    case "RESET":
+      return { count: 0 };
+  }
+}
+```
+
+### 3. 组件属性类型
+
+```typescript
+type Size = "small" | "medium" | "large";
+type Variant = "primary" | "secondary" | "danger";
+
+interface ButtonProps {
+  size: Size;
+  variant: Variant;
+  disabled?: boolean;
+  onClick?: () => void;
+  children: React.ReactNode;
+}
+
+function Button({ size, variant, disabled, onClick, children }: ButtonProps) {
+  return (
+    <button
+      className={`btn btn-${size} btn-${variant}`}
+      disabled={disabled}
+      onClick={onClick}
+    >
+      {children}
+    </button>
+  );
 }
 ```
 
 ## 总结
 
-TypeScript 的类型系统是强大且灵活的，它不仅可以帮助开发者在开发阶段发现错误，还能提高代码的可维护性和可读性。掌握 TypeScript 的类型系统是前端开发者和后端开发者必备的技能，它能让你的 JavaScript 代码更加可靠和高效。
+TypeScript 的类型系统是强大且灵活的，它不仅可以帮助开发者在开发阶段发现错误，还能提高代码的可维护性和可读性。通过掌握基础类型、复杂类型、接口、泛型等基础概念，以及条件类型、映射类型、工具类型等高级特性，你将能够编写出更加健壮和可维护的代码。
 
-通过理解并运用基础类型、复杂类型、接口、泛型等概念，你将能编写出更加健壮的代码。希望本篇文章能帮助你在 TypeScript 的世界中更加得心应手。
-
+在实际开发中，合理运用这些类型特性可以帮助我们构建更加可靠的应用程序，提高开发效率，减少运行时错误。希望本篇文章能帮助你在 TypeScript 的世界中更加得心应手。

@@ -22,12 +22,14 @@ category: "前端工程化"
 ### 1. **模块化和组件化**
 
 #### 模块化
+
 模块化是将代码按照功能划分为独立的模块，方便复用和维护。现代 JavaScript 支持多种模块规范，包括：
 
 - **CommonJS**：Node.js 的模块规范，使用 `require` 和 `module.exports`。
 - **ES Modules (ESM)**：现代浏览器和 Node.js 的原生支持，使用 `import` 和 `export`。
 
 **示例**：
+
 ```javascript
 // utils.js
 export function add(a, b) {
@@ -35,30 +37,32 @@ export function add(a, b) {
 }
 
 // main.js
-import { add } from './utils.js';
+import { add } from "./utils.js";
 console.log(add(2, 3)); // 输出 5
 ```
 
 #### 组件化
+
 组件化是模块化在 UI 层面的具体实现。通过封装可复用的 UI 组件，提升开发效率和代码一致性。
 
 在 React 中，组件化的一个示例：
+
 ```jsx
 // Button.jsx
-import React from 'react';
+import React from "react";
 
 export default function Button({ label, onClick }) {
   return <button onClick={onClick}>{label}</button>;
 }
 
 // App.jsx
-import React from 'react';
-import Button from './Button';
+import React from "react";
+import Button from "./Button";
 
 function App() {
   return (
     <div>
-      <Button label="点击我" onClick={() => alert('Button clicked!')} />
+      <Button label="点击我" onClick={() => alert("Button clicked!")} />
     </div>
   );
 }
@@ -73,6 +77,7 @@ function App() {
 - **Stylelint**：用于检查 CSS/SCSS/Less 等样式代码。
 
 **示例 ESLint 配置**：
+
 ```json
 {
   "extends": ["eslint:recommended", "plugin:react/recommended"],
@@ -92,20 +97,21 @@ function App() {
 - **Rollup**：专注于构建库和工具的打包器。
 
 **示例 Webpack 配置**：
+
 ```javascript
-const path = require('path');
+const path = require("path");
 
 module.exports = {
-  entry: './src/index.js',
+  entry: "./src/index.js",
   output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: 'bundle.js',
+    path: path.resolve(__dirname, "dist"),
+    filename: "bundle.js",
   },
   module: {
     rules: [
       {
         test: /\.css$/,
-        use: ['style-loader', 'css-loader'],
+        use: ["style-loader", "css-loader"],
       },
     ],
   },
@@ -120,6 +126,7 @@ module.exports = {
 - **代码审查**：通过 Pull Request 确保代码质量。
 
 **示例 Git 工作流**：
+
 ```bash
 # 创建新分支
 git checkout -b feature/add-login
@@ -146,6 +153,7 @@ git push origin feature/add-login
 - **Cypress**：现代 E2E 测试工具。
 
 **示例 Jest 测试**：
+
 ```javascript
 // sum.js
 function sum(a, b) {
@@ -154,9 +162,9 @@ function sum(a, b) {
 module.exports = sum;
 
 // sum.test.js
-const sum = require('./sum');
+const sum = require("./sum");
 
-test('adds 1 + 2 to equal 3', () => {
+test("adds 1 + 2 to equal 3", () => {
   expect(sum(1, 2)).toBe(3);
 });
 ```
@@ -169,6 +177,7 @@ test('adds 1 + 2 to equal 3', () => {
 - **CDN 部署**：如 Vercel、Netlify 或七牛云。
 
 **示例 GitHub Actions 配置**：
+
 ```yaml
 name: CI
 
@@ -190,6 +199,165 @@ jobs:
         run: npm run build
 ```
 
+## 现代化构建工具最佳实践
+
+### 1. **性能优化策略**
+
+在使用现代构建工具时，可以采用以下优化策略：
+
+- **代码分割**：使用动态导入实现按需加载
+
+```javascript
+// 路由级别的代码分割
+const UserProfile = React.lazy(() => import("./UserProfile"));
+```
+
+- **Tree Shaking**：移除未使用的代码
+
+```javascript
+// webpack.config.js
+module.exports = {
+  mode: "production", // 启用 Tree Shaking
+  optimization: {
+    usedExports: true,
+  },
+};
+```
+
+- **资源优化**：图片压缩、CSS 提取、代码压缩
+
+```javascript
+// webpack.config.js
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+
+module.exports = {
+  plugins: [new MiniCssExtractPlugin()],
+  optimization: {
+    minimize: true,
+  },
+};
+```
+
+### 2. **微前端架构实践**
+
+微前端是一种将前端应用分解为小型、独立部署的应用的架构方案。
+
+#### 实现方式
+
+- **基于 Single-SPA**：
+
+```javascript
+// root-config.js
+import { registerApplication, start } from "single-spa";
+
+registerApplication({
+  name: "app1",
+  app: () => import("./app1/main.js"),
+  activeWhen: "/app1",
+});
+
+start();
+```
+
+- **基于 Module Federation**：
+
+```javascript
+// webpack.config.js
+module.exports = {
+  plugins: [
+    new ModuleFederationPlugin({
+      name: "host",
+      remotes: {
+        app1: "app1@http://localhost:3001/remoteEntry.js",
+      },
+    }),
+  ],
+};
+```
+
+### 3. **前端监控与性能优化**
+
+#### 监控指标
+
+- **核心性能指标**：
+  - FCP (First Contentful Paint)
+  - LCP (Largest Contentful Paint)
+  - TTI (Time to Interactive)
+  - CLS (Cumulative Layout Shift)
+
+#### 实现方案
+
+```javascript
+// 性能监控示例
+const observer = new PerformanceObserver((list) => {
+  for (const entry of list.getEntries()) {
+    console.log(`${entry.name}: ${entry.startTime}`);
+  }
+});
+
+observer.observe({ entryTypes: ["paint", "largest-contentful-paint"] });
+```
+
+#### 错误监控
+
+```javascript
+// 全局错误捕获
+window.onerror = function (message, source, lineno, colno, error) {
+  // 上报错误信息
+  reportError({
+    message,
+    source,
+    lineno,
+    colno,
+    error,
+  });
+};
+
+// Promise 错误捕获
+window.addEventListener("unhandledrejection", function (event) {
+  reportError(event.reason);
+});
+```
+
+### 4. **大型项目最佳实践**
+
+#### 项目结构组织
+
+```
+project/
+├── src/
+│   ├── components/    # 公共组件
+│   ├── features/      # 业务功能模块
+│   ├── services/      # API 服务
+│   ├── utils/         # 工具函数
+│   └── store/         # 状态管理
+├── tests/            # 测试文件
+└── scripts/          # 构建脚本
+```
+
+#### 开发规范
+
+- **Git 提交规范**：
+
+```bash
+# .commitlintrc.js
+module.exports = {
+  extends: ['@commitlint/config-conventional'],
+  rules: {
+    'type-enum': [2, 'always', [
+      'feat', 'fix', 'docs', 'style', 'refactor',
+      'perf', 'test', 'chore', 'revert'
+    ]]
+  }
+};
+```
+
+- **代码审查清单**：
+  - 代码是否符合项目规范
+  - 是否编写了单元测试
+  - 是否有性能隐患
+  - 是否有安全漏洞
+
 ## 总结
 
-前端工程化是现代 Web 开发的基础，通过模块化、自动化工具、代码规范、测试等手段，显著提升了开发效率和代码质量。无论是个人开发者还是团队开发，掌握工程化的最佳实践，都是迈向高效开发的重要一步。
+前端工程化是一个持续演进的过程，需要在实践中不断优化和改进。通过合理运用现代化工具、采用微前端架构、实施监控体系，并遵循最佳实践，可以有效提升开发效率和项目质量。在大型项目中，更需要注重工程化体系的建设，确保项目的可维护性和可扩展性。

@@ -24,21 +24,26 @@ V8 主要包括以下组件：
 V8 的整体架构设计可以分为以下几个关键步骤：
 
 1. **解析阶段**：
+
    - JavaScript 源代码首先被解析器解析为 AST。
    - 随后生成字节码供解释器执行。
-   
+
    **示例**：
+
    ```javascript
    const greet = (name) => `Hello, ${name}`;
    console.log(greet("World"));
    ```
+
    在解析阶段，`greet` 函数会被解析为语法树，供后续阶段处理。
 
 2. **解释执行 (Ignition)**：
+
    - V8 的解释器 Ignition 负责逐条解释执行字节码。
    - 这种方式启动快，但速度较慢。
 
 3. **编译优化 (TurboFan)**：
+
    - 热点代码（高频执行的代码块）会被标记，并交由 TurboFan 编译为高效的机器码。
    - 例如，对于一个大量重复调用的循环，TurboFan 会尝试内联函数、消除冗余代码等优化。
 
@@ -47,39 +52,166 @@ V8 的整体架构设计可以分为以下几个关键步骤：
    - 新生代用于存储短期对象，而老生代则用于存储长期对象。
    - 垃圾回收器的算法包括 **Scavenge**、**Mark-Sweep** 和 **Mark-Compact**。
 
-## V8 的性能优化技术
+## V8 的内存管理机制
 
-V8 的高性能来源于一系列先进的优化技术：
+### 1. **内存分配策略**
 
-### 1. **即时编译 (JIT)**
+- **新生代内存**：用于存储生命周期短的对象
 
-- JIT 编译在运行时将 JavaScript 转换为机器码，跳过了传统解释执行的步骤。
-- 通过记录代码的执行模式，V8 可以识别出高频执行路径并优化。
+  - 使用 Scavenge 算法进行垃圾回收
+  - 分为 From 和 To 两个空间
+  - 存活对象在两个空间间复制
 
-### 2. **隐藏类 (Hidden Classes)**
+- **老生代内存**：用于存储生命周期长的对象
+  - 使用 Mark-Sweep 和 Mark-Compact 算法
+  - 定期进行全量垃圾回收
+  - 支持增量标记，减少主线程暂停
 
-- JavaScript 是动态类型语言，V8 通过生成隐藏类来优化对象的属性访问。
-- 例如：
-  ```javascript
-  function Person(name) {
-    this.name = name;
+### 2. **垃圾回收优化**
+
+- **分代回收**：根据对象生命周期特征采用不同策略
+- **增量标记**：将标记工作分散到多个时间片中
+- **并发回收**：在后台线程中进行垃圾回收
+- **惰性清理**：根据内存压力决定清理时机
+
+### 3. **内存泄漏防范**
+
+```javascript
+// 常见的内存泄漏场景
+class EventEmitter {
+  constructor() {
+    this.listeners = new Map();
   }
-  const p1 = new Person("Alice");
-  const p2 = new Person("Bob");
-  ```
-  `p1` 和 `p2` 会共享同一个隐藏类，优化了属性查找的效率。
 
-### 3. **内联缓存 (Inline Caching)**
-
-- 内联缓存记录了函数调用的类型信息，减少了重复类型检查的开销。
-- 示例：
-  ```javascript
-  function add(a, b) {
-    return a + b;
+  addListener(event, callback) {
+    if (!this.listeners.has(event)) {
+      this.listeners.set(event, new Set());
+    }
+    this.listeners.get(event).add(callback);
   }
-  add(1, 2); // 初次调用，记录类型信息
-  add(3, 4); // 使用缓存，加速执行
+
+  removeListener(event, callback) {
+    // 记得清理不再使用的事件监听器
+    if (this.listeners.has(event)) {
+      this.listeners.get(event).delete(callback);
+    }
+  }
+}
+```
+
+## 性能优化最佳实践
+
+### 1. **代码优化技巧**
+
+- **函数内联**：减少函数调用开销
+
+  ```javascript
+  // V8 可能会内联这样的小函数
+  function add(x, y) {
+    return x + y;
+  }
   ```
+
+- **避免类型转换**：保持变量类型稳定
+
+  ```javascript
+  // 推荐：类型稳定
+  let value = 42;
+  value = 43;
+
+  // 不推荐：类型不稳定
+  let value = 42;
+  value = "43";
+  ```
+
+- **使用适当的数据结构**：
+
+  ```javascript
+  // 对于固定键名的对象，使用对象字面量
+  const point = { x: 0, y: 0 };
+
+  // 对于动态键名，使用 Map
+  const cache = new Map();
+  ```
+
+### 2. **内存优化策略**
+
+- **对象池化**：重用对象而不是频繁创建
+
+  ```javascript
+  class ObjectPool {
+    constructor() {
+      this.pool = [];
+    }
+
+    acquire() {
+      return this.pool.pop() || this.createObject();
+    }
+
+    release(obj) {
+      this.pool.push(obj);
+    }
+
+    createObject() {
+      return {
+        /* 初始化对象 */
+      };
+    }
+  }
+  ```
+
+- **避免内存泄漏**：
+  - 及时清理定时器
+  - 解绑事件监听器
+  - 避免闭包持有大对象
+
+### 3. **编译优化**
+
+- **热点代码优化**：
+
+  - 保持代码路径稳定
+  - 避免频繁的类型变化
+  - 使用适当的循环结构
+
+- **减少反优化**：
+  - 避免在热点代码中使用 `try-catch`
+  - 避免在循环中创建函数
+  - 避免使用 `eval` 和 `with`
+
+## 调试与性能分析
+
+### 1. **使用 V8 调试工具**
+
+- **Node.js --inspect**：启用调试器
+- **Chrome DevTools**：分析堆内存和 CPU 性能
+- **V8 内置的性能分析器**：生成详细的性能报告
+
+### 2. **性能监控**
+
+```javascript
+// 使用 Performance API 监控性能
+const performance = globalThis.performance;
+
+function measureOperation() {
+  const start = performance.now();
+  // 执行操作
+  const end = performance.now();
+  console.log(`Operation took ${end - start}ms`);
+}
+```
+
+## 未来展望
+
+1. **持续的性能改进**：
+
+   - 更智能的 JIT 编译
+   - 更高效的垃圾回收
+   - WebAssembly 集成优化
+
+2. **新特性支持**：
+   - ES 新特性的优化实现
+   - 更好的 TypeScript 支持
+   - 更强大的 WebAssembly 能力
 
 ### 4. **垃圾回收优化**
 
@@ -97,6 +229,7 @@ V8 是 Chrome 的核心组件，负责解析和执行网页中的 JavaScript。�
 Node.js 基于 V8 提供了高效的后端运行时环境。例如，V8 的快速编译和优化能力，使 Node.js 能够处理高并发请求。
 
 **示例**：
+
 ```javascript
 const http = require("http");
 
@@ -114,6 +247,7 @@ server.listen(3000, () => {
 V8 不仅支持 JavaScript，还可以执行 WebAssembly，这使得开发者能够在浏览器中运行接近原生速度的代码。
 
 **示例**：
+
 ```c
 // C 代码编译为 WebAssembly
 #include <stdio.h>

@@ -25,12 +25,14 @@ MySQL 是一个基于 SQL（Structured Query Language）的关系型数据库，
 ### 1. 连接层
 
 连接层负责处理客户端连接请求，包括认证用户、管理连接线程等。
+
 - **连接池**：为每个客户端分配线程，默认使用线程池来复用资源。
 - **权限认证**：验证用户是否有权访问数据库。
 
 ### 2. SQL 层
 
 SQL 层负责解析和优化 SQL 查询。
+
 - **解析器**：将 SQL 查询解析为抽象语法树（AST）。
 - **查询优化器**：优化执行计划，选择高效的查询路径。
 - **执行器**：根据优化器生成的计划执行查询。
@@ -40,6 +42,7 @@ SQL 层负责解析和优化 SQL 查询。
 存储引擎是 MySQL 的核心之一，决定了数据如何存储和检索。
 
 #### 常见存储引擎
+
 - **InnoDB**：支持事务、外键、行级锁，是默认存储引擎。
 - **MyISAM**：适合读多写少的场景，支持全文索引。
 - **Memory**：将数据存储在内存中，适合临时数据处理。
@@ -55,6 +58,7 @@ SQL 层负责解析和优化 SQL 查询。
 ### 1. 用户认证与授权
 
 通过 MySQL 存储用户信息（如用户名、密码散列值）。例如：
+
 ```sql
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -63,11 +67,13 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
+
 前端通过 REST API 向后端发送登录请求，后端查询数据库验证用户信息。
 
 ### 2. 商品展示
 
 电商平台前端需要动态加载商品信息，这些数据通常存储在 MySQL 数据库中：
+
 ```sql
 CREATE TABLE products (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -77,7 +83,9 @@ CREATE TABLE products (
     description TEXT
 );
 ```
+
 通过 SQL 查询实现分页加载：
+
 ```sql
 SELECT * FROM products LIMIT 10 OFFSET 0;
 ```
@@ -85,6 +93,7 @@ SELECT * FROM products LIMIT 10 OFFSET 0;
 ### 3. 实时聊天记录
 
 实时聊天应用可利用 MySQL 存储历史消息：
+
 ```sql
 CREATE TABLE messages (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -94,6 +103,7 @@ CREATE TABLE messages (
     sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
+
 前端通过 WebSocket 连接实时发送和接收消息。
 
 ## 深入原理：事务与锁机制
@@ -110,39 +120,168 @@ CREATE TABLE messages (
 ### 2. 锁机制
 
 MySQL 提供多种锁机制以保证并发一致性：
+
 - **表级锁**：适合大批量操作，但并发性能较低。
 - **行级锁**：粒度更细，适合高并发场景。
 - **意向锁**：用于快速判断是否可以加锁。
 
 例如，在更新商品库存时：
+
 ```sql
 START TRANSACTION;
 UPDATE products SET stock = stock - 1 WHERE id = 1;
 COMMIT;
 ```
 
-## 性能优化技巧
+## 高可用架构设计
 
-### 1. 索引优化
+### 1. 读写分离
 
-索引可以显著提高查询速度，但需要合理设计：
-- **单列索引**：针对单字段查询，如主键索引。
-- **复合索引**：针对多字段查询。
-- **覆盖索引**：查询字段完全被索引覆盖。
+在高并发场景下，通过主从复制实现读写分离可以显著提升性能：
 
-索引使用示例：
-```sql
-CREATE INDEX idx_name_price ON products (name, price);
+- **主库**：处理写操作（INSERT、UPDATE、DELETE）
+- **从库**：处理读操作（SELECT）
+
+实现示例：
+
+```javascript
+const mysql = require("mysql2");
+
+// 主库连接池
+const masterPool = mysql.createPool({
+  host: "master.example.com",
+  user: "root",
+  database: "myapp",
+});
+
+// 从库连接池
+const slavePool = mysql.createPool({
+  host: "slave.example.com",
+  user: "readonly",
+  database: "myapp",
+});
+
+// 读操作使用从库
+async function getUser(id) {
+  const [rows] = await slavePool
+    .promise()
+    .query("SELECT * FROM users WHERE id = ?", [id]);
+  return rows[0];
+}
+
+// 写操作使用主库
+async function createUser(user) {
+  const [result] = await masterPool
+    .promise()
+    .query("INSERT INTO users SET ?", user);
+  return result.insertId;
+}
 ```
 
-### 2. 查询优化
+### 2. 分库分表
 
-- 避免使用 `SELECT *`，改为显式列名。
-- 使用分页查询减少单次数据量。
-- 使用 `EXPLAIN` 分析查询性能：
+当单表数据量过大时，可以通过分库分表来优化性能：
+
+#### 水平分表
+
+根据数据特征（如用户 ID）将数据分散到多个表：
+
 ```sql
-EXPLAIN SELECT * FROM products WHERE name = 'Sneakers';
+-- 按用户ID分表
+CREATE TABLE orders_0 (
+    id BIGINT PRIMARY KEY,
+    user_id BIGINT,
+    amount DECIMAL(10, 2),
+    created_at TIMESTAMP
+);
+
+CREATE TABLE orders_1 (
+    -- 相同结构
+);
 ```
+
+分表路由算法示例：
+
+```javascript
+function getTableName(userId) {
+  return `orders_${userId % 2}`; // 简单的取模路由
+}
+```
+
+#### 垂直分表
+
+根据业务将不同字段拆分到不同的表：
+
+```sql
+-- 基础信息表
+CREATE TABLE product_base (
+    id INT PRIMARY KEY,
+    name VARCHAR(255),
+    price DECIMAL(10, 2)
+);
+
+-- 详细信息表
+CREATE TABLE product_detail (
+    product_id INT PRIMARY KEY,
+    description TEXT,
+    specifications JSON
+);
+```
+
+### 3. 性能优化最佳实践
+
+#### 配置优化
+
+```ini
+innodb_buffer_pool_size = 4G  # 缓冲池大小
+innodb_log_file_size = 256M   # 日志文件大小
+max_connections = 1000        # 最大连接数
+```
+
+#### 查询优化
+
+1. **使用合适的索引**
+
+```sql
+-- 复合索引优化
+CREATE INDEX idx_user_status_created
+  ON orders(user_id, status, created_at);
+
+-- 使用前缀索引
+CREATE INDEX idx_email
+  ON users(email(20));
+```
+
+2. **避免慢查询**
+
+```sql
+-- 使用子查询优化
+SELECT id, name FROM products WHERE category_id IN (
+  SELECT id FROM categories WHERE status = 'active'
+);
+
+-- 使用 JOIN 优化
+SELECT p.id, p.name
+FROM products p
+INNER JOIN categories c ON p.category_id = c.id
+WHERE c.status = 'active';
+```
+
+3. **批量操作优化**
+
+```sql
+-- 使用批量插入
+INSERT INTO users (name, email) VALUES
+  ('user1', 'user1@example.com'),
+  ('user2', 'user2@example.com'),
+  ('user3', 'user3@example.com');
+```
+
+#### 监控与维护
+
+1. 使用 Prometheus + Grafana 监控性能指标
+2. 定期进行 ANALYZE TABLE 更新统计信息
+3. 合理设置 VACUUM 和数据清理策略
 
 ### 3. 缓存机制
 

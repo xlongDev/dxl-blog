@@ -138,8 +138,134 @@ Next.js 15 引入了全新的开发者工具：
 - **实时性能监控**：可在开发环境中实时查看页面的性能瓶颈。
 - **调试器增强**：提供更直观的错误提示和调试信息。
 
+## 迁移指南
+
+### 1. 从 Next.js 14 升级
+
+```bash
+npm install next@latest react@latest react-dom@latest
+```
+
+主要变更点：
+
+- 更新 TurboPack 配置
+- 适配新的 API 路由格式
+- 检查并更新中间件配置
+
+### 2. App Router 迁移
+
+如果你仍在使用 Pages Router，建议逐步迁移到 App Router：
+
+```javascript
+// 旧的 pages/about.js
+export default function About() {
+  return <h1>About Page</h1>;
+}
+
+// 新的 app/about/page.js
+export default function About() {
+  return <h1>About Page</h1>;
+}
+```
+
+## 性能优化建议
+
+### 1. 使用 React Server Components
+
+```javascript
+// app/components/ServerComponent.js
+async function ServerComponent() {
+  const data = await fetchData(); // 直接在服务器端获取数据
+  return (
+    <div>
+      {data.map((item) => (
+        <div key={item.id}>{item.name}</div>
+      ))}
+    </div>
+  );
+}
+```
+
+### 2. 优化数据获取
+
+```javascript
+// app/utils/cache.js
+export async function fetchWithCache(url) {
+  return await fetch(url, {
+    next: {
+      revalidate: 3600, // 1小时缓存
+      tags: ["api-data"],
+    },
+  });
+}
+```
+
+### 3. 边缘计算优化
+
+```javascript
+// app/api/edge/route.js
+export const runtime = "edge";
+
+export async function GET() {
+  const data = await processAtEdge();
+  return Response.json(data);
+}
+```
+
+## 最佳实践
+
+### 1. 组件架构
+
+```javascript
+// 推荐的组件结构
+app/
+  components/
+    ui/           // 通用UI组件
+    features/     // 业务功能组件
+    layouts/      // 布局组件
+  lib/           // 工具函数
+  api/           // API路由
+  (routes)/      // 分组路由
+```
+
+### 2. 错误处理
+
+```javascript
+// app/error.js
+"use client";
+
+export default function Error({ error, reset }) {
+  return (
+    <div>
+      <h2>出错了！</h2>
+      <button onClick={() => reset()}>重试</button>
+    </div>
+  );
+}
+```
+
+### 3. 性能监控
+
+```javascript
+// app/layout.js
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/react";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        {children}
+        <SpeedInsights />
+        <Analytics />
+      </body>
+    </html>
+  );
+}
+```
+
 ## 总结
 
-Next.js 15 在性能、开发体验和功能扩展方面都取得了显著提升。无论是 TurboPack 的优化、流式渲染的增强，还是全新的 API 支持，这些特性都将进一步简化前端开发流程。如果你还未升级到 Next.js 15，现在是时候尝试一下了！
+Next.js 15 带来了显著的性能提升和开发体验改进。通过合理使用 React Server Components、边缘计算和新的缓存策略，可以构建出更快、更可靠的应用。在迁移过程中，建议采用渐进式策略，确保平稳过渡到新版本。
 
 欢迎留言分享你对这些新特性的看法或在项目中的实践经验。

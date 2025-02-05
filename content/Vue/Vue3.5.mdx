@@ -11,13 +11,21 @@ Vue 3.5 是 Vue.js 的一个重要版本，引入了许多新特性和改进，�
 ## 新特性一：增强的 Composition API
 
 ### 变化点
-Vue 3.5 对 `Composition API` 进行了优化，增加了对 `use` 函数的原生支持，用于模块化和复用逻辑的组织方式更加简洁。
+
+Vue 3.5 对 `Composition API` 进行了优化，增加了对 `use` 函数的原生支持，用于模块化和复用逻辑的组织方式更加简洁。同时，引入了新的生命周期钩子和响应式 API。
 
 ### 示例
+
 ```javascript
 // 引入 use 函数
 export const useCounter = () => {
   const count = ref(0);
+  const doubleCount = computed(() => count.value * 2);
+
+  // 新增的生命周期钩子
+  onMounted(() => {
+    console.log("Counter mounted");
+  });
 
   const increment = () => {
     count.value++;
@@ -25,6 +33,7 @@ export const useCounter = () => {
 
   return {
     count,
+    doubleCount,
     increment,
   };
 };
@@ -34,10 +43,11 @@ import { useCounter } from "./useCounter";
 
 export default {
   setup() {
-    const { count, increment } = useCounter();
+    const { count, doubleCount, increment } = useCounter();
 
     return {
       count,
+      doubleCount,
       increment,
     };
   },
@@ -45,129 +55,211 @@ export default {
 ```
 
 ### 改进
-与 Vue 3.0 相比，Vue 3.5 的 `use` 函数支持更强的类型推导，开发者无需手动定义类型，可以直接享受 TypeScript 的智能提示。
 
----
+与 Vue 3.0 相比，Vue 3.5 的 `use` 函数支持更强的类型推导，开发者无需手动定义类型，可以直接享受 TypeScript 的智能提示。同时，新增了更多的响应式 API 和生命周期钩子。
 
 ## 新特性二：Script Setup 增强
 
 ### 变化点
-`<script setup>` 是 Vue 3 引入的一大亮点，而在 Vue 3.5 中，它新增了以下功能：
 
-1. 支持顶层 `await`。
-2. 支持 `defineExpose` 自动推导。
-3. 新增 `defineServerSideProps`，简化服务端渲染（SSR）逻辑。
+`<script setup>` 在 Vue 3.5 中得到了显著增强：
+
+1. 支持顶层 `await`
+2. 支持 `defineExpose` 自动推导
+3. 新增 `defineServerSideProps`，简化服务端渲染（SSR）逻辑
+4. 支持更多的宏命令
 
 ### 示例
-#### 顶层 `await`
-```javascript
+
+```vue
 <script setup>
+// 顶层 await 支持
 const user = await fetchUser();
-</script>
 
-<template>
-  <div>{{ user.name }}</div>
-</template>
-```
-
-#### 服务端渲染示例
-```javascript
-<script setup>
-import { defineServerSideProps } from "vue";
-
-export const props = defineServerSideProps(async (context) => {
-  return { data: await fetchData(context) };
+// 新的宏命令支持
+defineOptions({
+  name: "MyComponent",
+  inheritAttrs: false,
 });
-</script>
 
-<template>
-  <div>{{ props.data }}</div>
-</template>
-```
-
----
-
-## 新特性三：Transition 和 Animation 的改进
-
-### 变化点
-Vue 3.5 增强了对过渡动画的支持，新增了 `transition-group` 的多模式支持，以及更细粒度的钩子函数。
-
-### 示例
-```html
-<transition-group name="fade" mode="out-in">
-  <div v-for="item in items" :key="item.id">
-    {{ item.text }}
-  </div>
-</transition-group>
-
-<script>
-export default {
-  data() {
-    return {
-      items: [
-        { id: 1, text: "Item 1" },
-        { id: 2, text: "Item 2" },
-      ];
-    };
+// 改进的 props 定义
+const props = defineProps({
+  title: {
+    type: String,
+    required: true,
+    validator: (value) => value.length > 0,
   },
-};
-</script>
-
-<style>
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.5s;
-}
-.fade-enter, .fade-leave-to {
-  opacity: 0;
-}
-</style>
-```
-
----
-
-## 新特性四：开发工具链的改进
-
-### 变化点
-1. Vue CLI 支持更现代的构建工具，比如 Vite 4。
-2. 新增对 `ESM` 的更深度支持。
-3. 开发者工具 DevTools 增强，支持 Vue 3.5 特性调试。
-
----
-
-## 性能优化
-
-Vue 3.5 在性能上进行了进一步优化，包括更快的虚拟 DOM diff 算法、更高效的响应式系统以及对大型表单渲染的优化。
-
-### 示例
-对于动态表单，Vue 3.5 的响应式性能提升显著：
-
-```javascript
-<script setup>
-import { reactive } from 'vue';
-
-const form = reactive({
-  name: '',
-  email: '',
-  password: ''
 });
 
-function submit() {
-  console.log(form);
-}
+// 自动类型推导的 expose
+defineExpose({
+  someMethod() {
+    // 方法实现
+  },
+});
+
+// 服务端渲染支持
+const serverProps = defineServerSideProps(async (context) => {
+  return {
+    data: await fetchData(context),
+  };
+});
 </script>
 
 <template>
-  <form @submit.prevent="submit">
-    <input v-model="form.name" placeholder="Name" />
-    <input v-model="form.email" placeholder="Email" />
-    <input v-model="form.password" type="password" placeholder="Password" />
-    <button type="submit">Submit</button>
-  </form>
+  <div>
+    <h1>{{ props.title }}</h1>
+    <div>{{ user.name }}</div>
+    <div>{{ serverProps.data }}</div>
+  </div>
 </template>
 ```
 
----
+## 新特性三：性能优化
+
+### 变化点
+
+Vue 3.5 在性能方面进行了多项优化：
+
+1. 更快的编译速度
+2. 更小的运行时体积
+3. 更智能的静态内容提升
+4. 改进的虚拟 DOM diff 算法
+
+### 示例
+
+```javascript
+// 静态内容提升优化
+const StaticComponent = defineComponent({
+  setup() {
+    // 静态内容会被提升到渲染函数外部
+    return () => (
+      <div class="static-wrapper">
+        <h1>Static Title</h1>
+        {/* 动态内容 */}
+        <div>{dynamicContent.value}</div>
+      </div>
+    );
+  },
+});
+
+// 改进的异步组件
+const AsyncComponent = defineAsyncComponent({
+  loader: () => import("./HeavyComponent.vue"),
+  loadingComponent: LoadingSpinner,
+  errorComponent: ErrorFallback,
+  delay: 200,
+  timeout: 3000,
+  suspensible: true,
+});
+```
+
+## 新特性四：TypeScript 增强
+
+### 变化点
+
+Vue 3.5 进一步增强了 TypeScript 支持：
+
+1. 改进的类型推导
+2. 新的工具类型
+3. 更好的 IDE 支持
+4. 组件 props 的自动类型推导
+
+### 示例
+
+```typescript
+// 改进的类型定义
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
+// 新的组合式函数类型推导
+const useUser = () => {
+  const user = ref<User | null>(null);
+  const isLoggedIn = computed(() => user.value !== null);
+
+  async function fetchUser(id: number): Promise<void> {
+    user.value = await api.getUser(id);
+  }
+
+  return {
+    user,
+    isLoggedIn,
+    fetchUser,
+  };
+};
+
+// 组件 props 类型推导
+const MyComponent = defineComponent({
+  props: {
+    user: {
+      type: Object as PropType<User>,
+      required: true,
+    },
+  },
+  setup(props) {
+    // props.user 自动获得完整的类型推导
+    console.log(props.user.name);
+  },
+});
+```
+
+## 新特性五：开发工具改进
+
+### 变化点
+
+Vue 3.5 改进了开发工具链：
+
+1. 更强大的 Vue DevTools
+2. 更好的 Vite 集成
+3. 改进的错误处理和调试体验
+4. 新的性能分析工具
+
+### 示例
+
+```javascript
+// vite.config.ts 配置示例
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
+
+export default defineConfig({
+  plugins: [vue()],
+  // 改进的构建优化
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vue: ["vue"],
+          router: ["vue-router"],
+          store: ["pinia"],
+        },
+      },
+    },
+  },
+  // 新的开发服务器选项
+  server: {
+    hmr: {
+      overlay: true,
+    },
+    // 改进的错误处理
+    error: {
+      overlay: true,
+      recover: true,
+    },
+  },
+});
+```
 
 ## 总结
 
-Vue 3.5 带来了许多令人期待的新特性和改进，大大提升了开发体验和应用性能。如果你正在使用 Vue 3.0，不妨尽快尝试升级到 Vue 3.5，享受这些新功能带来的便利！
+Vue 3.5 带来了众多激动人心的新特性和改进，主要包括：
+
+1. 增强的 Composition API 和更多的组合式函数
+2. 改进的 Script Setup 语法和更多的宏命令
+3. 显著的性能优化
+4. 更强大的 TypeScript 支持
+5. 改进的开发工具和调试体验
+
+这些改进使得 Vue.js 在开发体验、性能和类型安全性方面都有了质的提升，为开发者提供了更好的工具来构建现代化的 Web 应用。建议开发者及时升级到 Vue 3.5 版本，以充分利用这些新特性带来的优势。

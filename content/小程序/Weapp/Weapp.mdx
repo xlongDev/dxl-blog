@@ -13,6 +13,7 @@ category: "小程序"
 微信小程序是腾讯微信团队推出的一种轻量级应用形态，开发者可以使用 WXML（微信标记语言）、WXSS（微信样式表）和 JavaScript 开发出类似于原生 App 的应用，但不需要用户下载和安装。
 
 ### 1.1 微信小程序的特点
+
 - **无需安装，即点即用**
 - **更轻量，运行更快**
 - **与微信生态深度结合**（可调用微信支付、微信登录、分享等功能）
@@ -22,19 +23,20 @@ category: "小程序"
 
 ## 2. 微信小程序的开发流程
 
-微信小程序的开发通常包括以下几个步骤：
+### 2.1 准备工作
 
-### 2.1 注册并创建小程序
-1. 登录[微信公众平台](https://mp.weixin.qq.com/)，注册一个小程序账号。
-2. 进行主体认证，获取小程序 AppID。
-3. 在微信公众平台后台配置小程序的信息。
+1. 登录[微信公众平台](https://mp.weixin.qq.com/)，注册小程序账号
+2. 进行主体认证，获取 AppID
+3. 配置小程序基本信息和开发者权限
 
-### 2.2 下载并安装开发工具
-- 下载[微信开发者工具](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html)。
-- 绑定小程序账号，创建一个新的小程序项目。
+### 2.2 开发环境搭建
 
-### 2.3 目录结构
-一个典型的小程序项目结构如下：
+1. 下载并安装[微信开发者工具](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html)
+2. 使用 AppID 创建新项目
+3. 配置开发者工具的基本设置
+
+### 2.3 项目结构
+
 ```plaintext
 ├── pages/          # 页面文件夹
 │   ├── index/      # 首页
@@ -42,89 +44,231 @@ category: "小程序"
 │   │   ├── index.wxss
 │   │   ├── index.js
 │   │   ├── index.json
-├── utils/          # 公共工具文件
+├── components/     # 自定义组件
+├── utils/          # 工具函数
+├── services/       # 接口服务
+├── assets/         # 静态资源
 ├── app.js          # 全局逻辑
 ├── app.json        # 全局配置
 ├── app.wxss        # 全局样式
-├── project.config.json # 项目配置文件
+├── project.config.json # 项目配置
 ```
 
-## 3. 微信小程序的核心技术
+## 3. 核心技术与最佳实践
 
-### 3.1 WXML（微信标记语言）
-WXML 类似于 HTML，用于描述小程序的页面结构。
-示例代码：
+### 3.1 页面开发
+
+#### WXML 模板
+
 ```xml
 <view class="container">
-  <text>{{message}}</text>
+  <view class="userinfo">
+    <button wx:if="{{!hasUserInfo}}" bindtap="getUserProfile">
+      获取头像昵称
+    </button>
+    <block wx:else>
+      <image class="userinfo-avatar" src="{{userInfo.avatarUrl}}"></image>
+      <text class="userinfo-nickname">{{userInfo.nickName}}</text>
+    </block>
+  </view>
+
+  <view class="custom-component">
+    <custom-card title="{{cardTitle}}" bind:click="handleCardClick">
+      <view slot="content">{{cardContent}}</view>
+    </custom-card>
+  </view>
 </view>
 ```
 
-### 3.2 WXSS（微信样式表）
-WXSS 类似于 CSS，但增加了 `rpx`（响应式像素）等特性。
-```css
-.container {
-  font-size: 32rpx;
-  color: #333;
+#### 自定义组件
+
+```js
+Component({
+  properties: {
+    title: String,
+    content: String,
+  },
+  data: {
+    showContent: false,
+  },
+  methods: {
+    toggleContent() {
+      this.setData({
+        showContent: !this.data.showContent,
+      });
+    },
+  },
+});
+```
+
+### 3.2 性能优化
+
+#### 1. 数据预加载
+
+```js
+// 在 onLoad 中预加载下一页数据
+onLoad() {
+  this.preloadNextPage()
+},
+
+preloadNextPage() {
+  wx.preloadData({
+    url: 'pages/detail/detail',
+    data: {
+      id: this.data.nextId
+    }
+  })
 }
 ```
 
-### 3.3 JavaScript（逻辑层）
+#### 2. 图片懒加载
+
+```xml
+<image lazy-load="{{true}}" src="{{imageUrl}}" mode="aspectFill" />
+```
+
+#### 3. 分包加载
+
+```json
+{
+  "pages": ["pages/index/index"],
+  "subpackages": [
+    {
+      "root": "packageA",
+      "pages": ["pages/detail/detail"]
+    }
+  ]
+}
+```
+
+### 3.3 实际应用场景
+
+#### 1. 商城示例
+
 ```js
+// 商品列表页面
 Page({
   data: {
-    message: "Hello, 小程序!"
+    products: [],
+    loading: false,
+    page: 1,
   },
+
   onLoad() {
-    console.log("页面加载");
-  }
+    this.loadProducts();
+  },
+
+  async loadProducts() {
+    this.setData({ loading: true });
+    try {
+      const res = await wx.cloud.callFunction({
+        name: "getProducts",
+        data: { page: this.data.page },
+      });
+      this.setData({
+        products: [...this.data.products, ...res.result.data],
+        page: this.data.page + 1,
+      });
+    } catch (err) {
+      wx.showToast({ title: "加载失败", icon: "none" });
+    } finally {
+      this.setData({ loading: false });
+    }
+  },
+
+  onReachBottom() {
+    if (!this.data.loading) {
+      this.loadProducts();
+    }
+  },
 });
 ```
 
-### 3.4 API 调用示例
-#### 3.4.1 获取用户信息
+#### 2. 社交功能
+
 ```js
-wx.getUserProfile({
-  desc: '用于完善会员资料',
-  success: (res) => {
-    console.log(res.userInfo);
-  }
+// 朋友圈分享
+Page({
+  onShareAppMessage() {
+    return {
+      title: "分享标题",
+      path: "/pages/index/index",
+      imageUrl: "/assets/share.png",
+    };
+  },
+
+  onShareTimeline() {
+    return {
+      title: "分享到朋友圈",
+      query: "from=timeline",
+    };
+  },
 });
 ```
 
-#### 3.4.2 发送网络请求
+### 3.4 云开发最佳实践
+
 ```js
-wx.request({
-  url: 'https://api.example.com/data',
-  method: 'GET',
-  success: (res) => {
-    console.log(res.data);
+// 云函数示例
+const cloud = require("wx-server-sdk");
+cloud.init();
+
+exports.main = async (event, context) => {
+  const db = cloud.database();
+  const _ = db.command;
+
+  try {
+    // 事务处理
+    const result = await db.runTransaction(async (transaction) => {
+      const product = await transaction
+        .collection("products")
+        .doc(event.productId)
+        .get();
+
+      if (product.data.stock < 1) {
+        throw new Error("库存不足");
+      }
+
+      await transaction
+        .collection("products")
+        .doc(event.productId)
+        .update({
+          data: {
+            stock: _.inc(-1),
+          },
+        });
+
+      await transaction.collection("orders").add({
+        data: {
+          productId: event.productId,
+          userId: event.userId,
+          createTime: db.serverDate(),
+        },
+      });
+    });
+
+    return { success: true };
+  } catch (err) {
+    return { error: err.message };
   }
-});
+};
 ```
 
-## 4. 微信小程序的示例应用
+## 4. 发布与维护
 
-### 4.1 电商小程序
-- 商品展示
-- 购物车功能
-- 微信支付
+### 4.1 发布流程
 
-### 4.2 资讯类小程序
-- 新闻展示
-- 文章分类
-- 用户评论
+1. 代码审核与测试
+2. 版本提交审核
+3. 发布上线
+4. 版本管理与更新
 
-### 4.3 预约服务小程序
-- 医院预约挂号
-- 餐厅订座
-- 在线咨询
+### 4.2 运维监控
 
-## 5. 发布小程序
-1. 在微信开发者工具中上传代码。
-2. 在微信公众平台提交审核。
-3. 审核通过后发布。
+1. 使用微信小程序数据分析
+2. 接入错误监控系统
+3. 性能监控与优化
 
-## 6. 结语
+## 总结
 
-微信小程序为开发者提供了高效、便捷的开发方式，结合微信生态的庞大用户群体，能够迅速推广和变现。无论是个人开发者还是企业，都可以利用小程序拓展业务，提升用户体验。
+微信小程序作为一种轻量级的应用形式，具有开发门槛低、传播成本低、用户使用便捷等优势。通过合理的架构设计、性能优化和云开发能力，可以开发出功能丰富、性能优秀的小程序应用。在实际开发中，需要注意遵循微信小程序的设计规范和最佳实践，确保提供良好的用户体验。

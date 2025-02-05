@@ -135,13 +135,168 @@ export async function getStaticProps() {
 
 ## 部署与优化
 
-Next.js 应用可直接部署在 Vercel 平台，获得自动的性能优化支持。此外，还可以使用自定义服务器（如 Express、Koa）或 Docker 部署。
+Next.js 应用提供多种部署方案，每种方案都有其特定的优势和使用场景。
 
-优化技巧：
+### 1. Vercel 平台部署
 
-- 使用 `next/image` 组件优化图片加载。
-- 启用压缩和缓存策略。
-- 利用 Webpack 自定义构建配置。
+作为 Next.js 的开发团队，Vercel 平台提供最优的部署体验：
+
+- **零配置部署**：直接连接 Git 仓库，自动部署。
+- **自动 HTTPS**：免费的 SSL 证书配置。
+- **全球 CDN**：自动的边缘网络分发。
+- **实时性能分析**：内置的性能监控和分析工具。
+
+### 2. 自定义服务器部署
+
+使用 Express 或 Koa 等 Node.js 服务器：
+
+```javascript
+// server.js
+const express = require("express");
+const next = require("next");
+
+const dev = process.env.NODE_ENV !== "production";
+const app = next({ dev });
+const handle = app.getRequestHandler();
+
+app.prepare().then(() => {
+  const server = express();
+
+  server.all("*", (req, res) => {
+    return handle(req, res);
+  });
+
+  server.listen(3000, (err) => {
+    if (err) throw err;
+    console.log("> Ready on http://localhost:3000");
+  });
+});
+```
+
+### 3. Docker 容器化部署
+
+```dockerfile
+# Dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+EXPOSE 3000
+CMD ["npm", "start"]
+```
+
+## 性能优化最佳实践
+
+### 1. 图片优化
+
+使用 `next/image` 组件实现自动的图片优化：
+
+```javascript
+import Image from "next/image";
+
+function OptimizedImage() {
+  return (
+    <Image
+      src="/large-image.jpg"
+      alt="优化后的图片"
+      width={800}
+      height={600}
+      placeholder="blur"
+      blurDataURL="data:image/jpeg;base64,..."
+      priority={true}
+    />
+  );
+}
+```
+
+### 2. 代码优化
+
+- **代码分割**：使用动态导入优化加载性能
+
+```javascript
+const DynamicComponent = dynamic(() => import("../components/Heavy"), {
+  loading: () => <p>Loading...</p>,
+  ssr: false,
+});
+```
+
+- **预加载关键路由**：
+
+```javascript
+import { useRouter } from "next/router";
+
+function NavLink() {
+  const router = useRouter();
+  return (
+    <button
+      onMouseEnter={() => router.prefetch("/dashboard")}
+      onClick={() => router.push("/dashboard")}
+    >
+      前往仪表板
+    </button>
+  );
+}
+```
+
+### 3. 缓存策略
+
+- **配置响应头缓存**：
+
+```javascript
+// next.config.js
+module.exports = {
+  async headers() {
+    return [
+      {
+        source: "/static/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+    ];
+  },
+};
+```
+
+- **API 路由缓存**：
+
+```javascript
+export default async function handler(req, res) {
+  res.setHeader("Cache-Control", "s-maxage=10, stale-while-revalidate");
+  const data = await fetchData();
+  res.json(data);
+}
+```
+
+### 4. 构建优化
+
+- **自定义 Webpack 配置**：
+
+```javascript
+// next.config.js
+module.exports = {
+  webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
+    // 添加自定义 loader
+    config.module.rules.push({
+      test: /\.mdx?$/,
+      use: [
+        defaultLoaders.babel,
+        {
+          loader: "@mdx-js/loader",
+          options: {},
+        },
+      ],
+    });
+
+    return config;
+  },
+};
+```
 
 ## 总结
 

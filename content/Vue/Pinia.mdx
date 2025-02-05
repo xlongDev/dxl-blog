@@ -23,25 +23,28 @@ Pinia 是 Vue.js 的官方状态管理库，专注于易用性、模块化和开
 
 ### 与 Vuex 的对比
 
-| 特性           | Vuex                       | Pinia                       |
-|----------------|----------------------------|-----------------------------|
-| API 风格       | Mutations, Actions, Getters | Actions, Getters            |
-| 配置复杂度     | 高                         | 低                          |
-| TypeScript 支持| 较为复杂                   | 开箱即用                    |
-| Vue 版本兼容性 | Vue 2 和 Vue 3             | Vue 2 和 Vue 3              |
+| 特性 | Vuex | Pinia |
+|----------------|----------------------------|-----------------------------||
+| API 风格 | Mutations, Actions, Getters | Actions, Getters |
+| 配置复杂度 | 高 | 低 |
+| TypeScript 支持| 较为复杂 | 开箱即用 |
+| Vue 版本兼容性 | Vue 2 和 Vue 3 | Vue 2 和 Vue 3 |
+| 开发工具支持 | Vue Devtools | Vue Devtools + 更好的类型提示|
+| 代码分割 | 手动配置 | 自动支持 |
 
 ## Pinia 的核心概念
 
 使用 Pinia 管理状态时，需要理解以下几个核心概念：
 
 ### Store
+
 Store 是 Pinia 中的状态容器，负责存储应用的状态。每个 Store 都是独立的，可以按需创建多个。
 
 ```javascript
 // 定义一个 Store
-import { defineStore } from 'pinia';
+import { defineStore } from "pinia";
 
-export const useCounterStore = defineStore('counter', {
+export const useCounterStore = defineStore("counter", {
   state: () => ({
     count: 0,
   }),
@@ -54,145 +57,235 @@ export const useCounterStore = defineStore('counter', {
 ```
 
 ### State
+
 State 是存储数据的地方。在 Pinia 中，State 是响应式的，可以直接被修改，而无需像 Vuex 那样通过 Mutations。
 
 ```javascript
 const counterStore = useCounterStore();
 counterStore.count++; // 直接修改状态
+
+// 批量更新状态
+counterStore.$patch({
+  count: counterStore.count + 1,
+  name: "Eduardo",
+});
 ```
 
 ### Getters
+
 Getters 是类似于计算属性的函数，用于派生状态。
 
 ```javascript
-export const useCounterStore = defineStore('counter', {
+export const useCounterStore = defineStore("counter", {
   state: () => ({ count: 0 }),
   getters: {
     doubleCount: (state) => state.count * 2,
+    // 访问其他 getter
+    doubleCountPlusOne() {
+      return this.doubleCount + 1;
+    },
   },
 });
-
-const counterStore = useCounterStore();
-console.log(counterStore.doubleCount); // 输出 0
 ```
 
 ### Actions
+
 Actions 是用于封装业务逻辑和异步操作的函数，可以修改 State。
 
 ```javascript
-export const useCounterStore = defineStore('counter', {
+export const useCounterStore = defineStore("counter", {
   state: () => ({ count: 0 }),
   actions: {
     async fetchCount() {
-      const data = await fetch('/api/count');
+      const data = await fetch("/api/count");
       this.count = await data.json();
     },
-  },
-});
-```
-
-## 如何使用 Pinia
-
-以下是使用 Pinia 的基本步骤：
-
-### 安装 Pinia
-
-通过 npm 或 yarn 安装 Pinia：
-
-```bash
-npm install pinia
-```
-
-### 在 Vue 应用中注册 Pinia
-
-在主文件中注册 Pinia 并注入到 Vue 实例：
-
-```javascript
-import { createApp } from 'vue';
-import { createPinia } from 'pinia';
-import App from './App.vue';
-
-const app = createApp(App);
-const pinia = createPinia();
-
-app.use(pinia);
-app.mount('#app');
-```
-
-### 创建和使用 Store
-
-1. 定义 Store：
-
-```javascript
-import { defineStore } from 'pinia';
-
-export const useTodoStore = defineStore('todo', {
-  state: () => ({
-    todos: [],
-  }),
-  actions: {
-    addTodo(todo) {
-      this.todos.push(todo);
+    // 组合多个 action
+    async initializeApp() {
+      await this.fetchCount();
+      await this.fetchUserProfile();
     },
   },
 });
 ```
 
-2. 在组件中使用 Store：
+## 高级特性
+
+### 组合式 API 与 Setup Store
+
+Pinia 完全支持组合式 API 风格的 Store 定义：
 
 ```javascript
-<template>
-  <div>
-    <input v-model="newTodo" @keyup.enter="addTodo" placeholder="添加任务" />
-    <ul>
-      <li v-for="todo in todos" :key="todo.id">{{ todo.text }}</li>
-    </ul>
-  </div>
-</template>
+export const useCounterStore = defineStore("counter", () => {
+  const count = ref(0);
+  const doubleCount = computed(() => count.value * 2);
 
-<script>
-import { useTodoStore } from '@/stores/todo';
-import { ref } from 'vue';
+  function increment() {
+    count.value++;
+  }
+
+  return { count, doubleCount, increment };
+});
+```
+
+### 持久化存储
+
+使用插件实现状态持久化：
+
+```javascript
+import { createPinia } from "pinia";
+import { createPersistedState } from "pinia-plugin-persistedstate";
+
+const pinia = createPinia();
+pinia.use(
+  createPersistedState({
+    storage: localStorage,
+    key: (prefix) => `${prefix}`,
+  })
+);
+
+// 在 store 中启用持久化
+export const useUserStore = defineStore("user", {
+  state: () => ({
+    token: "",
+    userInfo: null,
+  }),
+  persist: true,
+});
+```
+
+### 订阅状态变化
+
+监听 store 的变化：
+
+```javascript
+const unsubscribe = store.$subscribe((mutation, state) => {
+  console.log("状态变更:", mutation.type);
+  console.log("变更数据:", mutation.payload);
+  console.log("当前状态:", state);
+});
+
+// 停止监听
+unsubscribe();
+```
+
+### 自定义插件开发
+
+创建 Pinia 插件：
+
+```javascript
+export function myPiniaPlugin({ store, options, pinia }) {
+  store.$onAction(({ name, args, after, onError }) => {
+    const startTime = Date.now();
+    console.log(`Action ${name} 开始执行`);
+
+    after((result) => {
+      console.log(`Action ${name} 完成，耗时: ${Date.now() - startTime}ms`);
+    });
+
+    onError((error) => {
+      console.error(`Action ${name} 发生错误:`, error);
+    });
+  });
+}
+
+// 使用插件
+pinia.use(myPiniaPlugin);
+```
+
+## 最佳实践
+
+### Store 模块化
+
+按功能领域拆分 Store：
+
+```
+stores/
+  ├── user.js      # 用户相关状态
+  ├── product.js   # 产品相关状态
+  ├── cart.js      # 购物车状态
+  └── index.js     # Store 统一导出
+```
+
+### TypeScript 支持
+
+利用 TypeScript 增强类型安全：
+
+```typescript
+interface UserState {
+  id: number;
+  name: string;
+  email: string;
+}
+
+export const useUserStore = defineStore("user", {
+  state: (): UserState => ({
+    id: 0,
+    name: "",
+    email: "",
+  }),
+  getters: {
+    userFullInfo: (state): string => {
+      return `${state.name} (${state.email})`;
+    },
+  },
+});
+```
+
+### 性能优化
+
+1. **按需加载 Store**：
+
+```javascript
+// 路由组件内按需导入
+import { useUserStore } from "@/stores/user";
 
 export default {
   setup() {
-    const todoStore = useTodoStore();
-    const newTodo = ref('');
-
-    const addTodo = () => {
-      if (newTodo.value.trim()) {
-        todoStore.addTodo({ id: Date.now(), text: newTodo.value });
-        newTodo.value = '';
-      }
-    };
-
-    return {
-      todos: todoStore.todos,
-      newTodo,
-      addTodo,
-    };
+    const userStore = useUserStore();
+    return { userStore };
   },
 };
-</script>
 ```
 
-## 高级功能
-
-### 插件支持
-Pinia 支持插件系统，可以扩展其功能。例如，持久化插件可以帮助保存状态到本地存储。
+2. **避免不必要的响应式**：
 
 ```javascript
-import { createPinia } from 'pinia';
-import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
+import { markRaw } from "vue";
 
-const pinia = createPinia();
-pinia.use(piniaPluginPersistedstate);
+export const useStore = defineStore("main", {
+  state: () => ({
+    // 标记不需要响应式的大对象
+    helper: markRaw(new HelperClass()),
+  }),
+});
 ```
 
-### SSR 支持
-Pinia 原生支持服务端渲染（SSR），可用于 Nuxt 等框架。
+## 调试与开发工具
 
-## 总结
+### Vue Devtools 集成
 
-Pinia 是一款现代、易用的 Vue 状态管理工具，适合各种规模的项目。通过简化的 API 和优秀的 TypeScript 支持，Pinia 提供了更加直观的开发体验，是 Vue 应用状态管理的理想选择。如果你还没有尝试过 Pinia，现在就可以开始探索它的强大功能吧！
+Pinia 与 Vue Devtools 完美集成，提供了强大的调试能力：
 
+- 查看所有 Store 的状态
+- 实时监控状态变化
+- 时间旅行调试
+- Action 执行记录
+
+### 日志插件
+
+```javascript
+function piniaLogger({ store }) {
+  store.$subscribe((mutation, state) => {
+    console.log(`[🍍 ${store.$id}]: ${mutation.type}`);
+    console.log("变更详情:", mutation.payload);
+    console.log("当前状态:", state);
+  });
+}
+
+pinia.use(piniaLogger);
+```
+
+## 结语
+
+Pinia 作为 Vue.js 的新一代状态管理方案，不仅简化了开发流程，还提供了强大的功能特性。通过合理使用 Pinia 的各项特性，我们可以构建出更加可维护和高效的 Vue 应用。无论是小型项目还是大型应用，Pinia 都是一个值得信赖的选择。

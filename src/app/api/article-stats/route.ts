@@ -1,112 +1,61 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectDB from "@/lib/db";
-import { ArticleStats } from "@/models/ArticleStats";
 
-export const runtime = "nodejs";
+interface ArticleStats {
+  slug: string;
+  views: number;
+  likes: number;
+  likedBy?: string[];
+}
+
+// 模拟数据存储
+let articleStats: Map<string, ArticleStats> = new Map();
 
 export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const slug = searchParams.get("slug");
+  const { searchParams } = new URL(request.url);
+  const slug = searchParams.get("slug");
 
-    if (!slug) {
-      return NextResponse.json({ error: "Slug is required" }, { status: 400 });
-    }
-
-    await connectDB();
-
-    const stats = await ArticleStats.findOne({ slug });
-    if (!stats) {
-      return NextResponse.json({ slug, views: 0, likes: 0, likedBy: [] });
-    }
-
-    return NextResponse.json(stats);
-  } catch (error) {
-    console.error("获取文章统计失败:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+  if (!slug) {
+    return NextResponse.json({ error: "Slug is required" }, { status: 400 });
   }
+
+  const stats = articleStats.get(slug) || { slug, views: 0, likes: 0 };
+  return NextResponse.json(stats);
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const slug = searchParams.get("slug");
-    const action = searchParams.get("action"); // "view" or "like" or "unlike"
+  const { searchParams } = new URL(request.url);
+  const slug = searchParams.get("slug");
+  const action = searchParams.get("action"); // "view" or "like"
 
-    if (!slug || !action) {
-      return NextResponse.json(
-        { error: "Slug and action are required" },
-        { status: 400 }
-      );
-    }
-
-    await connectDB();
-
-    const userId = request.cookies.get("user_id")?.value || "anonymous";
-    const now = new Date();
-
-    // 使用 findOneAndUpdate 来确保原子性操作
-    let update: any = {};
-    let options = { new: true, upsert: true };
-
-    if (action === "view") {
-      update = {
-        $inc: { views: 1 },
-        lastViewedAt: now,
-      };
-    } else if (action === "like" || action === "unlike") {
-      if (action === "like") {
-        update = {
-          $inc: { likes: 1 },
-          $addToSet: { likedBy: userId },
-          lastLikedAt: now,
-        };
-      } else {
-        update = {
-          $inc: { likes: -1 },
-          $pull: { likedBy: userId },
-        };
-      }
-
-      // 添加条件以防止重复操作
-      if (action === "like") {
-        options = {
-          ...options,
-          // 确保用户未点赞过
-          new: true,
-          upsert: true,
-        };
-      } else {
-        options = {
-          ...options,
-          // 确保用户已点赞
-          new: true,
-        };
-      }
-    }
-
-    const stats = await ArticleStats.findOneAndUpdate(
-      { slug },
-      update,
-      options
-    );
-
-    if (!stats) {
-      return NextResponse.json(
-        { error: "Article stats not found" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(stats);
-  } catch (error) {
-    console.error("更新文章统计失败:", error);
+  if (!slug || !action) {
     return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
+      { error: "Slug and action are required" },
+      { status: 400 }
     );
   }
+
+  let stats = articleStats.get(slug) || { slug, views: 0, likes: 0 };
+
+  if (action === "view") {
+    stats.views += 1;
+  } else if (action === "like" || action === "unlike") {
+    // 初始化 likedBy 数组
+    if (!stats.likedBy) {
+      stats.likedBy = [];
+    }
+
+    const userId = request.cookies.get("user_id")?.value || "anonymous";
+    const hasLiked = stats.likedBy.includes(userId);
+
+    if (action === "like" && !hasLiked) {
+      stats.likes += 1;
+      stats.likedBy.push(userId);
+    } else if (action === "unlike" && hasLiked) {
+      stats.likes = Math.max(0, stats.likes - 1);
+      stats.likedBy = stats.likedBy.filter((id) => id !== userId);
+    }
+  }
+
+  articleStats.set(slug, stats);
+  return NextResponse.json(stats);
 }

@@ -1,8 +1,8 @@
 ---
-title: "Webpack 全面介绍" 
-date: "2021-03-27" 
-description: "详细介绍 Webpack 的核心概念、功能及其在前端开发中的应用。" 
-tags: ["Webpack", "前端开发", "模块打包"] 
+title: "Webpack 全面介绍"
+date: "2021-03-27"
+description: "详细介绍 Webpack 的核心概念、功能及其在前端开发中的应用。"
+tags: ["Webpack", "前端开发", "模块打包"]
 category: "Build-Tools"
 ---
 
@@ -31,7 +31,7 @@ Webpack 是一个模块打包工具（module bundler），能够将项目中的�
 
 ```javascript
 module.exports = {
-  entry: './src/index.js',
+  entry: "./src/index.js",
 };
 ```
 
@@ -42,8 +42,8 @@ module.exports = {
 ```javascript
 module.exports = {
   output: {
-    filename: 'bundle.js',
-    path: __dirname + '/dist',
+    filename: "bundle.js",
+    path: __dirname + "/dist",
   },
 };
 ```
@@ -58,7 +58,7 @@ module.exports = {
     rules: [
       {
         test: /\.css$/,
-        use: ['style-loader', 'css-loader'],
+        use: ["style-loader", "css-loader"],
       },
     ],
   },
@@ -70,12 +70,10 @@ module.exports = {
 用于执行范围更广的任务，例如打包优化、资源管理。
 
 ```javascript
-const HtmlWebpackPlugin = require('html-webpack-plugin');
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
-  plugins: [
-    new HtmlWebpackPlugin({ template: './src/index.html' }),
-  ],
+  plugins: [new HtmlWebpackPlugin({ template: "./src/index.html" })],
 };
 ```
 
@@ -85,7 +83,7 @@ Webpack 提供两种模式：`development` 和 `production`，分别优化开发
 
 ```javascript
 module.exports = {
-  mode: 'development', // 或 'production'
+  mode: "development", // 或 'production'
 };
 ```
 
@@ -96,7 +94,7 @@ module.exports = {
 ```javascript
 module.exports = {
   devServer: {
-    contentBase: './dist',
+    contentBase: "./dist",
     hot: true,
   },
 };
@@ -121,37 +119,191 @@ module.exports = {
 以下是一个简单的 Webpack 配置示例，用于处理 JavaScript 和 CSS 文件，并生成 HTML 文件。
 
 ```javascript
-const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
+const path = require("path");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
-  entry: './src/index.js',
+  entry: "./src/index.js",
   output: {
-    filename: 'bundle.js',
-    path: path.resolve(__dirname, 'dist'),
+    filename: "bundle.js",
+    path: path.resolve(__dirname, "dist"),
   },
   module: {
     rules: [
       {
         test: /\.css$/,
-        use: ['style-loader', 'css-loader'],
+        use: ["style-loader", "css-loader"],
       },
       {
         test: /\.(png|jpg|gif)$/,
-        type: 'asset/resource',
+        type: "asset/resource",
       },
     ],
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: './src/index.html',
+      template: "./src/index.html",
     }),
   ],
-  mode: 'development',
+  mode: "development",
+};
+```
+
+## 高级特性和最佳实践
+
+### 1. 模块联邦（Module Federation）
+
+模块联邦允许多个独立的构建共享代码：
+
+```javascript
+const { ModuleFederationPlugin } = require("webpack").container;
+
+module.exports = {
+  plugins: [
+    new ModuleFederationPlugin({
+      name: "host",
+      filename: "remoteEntry.js",
+      remotes: {
+        app1: "app1@http://localhost:3001/remoteEntry.js",
+      },
+      shared: ["react", "react-dom"],
+    }),
+  ],
+};
+```
+
+### 2. 性能优化策略
+
+#### 构建性能优化
+
+```javascript
+module.exports = {
+  cache: {
+    type: "filesystem",
+    buildDependencies: {
+      config: [__filename],
+    },
+  },
+  optimization: {
+    moduleIds: "deterministic",
+    runtimeChunk: "single",
+    splitChunks: {
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: "vendors",
+          chunks: "all",
+        },
+      },
+    },
+  },
+};
+```
+
+#### 资源优化
+
+```javascript
+const CompressionPlugin = require("compression-webpack-plugin");
+const TerserPlugin = require("terser-webpack-plugin");
+
+module.exports = {
+  optimization: {
+    minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          compress: {
+            drop_console: true,
+          },
+        },
+      }),
+    ],
+  },
+  plugins: [
+    new CompressionPlugin({
+      test: /\.(js|css|html|svg)$/,
+    }),
+  ],
+};
+```
+
+## 实际应用场景
+
+### 1. 微前端架构
+
+```javascript
+const { ModuleFederationPlugin } = require("webpack").container;
+
+module.exports = {
+  entry: "./src/index.js",
+  output: {
+    publicPath: "auto",
+  },
+  plugins: [
+    new ModuleFederationPlugin({
+      name: "microApp",
+      filename: "remoteEntry.js",
+      exposes: {
+        "./Widget": "./src/Widget",
+      },
+      shared: {
+        react: { singleton: true },
+        "react-dom": { singleton: true },
+      },
+    }),
+  ],
+};
+```
+
+### 2. 多页面应用（MPA）配置
+
+```javascript
+const glob = require("glob");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+
+const entries = {};
+const htmlPlugins = [];
+
+glob.sync("./src/pages/**/index.js").forEach((path) => {
+  const chunk = path.split("./src/pages/")[1].split("/index.js")[0];
+  entries[chunk] = path;
+  htmlPlugins.push(
+    new HtmlWebpackPlugin({
+      template: `./src/pages/${chunk}/index.html`,
+      filename: `${chunk}.html`,
+      chunks: [chunk],
+    })
+  );
+});
+
+module.exports = {
+  entry: entries,
+  plugins: [...htmlPlugins],
+};
+```
+
+### 3. 自定义插件开发
+
+```javascript
+class CustomPlugin {
+  apply(compiler) {
+    compiler.hooks.emit.tapAsync("CustomPlugin", (compilation, callback) => {
+      compilation.assets["fileList.json"] = {
+        source: () => {
+          return JSON.stringify(Object.keys(compilation.assets), null, 2);
+        },
+        size: () => {},
+      };
+      callback();
+    });
+  }
+}
+
+module.exports = {
+  plugins: [new CustomPlugin()],
 };
 ```
 
 ## 结语
 
-Webpack 是前端开发中不可或缺的工具，它为现代 Web 应用程序提供了高效的模块化解决方案和性能优化支持。无论是新手还是资深开发者，都能从中受益。通过深入了解其核心概念和功能，可以更好地应对复杂的项目需求。
-
+Webpack 是现代前端开发中不可或缺的构建工具，它不仅提供了强大的模块化和资源处理能力，还通过丰富的插件系统和优化策略，帮助开发者构建高性能的应用。随着微前端、模块联邦等新技术的兴起，Webpack 也在不断进化，为开发者提供更多可能性。掌握 Webpack 的高级特性和最佳实践，将帮助你更好地应对复杂的前端工程化需求。

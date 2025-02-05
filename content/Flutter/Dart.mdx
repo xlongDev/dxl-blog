@@ -17,6 +17,7 @@ Dart 是 Google 开发的一种开源、跨平台编程语言，主要用于构�
 - **垃圾回收**：自动管理内存，减少手动干预。
 - **并发支持**：使用 `Future` 和 `async/await` 处理异步操作，同时支持 `Isolate` 进行并行计算。
 - **跨平台**：可编译为原生代码（AOT）或 JIT 运行，提高性能。
+- **空安全**：从 Dart 2.12 开始支持空安全特性，减少空引用错误。
 
 ### 安装 Dart
 
@@ -54,8 +55,28 @@ void main() {
   bool isActive = true;
   List<int> numbers = [1, 2, 3, 4, 5];
   Map<String, String> person = {'name': 'Alice', 'city': 'Shanghai'};
-  
+
   print('$name is active: $isActive');
+}
+```
+
+### 空安全
+
+Dart 2.12 引入了空安全特性：
+
+```dart
+String? nullableName; // 可以为空
+String nonNullableName = 'Dart'; // 不能为空
+
+void main() {
+  // 使用空值检查操作符
+  print(nullableName?.length);
+
+  // 使用空值断言操作符
+  int length = nonNullableName!.length;
+
+  // 使用 ?? 操作符提供默认值
+  String displayName = nullableName ?? 'Default';
 }
 ```
 
@@ -66,7 +87,7 @@ Dart 支持常见的控制流语句，如 `if`、`for`、`while` 和 `switch`：
 ```dart
 void main() {
   int score = 85;
-  
+
   if (score >= 90) {
     print('A');
   } else if (score >= 80) {
@@ -82,13 +103,23 @@ void main() {
 Dart 允许函数具有可选参数，并支持箭头函数：
 
 ```dart
-void greet(String name, [String? message = 'Hello']) {
-  print('$message, $name!');
+// 命名可选参数
+void greet({String name = 'Guest', String? message}) {
+  print('${message ?? 'Hello'}, $name!');
 }
 
+// 位置可选参数
+String getFullName(String firstName, [String? lastName]) {
+  return lastName != null ? '$firstName $lastName' : firstName;
+}
+
+// 箭头函数
+int add(int a, int b) => a + b;
+
 void main() {
-  greet('Dart'); // Hello, Dart!
-  greet('Flutter', 'Welcome'); // Welcome, Flutter!
+  greet(name: 'Dart', message: 'Welcome'); // Welcome, Dart!
+  print(getFullName('John', 'Doe')); // John Doe
+  print(add(5, 3)); // 8
 }
 ```
 
@@ -98,19 +129,25 @@ void main() {
 
 ```dart
 class Person {
-  String name;
-  int age;
+  final String name;
+  final int age;
 
-  Person(this.name, this.age);
-  
+  // 构造函数
+  const Person(this.name, this.age);
+
+  // 命名构造函数
+  Person.guest() : name = 'Guest', age = 0;
+
   void introduce() {
     print('Hi, I am $name, and I am $age years old.');
   }
 }
 
 void main() {
-  var person = Person('Alice', 30);
+  final person = Person('Alice', 30);
+  final guest = Person.guest();
   person.introduce();
+  guest.introduce();
 }
 ```
 
@@ -134,9 +171,51 @@ void main() {
 }
 ```
 
+### Mixin
+
+```dart
+mixin Swimming {
+  void swim() {
+    print('Swimming...');
+  }
+}
+
+mixin Flying {
+  void fly() {
+    print('Flying...');
+  }
+}
+
+class Duck extends Animal with Swimming, Flying {
+  @override
+  void makeSound() {
+    print('Quack!');
+  }
+}
+```
+
+### 泛型
+
+```dart
+class Stack<T> {
+  final List<T> _items = [];
+
+  void push(T item) => _items.add(item);
+  T pop() => _items.removeLast();
+  bool get isEmpty => _items.isEmpty;
+}
+
+void main() {
+  final numbers = Stack<int>();
+  numbers.push(1);
+  numbers.push(2);
+  print(numbers.pop()); // 2
+}
+```
+
 ## 异步编程
 
-Dart 提供 `Future` 和 `async/await` 处理异步操作。
+### Future
 
 ```dart
 Future<String> fetchData() async {
@@ -148,6 +227,41 @@ void main() async {
   print('Fetching data...');
   String data = await fetchData();
   print(data);
+}
+```
+
+### Stream
+
+```dart
+Stream<int> countStream(int max) async* {
+  for (int i = 1; i <= max; i++) {
+    await Future.delayed(Duration(seconds: 1));
+    yield i;
+  }
+}
+
+void main() async {
+  Stream<int> stream = countStream(5);
+  await for (int number in stream) {
+    print(number);
+  }
+}
+```
+
+### Isolate
+
+```dart
+import 'dart:isolate';
+
+Future<int> computeInIsolate(int value) async {
+  final receivePort = ReceivePort();
+  await Isolate.spawn(heavyComputation, receivePort.sendPort);
+  return await receivePort.first;
+}
+
+void heavyComputation(SendPort sendPort) {
+  // 执行耗时计算
+  sendPort.send(42);
 }
 ```
 

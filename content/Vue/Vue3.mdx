@@ -1,6 +1,6 @@
 ---
 title: "Vue.js 3 概述"
-date: "2021-03-09"
+date: "2021-06-22"
 description: "全面介绍 Vue.js 3 的基础概念、核心特性和应用场景。"
 tags: ["Vue.js", "JavaScript", "前端开发"]
 category: "Vue"
@@ -17,6 +17,8 @@ Vue.js 是一个用于构建用户界面的渐进式 JavaScript 框架，其设�
 - **渐进式框架**：Vue.js 既可以用作轻量级的 UI 库，也能通过生态系统构建复杂的单页应用。
 - **组件化开发**：以组件为核心的开发模式提高了代码的可维护性和可复用性。
 - **响应式系统**：基于 Proxy 的响应式数据绑定系统提供了更高效、更直观的数据追踪机制。
+- **虚拟 DOM**：优化的虚拟 DOM 实现，提供更快的渲染性能。
+- **组合式 API**：提供更灵活的逻辑组织和代码复用方式。
 
 ## 核心特性
 
@@ -24,9 +26,10 @@ Vue.js 是一个用于构建用户界面的渐进式 JavaScript 框架，其设�
 
 Composition API 是 Vue 3 的一个重要特性，它提供了一种更灵活的逻辑组织方式，特别适合复杂场景下的代码复用。
 
-#### 示例
+#### 基础示例
+
 ```javascript
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from "vue";
 
 export default {
   setup() {
@@ -34,10 +37,42 @@ export default {
     const doubleCount = computed(() => count.value * 2);
 
     onMounted(() => {
-      console.log('组件已挂载');
+      console.log("组件已挂载");
     });
 
     return { count, doubleCount };
+  },
+};
+```
+
+#### 组合式函数（Composables）
+
+```javascript
+// useCounter.js
+import { ref, computed } from "vue";
+
+export function useCounter(initialValue = 0) {
+  const count = ref(initialValue);
+  const doubleCount = computed(() => count.value * 2);
+
+  function increment() {
+    count.value++;
+  }
+
+  return {
+    count,
+    doubleCount,
+    increment,
+  };
+}
+
+// 使用组合式函数
+import { useCounter } from "./composables/useCounter";
+
+export default {
+  setup() {
+    const { count, doubleCount, increment } = useCounter();
+    return { count, doubleCount, increment };
   },
 };
 ```
@@ -46,90 +81,251 @@ export default {
 
 Vue 3 使用 `Proxy` 替代了 Vue 2 中基于 `Object.defineProperty` 的实现，解决了 Vue 2 在检测数组和对象属性变化时的诸多限制。
 
-#### 优势
-- 更高的性能：`Proxy` 的实现避免了大量的性能开销。
-- 更好的可扩展性：支持动态添加属性的响应式追踪。
+#### 响应式 API
 
-### 3. 更好的 TypeScript 支持
+```javascript
+import { ref, reactive, computed, watch } from "vue";
 
-Vue 3 从设计之初就充分考虑了对 TypeScript 的支持，使得开发者可以更方便地在项目中使用静态类型检查。
+// ref 用于基本类型
+const count = ref(0);
 
-#### 示例
-```typescript
-import { defineComponent, ref } from 'vue';
-
-export default defineComponent({
-  setup() {
-    const count = ref<number>(0);
-    return { count };
+// reactive 用于对象
+const state = reactive({
+  user: {
+    name: "John",
+    age: 30,
+  },
+  settings: {
+    theme: "dark",
   },
 });
+
+// computed
+const userInfo = computed(() => `${state.user.name} (${state.user.age})`);
+
+// watch
+watch(
+  () => state.user,
+  (newValue, oldValue) => {
+    console.log("用户信息变更:", newValue);
+  },
+  { deep: true }
+);
 ```
 
-### 4. Teleport
+### 3. Script Setup 语法糖
 
-Teleport 是一个新的内置组件，用于将模板中的某些内容渲染到 DOM 中的任意位置。
+```vue
+<script setup>
+import { ref, computed } from "vue";
+import { useCounter } from "./composables/useCounter";
 
-#### 示例
-```html
+// 组件状态
+const message = ref("Hello Vue 3!");
+
+// 使用组合式函数
+const { count, increment } = useCounter();
+
+// 计算属性
+const reversedMessage = computed(() =>
+  message.value.split("").reverse().join("")
+);
+
+// 方法定义
+const handleClick = () => {
+  message.value = "Clicked!";
+  increment();
+};
+</script>
+
 <template>
   <div>
-    <teleport to="body">
-      <div>这个内容会被渲染到 body 元素中</div>
-    </teleport>
+    <h1>{{ message }}</h1>
+    <p>Reversed: {{ reversedMessage }}</p>
+    <p>Count: {{ count }}</p>
+    <button @click="handleClick">Click me</button>
   </div>
 </template>
 ```
 
-### 5. Fragment
+### 4. 内置组件
 
-Vue 3 支持组件的模板中返回多个根节点，避免了 Vue 2 必须使用单一根节点的限制。
+#### Teleport
 
-#### 示例
-```html
+```vue
 <template>
-  <>
-    <header>头部</header>
-    <footer>尾部</footer>
-  </>
+  <button @click="showModal = true">打开模态框</button>
+
+  <teleport to="body">
+    <div v-if="showModal" class="modal">
+      <h2>模态框标题</h2>
+      <p>模态框内容</p>
+      <button @click="showModal = false">关闭</button>
+    </div>
+  </teleport>
 </template>
+
+<script setup>
+import { ref } from "vue";
+const showModal = ref(false);
+</script>
 ```
 
-### 6. Suspense
+#### Suspense
 
-Suspense 是 Vue 3 提供的一个强大的异步组件渲染机制，常用于处理异步加载的组件或数据。
-
-#### 示例
-```html
+```vue
 <template>
   <suspense>
     <template #default>
-      <AsyncComponent />
+      <async-component />
     </template>
     <template #fallback>
       <div>加载中...</div>
     </template>
   </suspense>
 </template>
+
+<script setup>
+import { defineAsyncComponent } from "vue";
+
+const AsyncComponent = defineAsyncComponent(() =>
+  import("./components/AsyncComponent.vue")
+);
+</script>
 ```
 
-## 应用场景
+## 性能优化
 
-Vue.js 3 适合各种规模的前端开发项目，包括但不限于：
+### 1. 静态提升
 
-- 单页应用（SPA）：高性能、灵活的架构使其成为构建 SPA 的理想选择。
-- 电商平台：响应式数据绑定和组件化设计简化了复杂交互的实现。
-- 企业级系统：优秀的生态系统和 TypeScript 支持让 Vue.js 3 能够胜任复杂的业务需求。
+```javascript
+// Vue 3 会自动提升静态内容
+const StaticComponent = () => {
+  // 静态内容只会被创建一次
+  return () => (
+    <div>
+      <h1>Static Title</h1>
+      <div>{/* 动态内容 */}</div>
+    </div>
+  );
+};
+```
 
-## 生态系统
+### 2. 按需编译
 
-Vue.js 的生态系统十分丰富，包括：
+```javascript
+// vite.config.js
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
 
-- **Vue Router**：官方的路由管理库，支持动态路由和懒加载。
-- **Pinia**：推荐的状态管理库，简洁高效。
-- **Vite**：现代化的开发工具，提供快速的开发和构建体验。
-- **Vue CLI**：快速生成项目模板的命令行工具。
+export default defineConfig({
+  plugins: [vue()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "vue-core": ["vue"],
+          "vue-router": ["vue-router"],
+          pinia: ["pinia"],
+        },
+      },
+    },
+  },
+});
+```
+
+### 3. 异步组件和路由
+
+```javascript
+// 异步组件
+const AsyncComp = defineAsyncComponent({
+  loader: () => import("./components/Heavy.vue"),
+  loadingComponent: LoadingComponent,
+  errorComponent: ErrorComponent,
+  delay: 200,
+  timeout: 3000,
+});
+
+// 路由懒加载
+const routes = [
+  {
+    path: "/dashboard",
+    component: () => import("./views/Dashboard.vue"),
+  },
+];
+```
+
+## 工程化实践
+
+### 1. TypeScript 支持
+
+```typescript
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
+const useUser = () => {
+  const user = ref<User | null>(null);
+
+  const fetchUser = async (id: number) => {
+    user.value = await api.getUser(id);
+  };
+
+  return {
+    user,
+    fetchUser,
+  };
+};
+```
+
+### 2. 测试
+
+```javascript
+// counter.spec.js
+import { mount } from "@vue/test-utils";
+import Counter from "../components/Counter.vue";
+
+test("increments value on click", async () => {
+  const wrapper = mount(Counter);
+  await wrapper.find("button").trigger("click");
+  expect(wrapper.text()).toContain("1");
+});
+```
+
+### 3. 状态管理
+
+```javascript
+// store/user.js
+import { defineStore } from "pinia";
+
+export const useUserStore = defineStore("user", {
+  state: () => ({
+    user: null,
+    loading: false,
+  }),
+  actions: {
+    async login(credentials) {
+      this.loading = true;
+      try {
+        this.user = await api.login(credentials);
+      } finally {
+        this.loading = false;
+      }
+    },
+  },
+});
+```
 
 ## 总结
 
-Vue.js 3 是一个现代化、高性能且易于上手的前端框架，无论是初学者还是经验丰富的开发者，都能从中受益。其强大的功能、良好的生态和活跃的社区让它成为前端开发领域不可忽视的选择。
+Vue.js 3 通过其创新的特性和优化，为现代 Web 应用开发提供了强大的工具和更好的开发体验。主要优势包括：
+
+1. 更灵活的组合式 API
+2. 更高效的响应式系统
+3. 更好的 TypeScript 支持
+4. 更强大的性能优化
+5. 更完善的工程化支持
+
+无论是小型项目还是大型应用，Vue.js 3 都能够满足开发需求，并帮助开发者构建高质量的现代 Web 应用。

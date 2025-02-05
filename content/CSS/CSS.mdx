@@ -70,9 +70,11 @@ button:hover {
 CSS 提供多种布局方式，包括：
 
 ### 1. 普通文档流
+
 默认情况下，HTML 元素按顺序排列，块级元素占满整行，行内元素仅占内容宽度。
 
 ### 2. 浮动布局（Float）
+
 `float` 可用于实现简单的多列布局，但需要 `clear` 解决浮动影响。
 
 ```css
@@ -83,6 +85,7 @@ img {
 ```
 
 ### 3. Flexbox（弹性布局）
+
 Flexbox 提供强大的 1D 布局能力，适用于行或列方向排列的内容。
 
 ```css
@@ -94,6 +97,7 @@ Flexbox 提供强大的 1D 布局能力，适用于行或列方向排列的内�
 ```
 
 ### 4. Grid（网格布局）
+
 Grid 提供 2D 布局能力，适用于复杂的页面结构。
 
 ```css
@@ -131,8 +135,12 @@ button {
 
 ```css
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .box {
@@ -150,6 +158,105 @@ button {
 @primary-color: blue;
 .button {
   background-color: @primary-color;
+}
+```
+
+## CSS 性能优化
+
+### 1. 选择器优化
+
+- **避免过度嵌套**：减少选择器的层级，提高匹配效率。
+- **避免通配符**：`*` 选择器会影响所有元素，增加浏览器负担。
+- **利用继承**：合理使用 CSS 继承特性，减少重复代码。
+
+### 2. 渲染性能
+
+- **避免重排重绘**：优先使用 transform 和 opacity 实现动画。
+- **使用 will-change**：提前告知浏览器元素可能发生的变化。
+- **合理使用 GPU 加速**：对频繁动画的元素使用 `transform: translateZ(0)`。
+
+```css
+.optimized-animation {
+  transform: translateZ(0);
+  will-change: transform;
+  transition: transform 0.3s;
+}
+```
+
+### 3. 资源优化
+
+- **CSS 压缩**：移除注释和空白字符。
+- **按需加载**：使用媒体查询拆分 CSS 文件。
+- **关键 CSS 内联**：首屏关键样式内联到 HTML。
+
+## 现代布局技术
+
+### 1. CSS Grid 子网格
+
+CSS Grid Level 2 引入了子网格特性，允许子元素继承父网格的轨道尺寸。
+
+```css
+.parent-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.child-grid {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+}
+```
+
+### 2. Container Queries
+
+相比媒体查询，容器查询允许基于父容器大小来调整样式。
+
+```css
+.card-container {
+  container-type: inline-size;
+}
+
+@container (min-width: 400px) {
+  .card {
+    display: grid;
+    grid-template-columns: 2fr 3fr;
+  }
+}
+```
+
+### 3. CSS 逻辑属性
+
+使用逻辑属性来处理不同书写模式和阅读方向。
+
+```css
+.element {
+  margin-inline: auto;
+  padding-block: 1rem;
+  border-inline-start: 2px solid;
+}
+```
+
+### 4. CSS 自定义属性（变量）
+
+利用自定义属性实现主题切换和动态样式。
+
+```css
+:root {
+  --primary-color: #007bff;
+  --secondary-color: #6c757d;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary-color: #0056b3;
+    --secondary-color: #545b62;
+  }
+}
+
+.button {
+  background-color: var(--primary-color);
+  color: white;
 }
 ```
 

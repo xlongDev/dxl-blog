@@ -11,12 +11,14 @@ Nuxt 3 是基于 Vue 3 的新一代全栈框架，为开发者提供了更高性
 ## Nuxt 3 的核心特性
 
 ### 1. 原生支持 Vue 3 和 Composition API
+
 Nuxt 3 完全基于 Vue 3 构建，充分利用了 Composition API 和 Vue 3 的性能改进。开发者可以使用更灵活的组件逻辑组织方式，同时享受更快的渲染性能。
 
 #### 示例
+
 ```vue
 <script setup>
-import { ref } from 'vue';
+import { ref } from "vue";
 
 const count = ref(0);
 const increment = () => count.value++;
@@ -31,20 +33,25 @@ const increment = () => count.value++;
 ```
 
 ### 2. 新的 Server Engine
+
 Nuxt 3 引入了全新的 `Nitro` 引擎，使应用程序可以在多种环境中运行，包括 Node.js、Deno 和云函数。`Nitro` 提供了更快的服务端渲染 (SSR) 性能，并支持预渲染 (Static Site Generation, SSG)。
 
 #### 示例：部署到 Cloudflare Workers
+
 在 `nuxt.config.ts` 中指定目标：
+
 ```ts
 export default defineNuxtConfig({
   nitro: {
-    preset: 'cloudflare-workers'
-  }
+    preset: "cloudflare-workers",
+  },
 });
 ```
+
 通过简单配置，即可将 Nuxt 3 应用部署到支持的服务平台。
 
 ### 3. 改进的文件结构
+
 Nuxt 3 对项目的文件结构进行了优化，使得代码组织更加清晰，减少了重复配置。
 
 - `pages/`: 用于自动生成路由。
@@ -53,35 +60,43 @@ Nuxt 3 对项目的文件结构进行了优化，使得代码组织更加清晰�
 - `server/`: 存放 API 路由和中间件。
 
 #### 示例
+
 创建一个简单的 API 路由：
+
 ```ts
 // server/api/hello.ts
 export default defineEventHandler(() => {
-  return { message: 'Hello, Nuxt 3!' };
+  return { message: "Hello, Nuxt 3!" };
 });
 ```
+
 通过 `/api/hello` 即可访问此接口。
 
 ### 4. 更好的 TypeScript 支持
+
 Nuxt 3 对 TypeScript 的支持更加全面，包括自动类型推断和智能提示。开发者可以直接在 `.vue` 文件和配置文件中使用 TypeScript，无需额外配置。
 
 #### 示例
+
 ```ts
 // nuxt.config.ts
 export default defineNuxtConfig({
   typescript: {
-    strict: true
-  }
+    strict: true,
+  },
 });
 ```
 
 通过启用严格模式，可以更轻松地捕获潜在的错误。
 
 ### 5. 自动导入功能
+
 Nuxt 3 提供了自动导入功能，开发者无需手动引入常用的工具函数和组件。例如，`ref`、`computed` 等 Vue 工具函数可以直接使用。
 
 #### 示例
+
 无需导入：
+
 ```vue
 <template>
   <div>{{ count }}</div>
@@ -93,23 +108,27 @@ const count = ref(0);
 ```
 
 ### 6. Vite 默认集成
+
 Nuxt 3 默认集成了 Vite 构建工具，提供了更快的热更新和构建速度，同时支持现代浏览器特性。
 
 #### 优势
+
 - 更快的开发体验。
 - 更小的打包体积。
 - 开箱即用的支持。
 
 ### 7. 动态模块加载
+
 Nuxt 3 支持动态模块加载，开发者可以根据需求加载特定模块，提升性能并减少打包大小。
 
 #### 示例
+
 ```ts
 export default defineNuxtConfig({
   modules: [
-    '@nuxtjs/axios',
-    async () => (await import('@nuxtjs/tailwindcss')).default
-  ]
+    "@nuxtjs/axios",
+    async () => (await import("@nuxtjs/tailwindcss")).default,
+  ],
 });
 ```
 
@@ -125,3 +144,141 @@ export default defineNuxtConfig({
 ## 总结
 
 Nuxt 3 带来了诸多令人兴奋的新特性，无论是性能优化、开发体验提升还是部署灵活性，都为现代 Web 开发提供了强有力的支持。如果你正在寻找一款全能的前端框架，Nuxt 3 是一个值得尝试的选择。
+
+### 8. 边缘计算支持
+
+Nuxt 3 通过 Nitro 引擎提供了强大的边缘计算能力，可以在 CDN 边缘节点运行应用逻辑。
+
+#### 示例：边缘中间件
+
+```ts
+// middleware/edge.ts
+export default defineEventHandler((event) => {
+  const country = event.headers.get("x-vercel-ip-country");
+  if (country === "CN") {
+    return sendRedirect(event, "/zh");
+  }
+});
+```
+
+### 9. 高级 SSR 功能
+
+Nuxt 3 提供了更灵活的服务端渲染选项，包括按需渲染和混合渲染模式。
+
+#### 示例：混合渲染
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  routeRules: {
+    "/": { prerender: true },
+    "/blog/**": { swr: 3600 },
+    "/api/**": { cors: true },
+    "/admin/**": { ssr: false },
+  },
+});
+```
+
+### 10. 静态站点优化
+
+Nuxt 3 改进了静态站点生成的性能和灵活性。
+
+#### 示例：增量静态生成
+
+```ts
+// pages/posts/[id].vue
+definePageMeta({
+  static: true,
+  revalidate: 60,
+});
+
+export async function getStaticPaths() {
+  const posts = await queryDatabase();
+  return posts.map((post) => ({
+    params: { id: post.id },
+    props: { post },
+  }));
+}
+```
+
+## 高级部署策略
+
+### 1. 多环境配置
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  runtimeConfig: {
+    apiSecret: "", // 服务器端
+    public: {
+      apiBase: "", // 客户端
+    },
+  },
+});
+```
+
+### 2. 自动化部署
+
+```yaml
+# .github/workflows/deploy.yml
+name: Deploy
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+      - run: npm ci
+      - run: npm run build
+      - uses: cloudflare/wrangler-action@v3
+```
+
+### 3. 性能监控
+
+```ts
+// plugins/performance.ts
+export default defineNuxtPlugin(() => {
+  if (process.client) {
+    const observer = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        console.log(
+          "Performance:",
+          entry.name,
+          entry.startTime,
+          entry.duration
+        );
+      }
+    });
+    observer.observe({ entryTypes: ["navigation", "resource"] });
+  }
+});
+```
+
+## 最佳实践建议
+
+1. **状态管理**
+
+   - 使用 Pinia 替代 Vuex
+   - 合理划分 store 模块
+   - 利用 SSR 状态复用
+
+2. **API 集成**
+
+   - 使用 composables 封装 API 调用
+   - 实现请求缓存和错误处理
+   - 支持类型安全的 API 响应
+
+3. **性能优化**
+
+   - 实施组件级代码分割
+   - 配置资源预加载
+   - 优化字体加载策略
+   - 使用服务端组件
+
+4. **开发工具链**
+   - 配置 ESLint 和 Prettier
+   - 使用 Husky 管理 Git Hooks
+   - 实施自动化测试

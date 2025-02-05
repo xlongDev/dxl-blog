@@ -35,13 +35,13 @@ Express 通常被用于：
 下面是一个简单的 Express 应用示例：
 
 ```javascript
-const express = require('express');
+const express = require("express");
 const app = express();
 const port = 3000;
 
 // 根路由处理
-app.get('/', (req, res) => {
-  res.send('Hello, Express!');
+app.get("/", (req, res) => {
+  res.send("Hello, Express!");
 });
 
 // 启动服务器
@@ -61,15 +61,15 @@ app.listen(port, () => {
 #### 基本路由
 
 ```javascript
-app.get('/user', (req, res) => {
-  res.send('User Page');
+app.get("/user", (req, res) => {
+  res.send("User Page");
 });
 ```
 
 #### 路由参数
 
 ```javascript
-app.get('/user/:id', (req, res) => {
+app.get("/user/:id", (req, res) => {
   const userId = req.params.id;
   res.send(`User ID: ${userId}`);
 });
@@ -83,7 +83,7 @@ app.get('/user/:id', (req, res) => {
 
 ```javascript
 app.use((req, res, next) => {
-  console.log('Time:', Date.now());
+  console.log("Time:", Date.now());
   next();
 });
 ```
@@ -91,12 +91,16 @@ app.use((req, res, next) => {
 #### 路由级中间件
 
 ```javascript
-app.get('/user', (req, res, next) => {
-  console.log('User route middleware');
-  next();
-}, (req, res) => {
-  res.send('User Page');
-});
+app.get(
+  "/user",
+  (req, res, next) => {
+    console.log("User route middleware");
+    next();
+  },
+  (req, res) => {
+    res.send("User Page");
+  }
+);
 ```
 
 ### 3. 静态文件服务
@@ -104,7 +108,7 @@ app.get('/user', (req, res, next) => {
 Express 可以快速托管静态文件：
 
 ```javascript
-app.use(express.static('public'));
+app.use(express.static("public"));
 ```
 
 将上述代码中的 `public` 替换为静态资源文件夹路径即可。
@@ -114,11 +118,11 @@ app.use(express.static('public'));
 Express 支持多种模板引擎，例如 Pug：
 
 ```javascript
-app.set('view engine', 'pug');
-app.set('views', './views');
+app.set("view engine", "pug");
+app.set("views", "./views");
 
-app.get('/home', (req, res) => {
-  res.render('index', { title: 'Home', message: 'Welcome to Express!' });
+app.get("/home", (req, res) => {
+  res.render("index", { title: "Home", message: "Welcome to Express!" });
 });
 ```
 
@@ -153,7 +157,7 @@ Express 提供了简单的错误处理机制：
 ```javascript
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).send('Something broke!');
+  res.status(500).send("Something broke!");
 });
 ```
 
@@ -162,8 +166,216 @@ app.use((err, req, res, next) => {
 使用 `cors` 中间件轻松启用 CORS：
 
 ```javascript
-const cors = require('cors');
+const cors = require("cors");
 app.use(cors());
+```
+
+## 中间件开发指南
+
+### 1. 中间件的基本结构
+
+```javascript
+const myMiddleware = (options = {}) => {
+  return (req, res, next) => {
+    // 中间件逻辑
+    next();
+  };
+};
+```
+
+### 2. 常见中间件类型
+
+#### 认证中间件
+
+```javascript
+const authMiddleware = (req, res, next) => {
+  const token = req.headers.authorization;
+  if (!token) {
+    return res.status(401).json({ message: "未授权访问" });
+  }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    res.status(401).json({ message: "无效的令牌" });
+  }
+};
+```
+
+#### 日志中间件
+
+```javascript
+const loggerMiddleware = (req, res, next) => {
+  const start = Date.now();
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    console.log(`${req.method} ${req.url} ${res.statusCode} - ${duration}ms`);
+  });
+  next();
+};
+```
+
+#### 错误处理中间件
+
+```javascript
+const errorHandler = (err, req, res, next) => {
+  console.error(err.stack);
+  res.status(err.status || 500).json({
+    error: {
+      message: err.message,
+      status: err.status,
+      stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+    },
+  });
+};
+```
+
+## 实战案例
+
+### 1. RESTful API 服务
+
+```javascript
+const express = require("express");
+const app = express();
+
+// 中间件配置
+app.use(express.json());
+app.use(loggerMiddleware);
+
+// 用户路由
+const userRouter = express.Router();
+
+userRouter.get("/", async (req, res) => {
+  const users = await User.find();
+  res.json(users);
+});
+
+userRouter.post("/", async (req, res) => {
+  const user = new User(req.body);
+  await user.save();
+  res.status(201).json(user);
+});
+
+app.use("/api/users", authMiddleware, userRouter);
+```
+
+### 2. 文件上传服务
+
+```javascript
+const multer = require("multer");
+const path = require("path");
+
+const storage = multer.diskStorage({
+  destination: "./uploads/",
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+
+const upload = multer({ storage });
+
+app.post("/upload", upload.single("file"), (req, res) => {
+  res.json({
+    message: "文件上传成功",
+    file: req.file,
+  });
+});
+```
+
+### 3. 实时聊天应用
+
+```javascript
+const express = require("express");
+const http = require("http");
+const socketIo = require("socket.io");
+
+const app = express();
+const server = http.createServer(app);
+const io = socketIo(server);
+
+io.on("connection", (socket) => {
+  console.log("用户已连接");
+
+  socket.on("chat message", (msg) => {
+    io.emit("chat message", msg);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("用户已断开连接");
+  });
+});
+
+server.listen(3000);
+```
+
+## 性能优化
+
+### 1. 压缩响应
+
+```javascript
+const compression = require("compression");
+app.use(compression());
+```
+
+### 2. 缓存控制
+
+```javascript
+app.use(
+  express.static("public", {
+    maxAge: "1d",
+    etag: true,
+  })
+);
+```
+
+### 3. 负载均衡
+
+```javascript
+const cluster = require("cluster");
+const numCPUs = require("os").cpus().length;
+
+if (cluster.isMaster) {
+  for (let i = 0; i < numCPUs; i++) {
+    cluster.fork();
+  }
+} else {
+  const app = express();
+  // 应用配置
+  app.listen(3000);
+}
+```
+
+## 安全最佳实践
+
+### 1. 安全中间件
+
+```javascript
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+
+app.use(helmet());
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15分钟
+  max: 100, // 限制每个IP 100次请求
+});
+
+app.use(limiter);
+```
+
+### 2. CORS 配置
+
+```javascript
+const cors = require("cors");
+
+app.use(
+  cors({
+    origin: ["http://localhost:3000"],
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 ```
 
 ## 常用工具与中间件
@@ -183,4 +395,3 @@ app.use(cors());
 ## 总结
 
 Express.js 是一个功能强大且灵活的 Web 框架，非常适合快速构建 Web 应用和 API。通过学习其核心概念和扩展功能，开发者可以轻松应对各种后端开发场景。如果你正在寻找一个高效的工具来开发 Web 服务，Express.js 是一个不错的选择。
-

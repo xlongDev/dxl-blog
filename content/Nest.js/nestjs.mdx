@@ -35,12 +35,13 @@ Nest.js 是一个开源框架，由 **Kamil Myśliwiec** 于 2017 年创建。�
 ## 核心概念
 
 ### 模块（Modules）
+
 模块是 Nest.js 的核心构建块，每个模块代表应用程序的一个功能单元。模块通过装饰器 `@Module` 定义，以下是一个基本模块示例：
 
 ```typescript
-import { Module } from '@nestjs/common';
-import { CatsController } from './cats.controller';
-import { CatsService } from './cats.service';
+import { Module } from "@nestjs/common";
+import { CatsController } from "./cats.controller";
+import { CatsService } from "./cats.service";
 
 @Module({
   controllers: [CatsController],
@@ -50,40 +51,43 @@ export class CatsModule {}
 ```
 
 ### 控制器（Controllers）
+
 控制器负责处理传入的请求并返回响应，使用 `@Controller` 装饰器定义。例如：
 
 ```typescript
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get } from "@nestjs/common";
 
-@Controller('cats')
+@Controller("cats")
 export class CatsController {
   @Get()
   findAll(): string {
-    return 'This action returns all cats';
+    return "This action returns all cats";
   }
 }
 ```
 
 ### 提供者（Providers）
+
 提供者是任何可注入的服务，通常用于封装业务逻辑。使用 `@Injectable` 装饰器定义：
 
 ```typescript
-import { Injectable } from '@nestjs/common';
+import { Injectable } from "@nestjs/common";
 
 @Injectable()
 export class CatsService {
   findAll(): string {
-    return 'This action returns all cats';
+    return "This action returns all cats";
   }
 }
 ```
 
 ### 中间件（Middleware）
+
 中间件是一种函数，可以在请求到达路由处理器之前执行。例如：
 
 ```typescript
-import { Injectable, NestMiddleware } from '@nestjs/common';
-import { Request, Response, NextFunction } from 'express';
+import { Injectable, NestMiddleware } from "@nestjs/common";
+import { Request, Response, NextFunction } from "express";
 
 @Injectable()
 export class LoggerMiddleware implements NestMiddleware {
@@ -95,21 +99,23 @@ export class LoggerMiddleware implements NestMiddleware {
 ```
 
 ### 守卫（Guards）
+
 守卫用于实现自定义的认证和授权逻辑。通过实现 `CanActivate` 接口定义：
 
 ```typescript
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext } from "@nestjs/common";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest();
-    return request.headers.authorization === 'valid-token';
+    return request.headers.authorization === "valid-token";
   }
 }
 ```
 
 ### 拦截器（Interceptors）
+
 拦截器用于转换数据或扩展函数行为。例如：
 
 ```typescript
@@ -118,9 +124,9 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
-} from '@nestjs/common';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+} from "@nestjs/common";
+import { Observable } from "rxjs";
+import { map } from "rxjs/operators";
 
 @Injectable()
 export class TransformInterceptor<T> implements NestInterceptor<T, any> {
@@ -133,15 +139,19 @@ export class TransformInterceptor<T> implements NestInterceptor<T, any> {
 ## 主要特性
 
 ### GraphQL 支持
+
 Nest.js 内置对 GraphQL 的支持，提供基于代码优先（Code-first）和模式优先（Schema-first）两种开发模式。
 
 ### 数据库集成
+
 支持多种数据库 ORM，如 TypeORM、Sequelize 和 Mongoose，开发者可以根据项目需求选择合适的工具。
 
 ### 实时功能
+
 通过 WebSocket 或 Socket.IO，可以轻松实现实时通信功能。
 
 ### 测试驱动开发（TDD）
+
 Nest.js 强调测试，提供内置的单元测试和端到端测试工具。
 
 ## 应用场景
@@ -154,11 +164,13 @@ Nest.js 强调测试，提供内置的单元测试和端到端测试工具。
 ## 如何开始
 
 1. 安装 Nest.js CLI：
+
    ```bash
    npm i -g @nestjs/cli
    ```
 
 2. 创建新项目：
+
    ```bash
    nest new project-name
    ```
@@ -167,6 +179,224 @@ Nest.js 强调测试，提供内置的单元测试和端到端测试工具。
    ```bash
    npm run start:dev
    ```
+
+### 高级特性与实践
+
+#### 自定义装饰器
+
+装饰器是 Nest.js 中非常强大的功能，可以用来扩展类、方法或参数的行为。以下是一个自定义装饰器的示例：
+
+```typescript
+import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+
+export const User = createParamDecorator(
+  (data: unknown, ctx: ExecutionContext) => {
+    const request = ctx.switchToHttp().getRequest();
+    return request.user;
+  },
+);
+
+// 在控制器中使用
+@Get('profile')
+getProfile(@User() user: UserEntity) {
+  return user;
+}
+```
+
+#### 管道（Pipes）
+
+管道用于数据转换和验证，以下是一个自定义验证管道的示例：
+
+```typescript
+import { PipeTransform, Injectable, ArgumentMetadata, BadRequestException } from '@nestjs/common';
+
+@Injectable()
+export class ParseIntPipe implements PipeTransform<string, number> {
+  transform(value: string, metadata: ArgumentMetadata): number {
+    const val = parseInt(value, 10);
+    if (isNaN(val)) {
+      throw new BadRequestException('Validation failed');
+    }
+    return val;
+  }
+}
+
+// 在控制器中使用
+@Get(':id')
+findOne(@Param('id', new ParseIntPipe()) id: number) {
+  return this.service.findOne(id);
+}
+```
+
+### 微服务架构实现
+
+#### 消息队列集成
+
+Nest.js 支持多种消息队列实现，以下是使用 Redis 作为消息代理的示例：
+
+```typescript
+import { ClientsModule, Transport } from "@nestjs/microservices";
+
+@Module({
+  imports: [
+    ClientsModule.register([
+      {
+        name: "MATH_SERVICE",
+        transport: Transport.REDIS,
+        options: {
+          host: "localhost",
+          port: 6379,
+        },
+      },
+    ]),
+  ],
+})
+export class AppModule {}
+```
+
+#### 服务发现
+
+使用 Consul 进行服务发现的配置示例：
+
+```typescript
+import { ConsulService } from "@nestjs/consul";
+
+@Injectable()
+export class ServiceRegistry {
+  constructor(private readonly consulService: ConsulService) {}
+
+  async register() {
+    await this.consulService.register({
+      name: "my-service",
+      address: "localhost",
+      port: 3000,
+      check: {
+        http: "http://localhost:3000/health",
+        interval: "10s",
+      },
+    });
+  }
+}
+```
+
+### 性能优化
+
+#### 缓存策略
+
+使用缓存提高应用性能：
+
+```typescript
+import { CacheModule, CacheInterceptor } from '@nestjs/common';
+import * as redisStore from 'cache-manager-redis-store';
+
+@Module({
+  imports: [
+    CacheModule.register({
+      store: redisStore,
+      host: 'localhost',
+      port: 6379,
+      ttl: 600,
+    }),
+  ],
+})
+export class AppModule {}
+
+// 在控制器中使用缓存
+@UseInterceptors(CacheInterceptor)
+@Get('products')
+getProducts() {
+  return this.productsService.findAll();
+}
+```
+
+#### 数据库优化
+
+使用 TypeORM 查询优化示例：
+
+```typescript
+@Injectable()
+export class ProductsService {
+  constructor(
+    @InjectRepository(Product)
+    private productsRepository: Repository<Product>
+  ) {}
+
+  async findAll() {
+    return this.productsRepository
+      .createQueryBuilder("product")
+      .leftJoinAndSelect("product.category", "category")
+      .cache(true)
+      .getMany();
+  }
+}
+```
+
+### 安全性与认证
+
+#### JWT 认证实现
+
+```typescript
+import { JwtModule } from "@nestjs/jwt";
+import { PassportModule } from "@nestjs/passport";
+
+@Module({
+  imports: [
+    PassportModule,
+    JwtModule.register({
+      secret: "your-secret-key",
+      signOptions: { expiresIn: "60m" },
+    }),
+  ],
+})
+export class AuthModule {}
+
+// JWT 策略实现
+@Injectable()
+export class JwtStrategy extends PassportStrategy(Strategy) {
+  constructor() {
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ignoreExpiration: false,
+      secretOrKey: "your-secret-key",
+    });
+  }
+
+  async validate(payload: any) {
+    return { userId: payload.sub, username: payload.username };
+  }
+}
+```
+
+#### CORS 和 Helmet 配置
+
+```typescript
+import { NestFactory } from "@nestjs/core";
+import * as helmet from "helmet";
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  // 启用 Helmet 中间件
+  app.use(helmet());
+
+  // 配置 CORS
+  app.enableCors({
+    origin: ["http://localhost:3000"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  });
+
+  await app.listen(3000);
+}
+```
+
+### 最佳实践
+
+1. **异常处理**：使用全局异常过滤器统一处理错误响应。
+2. **配置管理**：使用 `@nestjs/config` 管理环境变量和配置。
+3. **日志记录**：实现自定义日志服务进行统一日志管理。
+4. **API 文档**：使用 Swagger 自动生成 API 文档。
+5. **单元测试**：为每个组件编写完整的单元测试。
 
 ## 总结
 

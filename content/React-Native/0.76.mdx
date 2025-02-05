@@ -139,7 +139,7 @@ export default {
 
 ```java
 import com.facebook.react.soloader.OpenSourceMergedSoMapping;
-import com.facebook.soloader.SoLoader;
+import com.facebook.react.soloader.SoLoader;
 
 class MainApplication extends Application implements ReactApplication {
 
@@ -165,3 +165,129 @@ class MainApplication extends Application implements ReactApplication {
 React Native 0.76 版本带来了重大更新，包括默认启用新架构、引入 React Native DevTools、性能提升以及新增样式属性等。这些改进旨在提升开发者体验和应用性能，建议开发者尽快升级项目以充分利用这些新特性。
 
 如需了解更多详细信息，请参考[官方发布公告](https://reactnative.dev/blog/2024/01/03/0.76-stable)和相关文档。
+
+## 新架构深入解析
+
+### Fabric 渲染器
+
+Fabric 是 React Native 新架构中的核心渲染系统，它带来了以下优势：
+
+- **同步渲染**：减少了 JavaScript 和原生层之间的通信开销
+- **一致的布局**：确保 iOS 和 Android 平台上的一致性
+- **更好的内存管理**：通过共享内存优化性能
+
+#### 示例：使用 Fabric 的优化组件
+
+```jsx
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+
+function OptimizedComponent() {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.text}>Fabric 优化的组件</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  text: {
+    fontSize: 16,
+    color: "#000",
+  },
+});
+```
+
+### TurboModules
+
+TurboModules 是新架构中的原生模块系统，提供了以下特性：
+
+- **懒加载**：按需加载原生模块
+- **类型安全**：通过 TypeScript 和 Codegen 提供类型检查
+- **更好的性能**：减少了 JavaScript 和原生代码之间的序列化开销
+
+#### 示例：创建 TurboModule
+
+```typescript
+// NativeCalculator.ts
+import { TurboModule, TurboModuleRegistry } from "react-native";
+
+export interface Spec extends TurboModule {
+  add(a: number, b: number): Promise<number>;
+  multiply(a: number, b: number): number;
+}
+
+export default TurboModuleRegistry.getEnforcing<Spec>("Calculator");
+```
+
+## 高级性能优化
+
+### 1. 使用 Hermes 引擎
+
+Hermes 是专为 React Native 优化的 JavaScript 引擎，建议在项目中启用：
+
+```json
+// android/app/build.gradle
+def enableHermes = true
+```
+
+### 2. 内存优化
+
+```jsx
+import React, { useCallback, useState } from "react";
+import { View, Image } from "react-native";
+
+function MemoryOptimizedImage() {
+  const [imageError, setImageError] = useState(false);
+
+  const handleError = useCallback(() => {
+    setImageError(true);
+  }, []);
+
+  return (
+    <View>
+      <Image
+        source={
+          imageError
+            ? require("./fallback.png")
+            : { uri: "https://example.com/image.jpg" }
+        }
+        onError={handleError}
+        loadingIndicatorSource={require("./placeholder.png")}
+        progressiveRenderingEnabled={true}
+      />
+    </View>
+  );
+}
+```
+
+### 3. 网络优化
+
+```jsx
+import { Image } from "react-native";
+
+// 预加载图片
+Image.prefetch("https://example.com/image.jpg");
+
+// 使用 FastImage 组件优化图片加载
+import FastImage from "react-native-fast-image";
+
+function OptimizedImageList() {
+  return (
+    <FastImage
+      style={{ width: 200, height: 200 }}
+      source={{
+        uri: "https://example.com/image.jpg",
+        priority: FastImage.priority.high,
+        cache: FastImage.cacheControl.immutable,
+      }}
+      resizeMode={FastImage.resizeMode.contain}
+    />
+  );
+}
+```

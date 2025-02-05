@@ -27,6 +27,27 @@ React Native 主要由以下几部分组成：
 2. **Bridge（桥）**：连接 JavaScript 层和原生层，负责数据传输。
 3. **Native 层**：包括 iOS（Objective-C/Swift）和 Android（Java/Kotlin）原生代码，执行核心功能。
 
+### 新架构（Fabric）深入解析
+
+Fabric 是 React Native 的新一代渲染系统，带来了以下重要改进：
+
+1. **同步渲染**
+
+   - 减少了 JavaScript 和原生层之间的通信开销
+   - 提供更流畅的用户体验
+   - 支持并发模式和 Suspense
+
+2. **统一的布局引擎**
+
+   - 使用 Yoga 布局引擎
+   - 确保 iOS 和 Android 平台的一致性
+   - 提供更好的性能和内存管理
+
+3. **Turbo Modules**
+   - 支持原生模块的懒加载
+   - 提供更好的类型安全性
+   - 减少启动时间和内存使用
+
 ## 核心组件
 
 React Native 提供了一系列基础 UI 组件：
@@ -40,14 +61,17 @@ React Native 提供了一系列基础 UI 组件：
 ### 示例代码：创建一个简单的 React Native 页面
 
 ```jsx
-import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import React from "react";
+import { View, Text, Image, StyleSheet } from "react-native";
 
 const App = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>欢迎使用 React Native</Text>
-      <Image source={{ uri: 'https://reactnative.dev/img/tiny_logo.png' }} style={styles.image} />
+      <Image
+        source={{ uri: "https://reactnative.dev/img/tiny_logo.png" }}
+        style={styles.image}
+      />
     </View>
   );
 };
@@ -55,12 +79,12 @@ const App = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   image: {
     width: 50,
@@ -72,9 +96,114 @@ const styles = StyleSheet.create({
 export default App;
 ```
 
+## 状态管理与导航
+
+### Redux 集成
+
+```jsx
+import { configureStore } from "@reduxjs/toolkit";
+import { Provider } from "react-redux";
+
+const store = configureStore({
+  reducer: {
+    // 你的 reducers
+  },
+});
+
+const App = () => (
+  <Provider store={store}>
+    <RootNavigator />
+  </Provider>
+);
+```
+
+### React Navigation
+
+```jsx
+import { NavigationContainer } from "@react-navigation/native";
+import { createStackNavigator } from "@react-navigation/stack";
+
+const Stack = createStackNavigator();
+
+function App() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Details" component={DetailsScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
+```
+
+## 性能优化技巧
+
+### 1. 使用 memo 和 useCallback
+
+```jsx
+import React, { memo, useCallback } from "react";
+
+const ExpensiveComponent = memo(({ onPress, data }) => {
+  return (
+    <TouchableOpacity onPress={onPress}>
+      <Text>{data.title}</Text>
+    </TouchableOpacity>
+  );
+});
+
+const ParentComponent = () => {
+  const handlePress = useCallback(() => {
+    // 处理点击事件
+  }, []);
+
+  return <ExpensiveComponent onPress={handlePress} data={data} />;
+};
+```
+
+### 2. 图片优化
+
+```jsx
+import FastImage from "react-native-fast-image";
+
+const OptimizedImage = () => (
+  <FastImage
+    style={{ width: 200, height: 200 }}
+    source={{
+      uri: "https://example.com/image.jpg",
+      priority: FastImage.priority.high,
+      cache: FastImage.cacheControl.immutable,
+    }}
+    resizeMode={FastImage.resizeMode.contain}
+  />
+);
+```
+
+### 3. FlatList 性能优化
+
+```jsx
+const OptimizedList = () => (
+  <FlatList
+    data={items}
+    renderItem={renderItem}
+    keyExtractor={(item) => item.id}
+    initialNumToRender={10}
+    maxToRenderPerBatch={10}
+    windowSize={5}
+    removeClippedSubviews={true}
+    getItemLayout={(data, index) => ({
+      length: ITEM_HEIGHT,
+      offset: ITEM_HEIGHT * index,
+      index,
+    })}
+  />
+);
+```
+
 ## React Native 开发环境搭建
 
 ### 1. 安装 Node.js 和 npm
+
 React Native 依赖 Node.js 运行 JavaScript 代码，建议安装最新稳定版本的 Node.js。
 
 ```sh
@@ -108,8 +237,63 @@ npx react-native run-android
 npx react-native run-ios
 ```
 
-## 结论
+## 调试技巧
 
-React Native 作为一种高效的跨平台移动开发方案，凭借其 React 生态、原生性能和庞大社区，成为众多开发者的首选。如果你熟悉 React，那么学习 React Native 会变得更加容易。
+### 1. 使用 React Native Debugger
 
-未来，随着 React Native 不断优化和发展，它在移动开发领域的应用前景将更加广阔。
+- 支持 Redux DevTools
+- 网络请求监控
+- 元素检查器
+
+### 2. 性能监控
+
+```jsx
+import { PerformanceObserver } from "react-native";
+
+const observer = new PerformanceObserver((list) => {
+  const entries = list.getEntries();
+  entries.forEach((entry) => {
+    console.log(`${entry.name}: ${entry.duration}ms`);
+  });
+});
+
+observer.observe({ entryTypes: ["measure"] });
+```
+
+## 原生模块开发
+
+### 创建自定义原生模块
+
+```java
+// Android
+public class CustomModule extends ReactContextBaseJavaModule {
+  @ReactMethod
+  public void customMethod(String message, Promise promise) {
+    try {
+      // 实现原生功能
+      promise.resolve("Success");
+    } catch (Exception e) {
+      promise.reject("ERROR", e.getMessage());
+    }
+  }
+}
+```
+
+```swift
+// iOS
+@objc(CustomModule)
+class CustomModule: NSObject {
+  @objc
+  func customMethod(_ message: String, resolver resolve: @escaping RCTPromiseResolveBlock,
+                   rejecter reject: @escaping RCTPromiseRejectBlock) {
+    // 实现原生功能
+    resolve("Success")
+  }
+}
+```
+
+## 总结
+
+React Native 作为一种高效的跨平台移动开发方案，凭借其 React 生态、原生性能和庞大社区，成为众多开发者的首选。通过本文介绍的新架构特性、性能优化技巧、状态管理方案和原生模块开发等内容，开发者可以更好地掌握 React Native 开发。
+
+随着 React Native 不断优化和发展，特别是新架构的全面推广，它在移动开发领域的应用前景将更加广阔。建议开发者持续关注 React Native 的最新进展，以便更好地利用这个强大的框架。

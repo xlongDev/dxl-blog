@@ -19,141 +19,275 @@ Vuex 是一个专为 Vue.js 应用设计的状态管理模式，核心思想是�
 Vuex 由以下几个核心概念组成：
 
 ### 1. State（状态）
+
 State 是存储应用中共享数据的地方。Vuex 提供了一个集中式的状态存储，所有组件都可以访问。
 
 ```javascript
 const store = new Vuex.Store({
   state: {
-    count: 0
-  }
+    count: 0,
+    user: null,
+    todos: [],
+  },
 });
 
-console.log(store.state.count); // 0
+// 在组件中访问状态
+export default {
+  computed: {
+    count() {
+      return this.$store.state.count;
+    },
+  },
+};
 ```
 
 ### 2. Mutations（突变）
-Mutations 是唯一允许更改状态的方式。每个 mutation 都有一个字符串的事件类型和一个回调函数。调用 `store.commit` 提交 mutation 时，状态会更新。
+
+Mutations 是唯一允许更改状态的方式。每个 mutation 都有一个字符串的事件类型和一个回调函数。
 
 ```javascript
 const store = new Vuex.Store({
   state: {
-    count: 0
+    count: 0,
   },
   mutations: {
-    increment(state) {
-      state.count++;
-    }
-  }
+    increment(state, payload = 1) {
+      state.count += payload;
+    },
+    setUser(state, user) {
+      state.user = user;
+    },
+  },
 });
 
-store.commit('increment');
-console.log(store.state.count); // 1
+// 提交 mutation
+store.commit("increment", 5);
+store.commit("setUser", { id: 1, name: "John" });
+
+// 对象风格提交
+store.commit({
+  type: "increment",
+  amount: 10,
+});
 ```
 
 ### 3. Actions（动作）
-Actions 类似于 mutations，但不同的是：
-- Actions 提交的是 mutations，而不是直接改变状态。
-- Actions 可以包含异步操作。
+
+Actions 用于处理异步操作和复杂的业务逻辑。
 
 ```javascript
 const store = new Vuex.Store({
   state: {
-    count: 0
+    user: null,
   },
   mutations: {
-    increment(state) {
-      state.count++;
-    }
+    setUser(state, user) {
+      state.user = user;
+    },
   },
   actions: {
-    incrementAsync({ commit }) {
-      setTimeout(() => {
-        commit('increment');
-      }, 1000);
-    }
-  }
+    async login({ commit }, credentials) {
+      try {
+        const user = await api.login(credentials);
+        commit("setUser", user);
+        return user;
+      } catch (error) {
+        console.error("Login failed:", error);
+        throw error;
+      }
+    },
+    async fetchUserData({ commit, state }) {
+      if (!state.user) return;
+      const data = await api.getUserData(state.user.id);
+      commit("setUserData", data);
+    },
+  },
 });
 
-store.dispatch('incrementAsync');
+// 分发 action
+store.dispatch("login", { username: "john", password: "123456" });
 ```
 
-### 4. Getters
-Getters 是 Vuex 的计算属性。它们可以根据状态派生出新的数据，供组件使用。
+### 4. Getters（计算属性）
+
+Getters 用于从 store 的 state 中派生出一些状态。
 
 ```javascript
 const store = new Vuex.Store({
   state: {
     todos: [
-      { id: 1, text: 'Learn Vue', done: true },
-      { id: 2, text: 'Learn Vuex', done: false }
-    ]
+      { id: 1, text: "Learn Vue", done: true },
+      { id: 2, text: "Learn Vuex", done: false },
+    ],
   },
   getters: {
-    doneTodos: state => {
-      return state.todos.filter(todo => todo.done);
-    }
-  }
+    doneTodos: (state) => state.todos.filter((todo) => todo.done),
+    doneTodosCount: (state, getters) => getters.doneTodos.length,
+    getTodoById: (state) => (id) => state.todos.find((todo) => todo.id === id),
+  },
 });
 
-console.log(store.getters.doneTodos); // [{ id: 1, text: 'Learn Vue', done: true }]
+// 在组件中使用 getters
+export default {
+  computed: {
+    doneTodosCount() {
+      return this.$store.getters.doneTodosCount;
+    },
+    // 方法形式访问
+    getTodoById() {
+      return this.$store.getters.getTodoById;
+    },
+  },
+};
 ```
 
-### 5. Modules（模块）
-随着应用规模的增长，Vuex 允许将状态和变更逻辑划分为多个模块（module）。
+## 模块化
+
+### 模块的定义和注册
 
 ```javascript
-const moduleA = {
-  state: () => ({ count: 0 }),
+// user.js
+const user = {
+  namespaced: true,
+  state: () => ({
+    profile: null,
+    settings: {},
+  }),
   mutations: {
-    increment(state) {
-      state.count++;
-    }
+    setProfile(state, profile) {
+      state.profile = profile;
+    },
   },
   actions: {
-    incrementIfOdd({ state, commit }) {
-      if (state.count % 2 !== 0) {
-        commit('increment');
-      }
-    }
+    async updateProfile({ commit }, data) {
+      const profile = await api.updateProfile(data);
+      commit("setProfile", profile);
+    },
   },
   getters: {
-    doubleCount: state => state.count * 2
+    isAdmin: (state) => state.profile?.role === "admin",
+  },
+};
+
+// store/index.js
+import { createStore } from "vuex";
+import user from "./modules/user";
+import cart from "./modules/cart";
+
+export default createStore({
+  modules: {
+    user,
+    cart,
+  },
+});
+```
+
+### 命名空间
+
+```javascript
+// 在带命名空间的模块内访问全局内容
+const module = {
+  namespaced: true,
+  actions: {
+    someAction({ dispatch, commit, getters, rootGetters }) {
+      commit("someMutation"); // 局部提交
+      commit("someMutation", null, { root: true }); // 全局提交
+
+      dispatch("someOtherAction"); // 局部分发
+      dispatch("someOtherAction", null, { root: true }); // 全局分发
+    },
+  },
+};
+```
+
+## 插件系统
+
+### 状态持久化插件
+
+```javascript
+// 创建持久化插件
+const persistPlugin = (store) => {
+  // 从 localStorage 恢复状态
+  const savedState = localStorage.getItem("vuex-state");
+  if (savedState) {
+    store.replaceState(JSON.parse(savedState));
   }
+
+  // 订阅状态变更
+  store.subscribe((mutation, state) => {
+    localStorage.setItem("vuex-state", JSON.stringify(state));
+  });
+};
+
+// 使用插件
+const store = new Vuex.Store({
+  plugins: [persistPlugin],
+});
+```
+
+### 日志插件
+
+```javascript
+const logPlugin = (store) => {
+  store.subscribe((mutation, state) => {
+    console.log("mutation:", mutation.type);
+    console.log("payload:", mutation.payload);
+    console.log("new state:", state);
+  });
 };
 
 const store = new Vuex.Store({
-  modules: {
-    a: moduleA
-  }
+  plugins: process.env.NODE_ENV !== "production" ? [logPlugin] : [],
 });
-
-store.commit('increment');
-console.log(store.state.a.count); // 1
 ```
 
-## Vuex 的优缺点
+## 最佳实践
 
-### 优点
-1. **集中式管理：** 所有共享状态集中存储，便于调试和维护。
-2. **响应式：** 状态变化会自动更新依赖的组件。
-3. **调试工具支持：** Vuex 提供了专门的 DevTools 插件，方便状态跟踪和时间旅行调试。
+### 1. 目录结构
 
-### 缺点
-1. **学习成本：** 对于小型应用，引入 Vuex 可能显得过于复杂。
-2. **模板代码较多：** 定义 state、mutations、actions 等可能需要重复写模板代码。
+```
+store/
+  ├── index.js          # 组装模块并导出 store
+  ├── actions.js        # 根级别的 actions
+  ├── mutations.js      # 根级别的 mutations
+  └── modules/
+      ├── user.js       # 用户模块
+      ├── products.js    # 产品模块
+      └── cart.js       # 购物车模块
+```
 
-## 适用场景
+### 2. 类型检查
 
-Vuex 最适合以下场景：
-- 组件之间需要共享大量状态。
-- 需要追踪复杂的状态变更历史。
-- 存在跨组件的状态依赖。
+```typescript
+// store/types.ts
+interface State {
+  user: User | null;
+  products: Product[];
+  cart: CartItem[];
+}
 
-对于简单应用，可以考虑使用 Vue 3 的 Composition API 或小型状态管理库（如 Pinia）。
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
+// store/index.ts
+import { InjectionKey } from "vue";
+import { createStore, Store } from "vuex";
+import { State } from "./types";
+
+export const key: InjectionKey<Store<State>> = Symbol();
+
+export const store = createStore<State>({
+  state: {
+    user: null,
+    products: [],
+    cart: [],
+  },
+});
+```
 
 ## 总结
 
-Vuex 是一个强大的状态管理库，适用于中大型 Vue.js 项目。通过集中式存储、规范化的状态变更流程以及丰富的开发工具支持，Vuex 能显著提升开发效率和代码可维护性。
-
-在选择使用 Vuex 时，应根据应用的复杂度权衡成本与收益，确保状态管理工具与项目需求匹配。
-
+Vuex 是一个功能强大的状态管理库，通过其核心概念（State、Mutations、Actions、Getters）和模块化系统，可以有效管理复杂应用的状态。结合插件系统和 TypeScript 支持，能够构建出可维护性更强的应用。在选择 Vuex 时，需要考虑项目的规模和复杂度，对于简单的应用，可能使用 Vue 的响应式系统就足够了，而对于大型应用，Vuex 的优势会更加明显。

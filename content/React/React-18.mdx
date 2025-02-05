@@ -15,12 +15,13 @@ React 18 是 React 的一个重要版本更新，它为开发者带来了多项�
 并发渲染是 React 18 最重要的更新之一。它允许 React 在执行渲染任务时更高效地处理优先级较高的更新，而不会阻塞低优先级任务，从而提升应用的响应速度。
 
 #### 使用示例
+
 ```jsx
-import { useState, useTransition } from 'react';
+import { useState, useTransition } from "react";
 
 function App() {
   const [isPending, startTransition] = useTransition();
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [list, setList] = useState([]);
 
   const handleChange = (e) => {
@@ -36,7 +37,15 @@ function App() {
   return (
     <div>
       <input value={input} onChange={handleChange} />
-      {isPending ? <p>Loading...</p> : <ul>{list.map((item, i) => <li key={i}>{item}</li>)}</ul>}
+      {isPending ? (
+        <p>Loading...</p>
+      ) : (
+        <ul>
+          {list.map((item, i) => (
+            <li key={i}>{item}</li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
@@ -51,42 +60,51 @@ function App() {
 React 18 自动批处理多个状态更新，即使这些更新分布在异步操作中。
 
 #### 示例对比
+
 React 18 之前：
+
 ```jsx
 function App() {
   const [count, setCount] = useState(0);
-  const [text, setText] = useState('');
+  const [text, setText] = useState("");
 
   const handleClick = () => {
     setCount(count + 1);
-    setText('Updated');
+    setText("Updated");
   };
 
   return (
-    <button onClick={handleClick}>{count} - {text}</button>
+    <button onClick={handleClick}>
+      {count} - {text}
+    </button>
   );
 }
 ```
+
 在 React 17 中，上述代码会触发两次重新渲染。
 
 React 18 自动批处理：
+
 ```jsx
 function App() {
   const [count, setCount] = useState(0);
-  const [text, setText] = useState('');
+  const [text, setText] = useState("");
 
   const handleClick = () => {
     setTimeout(() => {
       setCount((prev) => prev + 1);
-      setText('Updated');
+      setText("Updated");
     }, 1000);
   };
 
   return (
-    <button onClick={handleClick}>{count} - {text}</button>
+    <button onClick={handleClick}>
+      {count} - {text}
+    </button>
   );
 }
 ```
+
 在 React 18 中，即使状态更新在 `setTimeout` 中，也会批量处理，从而减少渲染次数。
 
 ---
@@ -96,10 +114,11 @@ function App() {
 React 18 扩展了 `Suspense` 的功能，使其不仅支持代码拆分，还支持数据加载的场景。
 
 #### 示例
-```jsx
-import React, { Suspense } from 'react';
 
-const UserProfile = React.lazy(() => import('./UserProfile'));
+```jsx
+import React, { Suspense } from "react";
+
+const UserProfile = React.lazy(() => import("./UserProfile"));
 
 function App() {
   return (
@@ -119,9 +138,10 @@ function App() {
 React 18 引入了流式渲染，以提升服务器端渲染（SSR）的效率，尤其是对于初次加载较慢的页面。
 
 #### 示例
+
 ```javascript
-import { renderToPipeableStream } from 'react-dom/server';
-import App from './App';
+import { renderToPipeableStream } from "react-dom/server";
+import App from "./App";
 
 const { pipe } = renderToPipeableStream(<App />, {
   onShellReady() {
@@ -129,6 +149,7 @@ const { pipe } = renderToPipeableStream(<App />, {
   },
 });
 ```
+
 流式渲染允许服务器先返回高优先级的内容，然后再加载其余部分。
 
 ---
@@ -138,13 +159,15 @@ const { pipe } = renderToPipeableStream(<App />, {
 React 18 引入了两个新的 Hooks：`useTransition` 和 `useDeferredValue`。
 
 #### `useTransition`
+
 `useTransition` 用于管理非紧急更新。
 
 #### 示例
+
 ```jsx
 function App() {
   const [isPending, startTransition] = useTransition();
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState("");
 
   const handleChange = (e) => {
     startTransition(() => {
@@ -162,12 +185,14 @@ function App() {
 ```
 
 #### `useDeferredValue`
+
 `useDeferredValue` 将值延后处理，以避免阻塞主线程。
 
 #### 示例
+
 ```jsx
 function App() {
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState("");
   const deferredValue = useDeferredValue(value);
 
   return (
@@ -184,3 +209,149 @@ function App() {
 ## 结语
 
 React 18 的更新为开发者提供了更多工具，以优化性能并提升用户体验。无论是并发渲染、自动批处理还是 `Suspense` 的扩展，这些特性都可以帮助开发者构建更加高效的应用。
+
+## 性能优化最佳实践
+
+### 1. 使用 useMemo 和 useCallback
+
+在处理大量数据或复杂计算时，合理使用 `useMemo` 和 `useCallback` 可以显著提升性能。
+
+```jsx
+import React, { useState, useMemo, useCallback } from "react";
+
+function ExpensiveComponent({ data, onItemClick }) {
+  // 使用 useMemo 缓存计算结果
+  const processedData = useMemo(() => {
+    return data.map((item) => ({ ...item, processed: true }));
+  }, [data]);
+
+  // 使用 useCallback 缓存回调函数
+  const handleClick = useCallback(
+    (id) => {
+      onItemClick(id);
+    },
+    [onItemClick]
+  );
+
+  return (
+    <ul>
+      {processedData.map((item) => (
+        <li key={item.id} onClick={() => handleClick(item.id)}>
+          {item.name}
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+### 2. 使用 React.memo 优化组件渲染
+
+对于纯展示型组件，使用 `React.memo` 可以避免不必要的重渲染。
+
+```jsx
+const MemoizedComponent = React.memo(function Component({ value }) {
+  return <div>{value}</div>;
+});
+```
+
+### 3. 优化 Suspense 边界
+
+合理设置 Suspense 边界可以提升用户体验：
+
+```jsx
+import React, { Suspense } from "react";
+
+function App() {
+  return (
+    <div>
+      <Suspense fallback={<Header.Skeleton />}>
+        <Header />
+      </Suspense>
+
+      <Suspense fallback={<MainContent.Skeleton />}>
+        <MainContent />
+      </Suspense>
+
+      <Suspense fallback={<Footer.Skeleton />}>
+        <Footer />
+      </Suspense>
+    </div>
+  );
+}
+```
+
+## 实际应用场景
+
+### 1. 大数据列表优化
+
+使用 `startTransition` 优化大数据列表的渲染：
+
+```jsx
+import { useState, useTransition } from "react";
+
+function DataList() {
+  const [isPending, startTransition] = useTransition();
+  const [filter, setFilter] = useState("");
+  const [list, setList] = useState(initialData);
+
+  const handleFilterChange = (e) => {
+    const value = e.target.value;
+    setFilter(value);
+
+    startTransition(() => {
+      const filtered = initialData.filter((item) =>
+        item.name.toLowerCase().includes(value.toLowerCase())
+      );
+      setList(filtered);
+    });
+  };
+
+  return (
+    <div>
+      <input value={filter} onChange={handleFilterChange} />
+      {isPending ? (
+        <div>正在筛选...</div>
+      ) : (
+        <ul>
+          {list.map((item) => (
+            <li key={item.id}>{item.name}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+```
+
+### 2. 流式 SSR 实践
+
+在 Next.js 或其他支持 SSR 的框架中使用流式渲染：
+
+```jsx
+import { Suspense } from "react";
+
+function ProductPage({ productId }) {
+  return (
+    <div>
+      <Suspense fallback={<ProductHeader.Skeleton />}>
+        <ProductHeader id={productId} />
+      </Suspense>
+
+      <Suspense fallback={<ProductDetails.Skeleton />}>
+        <ProductDetails id={productId} />
+      </Suspense>
+
+      <Suspense fallback={<RelatedProducts.Skeleton />}>
+        <RelatedProducts id={productId} />
+      </Suspense>
+    </div>
+  );
+}
+```
+
+## 结语
+
+React 18 的新特性不仅提供了更好的性能和用户体验，还为开发者提供了更多工具来优化应用。通过合理使用这些特性，我们可以构建出更快、更流畅的 React 应用。
+
+欢迎在评论区分享你使用 React 18 的经验和见解！

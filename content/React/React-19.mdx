@@ -26,6 +26,7 @@ React 19 的主要新特性包括：
 ## 并发特性增强
 
 ### 更细粒度的优先级调度
+
 React 19 对并发特性进行了进一步优化，允许开发者更灵活地控制任务的优先级，从而避免因低优先级任务阻塞高优先级任务。
 
 ```jsx
@@ -45,7 +46,15 @@ function App() {
   return (
     <div>
       <button onClick={fetchData}>加载数据</button>
-      {isPending ? <p>加载中...</p> : <ul>{data.map((item) => <li key={item}>{item}</li>)}</ul>}
+      {isPending ? (
+        <p>加载中...</p>
+      ) : (
+        <ul>
+          {data.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
@@ -177,6 +186,146 @@ export default App;
 
 ---
 
+## 迁移指南
+
+### 从 React 18 迁移到 React 19
+
+以下是从 React 18 迁移到 React 19 的主要步骤和注意事项：
+
+#### 1. 更新依赖
+
+```bash
+npm install react@19 react-dom@19
+```
+
+#### 2. 检查废弃的 API
+
+React 19 中废弃了一些旧的 API，需要进行相应的更新：
+
+```jsx
+// 旧的写法
+class OldComponent extends React.Component {
+  componentWillMount() {
+    // 已废弃
+  }
+}
+
+// 新的写法
+function NewComponent() {
+  useEffect(() => {
+    // 使用 useEffect 替代生命周期方法
+  }, []);
+}
+```
+
+#### 3. 使用新的 Hook API
+
+```jsx
+import { useEvent } from "react";
+
+function MyComponent() {
+  const handleClick = useEvent(() => {
+    // 事件处理逻辑
+  });
+
+  return <button onClick={handleClick}>点击</button>;
+}
+```
+
+## 性能优化
+
+### 1. 使用新的并发特性
+
+```jsx
+import { startTransition, useDeferredValue } from "react";
+
+function SearchResults({ query }) {
+  const deferredQuery = useDeferredValue(query);
+
+  return (
+    <div>
+      <p>搜索结果：{deferredQuery}</p>
+      {/* 复杂的搜索结果渲染 */}
+    </div>
+  );
+}
+```
+
+### 2. 优化服务端组件
+
+```jsx
+// components/DataFetcher.server.js
+async function DataFetcher() {
+  const data = await fetch("https://api.example.com/data");
+  const json = await data.json();
+
+  return (
+    <div>
+      {json.map((item) => (
+        <div key={item.id}>{item.name}</div>
+      ))}
+    </div>
+  );
+}
+
+// 在客户端组件中使用
+import DataFetcher from "./components/DataFetcher.server";
+
+function App() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <DataFetcher />
+    </Suspense>
+  );
+}
+```
+
+## 最佳实践
+
+### 1. 错误边界处理
+
+```jsx
+function ErrorBoundary({ children }) {
+  return (
+    <Suspense fallback={<Loading />}>
+      <ErrorBoundaryInner>{children}</ErrorBoundaryInner>
+    </Suspense>
+  );
+}
+
+function MyApp() {
+  return (
+    <ErrorBoundary>
+      <MyComponent />
+    </ErrorBoundary>
+  );
+}
+```
+
+### 2. 性能监控
+
+```jsx
+import { useEffect } from "react";
+
+function PerformanceMonitor({ children }) {
+  useEffect(() => {
+    // 监控渲染性能
+    const observer = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        console.log(`${entry.name}: ${entry.duration}`);
+      }
+    });
+
+    observer.observe({ entryTypes: ["measure"] });
+    return () => observer.disconnect();
+  }, []);
+
+  return children;
+}
+```
+
 ## 总结
 
-React 19 带来了众多新特性，从并发模式优化到服务端渲染增强，再到新 Hook 和 TypeScript 支持的改进，每一项更新都为开发者提供了更多可能性。如果您正在考虑升级到 React 19，不妨从这些特性入手，充分利用新版本的强大功能。
+React 19 带来了许多激动人心的新特性，从并发渲染的增强到服务端组件的稳定版本，都为开发者提供了更强大的工具。通过合理使用这些新特性，并遵循最佳实践，我们可以构建出更高效、更可靠的 React 应用。
+
+在迁移到 React 19 时，建议采取渐进式的方法，先在非关键业务中尝试新特性，待稳定后再推广到整个应用。同时，保持关注 React 官方文档和社区动态，及时了解最新的开发实践和优化建议。

@@ -113,9 +113,7 @@ type Result = MyReadonly<Example>;
 
 ```typescript
 type DeepReadonly<T> = {
-  readonly [K in keyof T]: T[K] extends object
-    ? DeepReadonly<T[K]>
-    : T[K];
+  readonly [K in keyof T]: T[K] extends object ? DeepReadonly<T[K]> : T[K];
 };
 
 type Example = {
@@ -228,33 +226,122 @@ type Result = Filter<[1, "hello", 2, "world"], string>;
 
 ## 进阶内容
 
-### 内置工具类型的实现原理
+### 1. 映射类型的高级应用
 
-了解 TypeScript 内置工具类型（如 `Partial`、`Required`、`Record` 等）的实现，可以帮助我们掌握更多的类型技巧。
+映射类型可以基于旧类型创建新类型，通过遍历键来转换属性。
 
-#### 示例：实现 `Partial`
+#### 示例：实现属性转换
 
 ```typescript
-type MyPartial<T> = {
-  [K in keyof T]?: T[K];
+// 将对象所有属性转为函数类型
+type FunctionizeProperties<T> = {
+  [K in keyof T]: () => T[K];
 };
 
-type Example = { name: string; age: number };
-type Result = MyPartial<Example>;
-// { name?: string; age?: number }
+type Person = { name: string; age: number };
+type PersonGetters = FunctionizeProperties<Person>;
+// { name: () => string; age: () => number }
+
+// 添加属性前缀
+type AddPrefix<T, P extends string> = {
+  [K in keyof T as `${P}${string & K}`]: T[K];
+};
+
+type PrefixedPerson = AddPrefix<Person, "get">;
+// { getName: string; getAge: number }
 ```
 
-### 类型运算符的灵活使用
+### 2. 联合类型转交叉类型
 
-灵活运用 `keyof`、`infer` 和 `extends` 等运算符，可以解决更复杂的问题。
-
-#### 示例：提取函数参数类型
+通过巧妙运用条件类型和函数类型，可以实现联合类型到交叉类型的转换。
 
 ```typescript
-type Parameters<T> = T extends (...args: infer P) => any ? P : never;
+type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
+  k: infer I
+) => void
+  ? I
+  : never;
 
-type Fn = (a: string, b: number) => void;
-type Params = Parameters<Fn>; // [string, number]
+type Union = { a: string } | { b: number };
+type Intersection = UnionToIntersection<Union>;
+// { a: string } & { b: number }
+```
+
+### 3. 字符串操作类型
+
+利用模板字面量类型实现字符串操作。
+
+```typescript
+// 实现字符串首字母大写
+type Capitalize<S extends string> = S extends `${infer F}${infer R}`
+  ? `${Uppercase<F>}${R}`
+  : S;
+
+type CapitalizedHello = Capitalize<"hello">; // 'Hello'
+
+// 实现驼峰命名转换
+type CamelCase<S extends string> = S extends `${infer F}-${infer R}`
+  ? `${F}${CamelCase<Capitalize<R>>}`
+  : S;
+
+type Result = CamelCase<"foo-bar-baz">; // 'fooBarBaz'
+```
+
+### 4. 递归类型转换
+
+处理嵌套数据结构的类型转换。
+
+```typescript
+// 深度可选类型
+type DeepPartial<T> = T extends object
+  ? {
+      [P in keyof T]?: DeepPartial<T[P]>;
+    }
+  : T;
+
+type NestedObject = {
+  user: {
+    info: {
+      name: string;
+      age: number;
+    };
+    settings: {
+      theme: string;
+    };
+  };
+};
+
+type DeepPartialObject = DeepPartial<NestedObject>;
+/*
+{
+  user?: {
+    info?: {
+      name?: string;
+      age?: number;
+    };
+    settings?: {
+      theme?: string;
+    };
+  };
+}
+*/
+```
+
+### 5. 高级条件类型
+
+使用条件类型实现复杂的类型判断和转换。
+
+```typescript
+// 提取Promise的返回类型
+type UnwrapPromise<T> = T extends Promise<infer U> ? UnwrapPromise<U> : T;
+
+type Result1 = UnwrapPromise<Promise<Promise<string>>>; // string
+
+// 提取函数返回类型
+type ReturnType<T> = T extends (...args: any[]) => infer R ? R : never;
+
+type Fn = (x: number) => string;
+type Result2 = ReturnType<Fn>; // string
 ```
 
 ---

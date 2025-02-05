@@ -19,18 +19,23 @@ CI/CD（持续集成和持续交付）是现代软件开发的重要组成部分
 在前端开发中，CI/CD 流程通常包括以下几个步骤：
 
 1. **代码提交与集成**
+
    - 开发者将代码提交到版本控制系统（如 Git）。CI 工具（如 Jenkins、GitHub Actions 或 GitLab CI）会监听版本库中的变动，并在代码提交时触发构建流程。
 
 2. **自动化构建**
+
    - 构建工具（如 Webpack、Vite、Parcel 等）会自动执行打包、代码压缩和资源优化等操作，生成可供部署的产物。
 
 3. **自动化测试**
+
    - 在构建完成后，CI 系统会自动运行单元测试（如 Jest、Mocha）和集成测试，确保代码质量和功能的正确性。
 
 4. **部署到测试环境**
+
    - 如果测试通过，CI/CD 工具会自动将代码部署到一个临时的测试环境，供开发人员或 QA 团队进行进一步验证。
 
 5. **发布到生产环境**
+
    - 在所有测试通过后，代码会自动发布到生产环境，或者在某些情况下，人工审核后再发布。
 
 6. **监控与回滚**
@@ -63,7 +68,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '14'
+          node-version: "14"
 
       - name: Install dependencies
         run: npm install
@@ -156,7 +161,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '16'
+          node-version: "16"
 
       - name: Install dependencies
         run: npm install
@@ -216,3 +221,178 @@ deploy:
 
 前端开发者可以根据项目需求，选择适合的 CI/CD 工具，并结合具体的应用场景优化流程。随着 DevOps 和自动化技术的不断发展，前端 CI/CD 也将持续演进，帮助开发者更好地交付高质量的产品。
 
+## 云原生 CI/CD
+
+随着云原生技术的发展，前端 CI/CD 也在向云原生方向演进。这种转变带来了更高的可扩展性、更好的可移植性和更强的自动化能力。
+
+### 容器化部署
+
+使用 Docker 容器化前端应用已成为一种最佳实践：
+
+```dockerfile
+# 构建阶段
+FROM node:16 as builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+# 生产阶段
+FROM nginx:alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+### Kubernetes 集成
+
+将前端应用部署到 Kubernetes 集群中可以实现更好的扩展性和可用性：
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: frontend-app:latest
+          ports:
+            - containerPort: 80
+```
+
+## 前端 CI/CD 最佳实践
+
+### 性能测试集成
+
+在 CI/CD 流程中集成性能测试是确保前端应用性能的关键：
+
+```yaml
+performance-test:
+  stage: test
+  script:
+    - npm install lighthouse
+    - npx lighthouse https://your-staging-url.com --output json --output-path ./report.json
+    - node ./scripts/analyze-performance.js
+```
+
+### E2E 测试自动化
+
+使用 Cypress 或 Playwright 进行端到端测试：
+
+```yaml
+e2e-test:
+  stage: test
+  script:
+    - npm install
+    - npm run cypress:run
+  artifacts:
+    paths:
+      - cypress/videos
+      - cypress/screenshots
+```
+
+### 自动化监控
+
+集成错误监控和性能监控工具：
+
+```javascript
+// 在构建时注入监控配置
+const monitoringConfig = {
+  apiKey: process.env.MONITORING_API_KEY,
+  environment: process.env.NODE_ENV,
+};
+
+// 初始化监控
+initializeMonitoring(monitoringConfig);
+```
+
+## 多环境部署策略
+
+### 环境配置管理
+
+使用环境变量和配置文件管理不同环境：
+
+```javascript
+// config.js
+const config = {
+  development: {
+    apiUrl: "http://dev-api.example.com",
+  },
+  staging: {
+    apiUrl: "http://staging-api.example.com",
+  },
+  production: {
+    apiUrl: "https://api.example.com",
+  },
+};
+
+export default config[process.env.NODE_ENV];
+```
+
+### 灰度发布
+
+实现灰度发布策略：
+
+```yaml
+canary-deployment:
+  stage: deploy
+  script:
+    - kubectl set image deployment/frontend frontend=frontend:${CI_COMMIT_SHA}
+    - kubectl scale deployment/frontend --replicas=1
+    - sleep 300 # 观察期
+    - kubectl scale deployment/frontend --replicas=3
+```
+
+## 安全相关的 CI/CD 实践
+
+### 依赖扫描
+
+在 CI 流程中集成依赖安全扫描：
+
+```yaml
+dependency-scan:
+  stage: security
+  script:
+    - npm audit
+    - npx snyk test
+```
+
+### 安全测试
+
+集成安全测试工具：
+
+```yaml
+security-test:
+  stage: security
+  script:
+    - npm install -g owasp-zap-cli
+    - zap-cli quick-scan --self-contained --start-options '-config api.disablekey=true' https://your-staging-url.com
+```
+
+### 敏感信息保护
+
+使用密钥管理服务：
+
+```yaml
+deploy:
+  stage: deploy
+  script:
+    - echo "${ENCRYPTED_DEPLOY_KEY}" | base64 -d > deploy_key.json
+    - gcloud auth activate-service-account --key-file=deploy_key.json
+    - npm run deploy
+  after_script:
+    - rm deploy_key.json # 清理敏感信息
+```
+
+通过以上优化，我们的 CI/CD 流程不仅能够保证代码质量和部署效率，还能确保应用的性能、可用性和安全性。这些实践能够帮助团队建立一个更加健壮和可靠的前端开发流程。

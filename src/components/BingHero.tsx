@@ -159,7 +159,19 @@ export default function BingHero() {
 
   // 处理打字完成后的回调
   const handleTypingComplete = () => {
-    setCurrentQuote(getRandomQuote());
+    // 获取新的随机标语
+    const newQuote = getRandomQuote();
+    // 确保不会连续显示相同的标语
+    if (newQuote.text === currentQuote.text) {
+      setCurrentQuote(
+        quotes[
+          (quotes.findIndex((q) => q.text === currentQuote.text) + 1) %
+            quotes.length
+        ]
+      );
+    } else {
+      setCurrentQuote(newQuote);
+    }
   };
 
   // 如果壁纸数据未加载完成，显示加载状态

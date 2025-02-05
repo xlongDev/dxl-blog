@@ -104,7 +104,7 @@ pnpm update lodash
 
    ```yaml
    packages:
-     - 'packages/*'
+     - "packages/*"
    ```
 
 2. 在子项目中添加依赖：
@@ -151,15 +151,15 @@ pnpm add express
 在 `src/index.js` 中：
 
 ```javascript
-const express = require('express');
+const express = require("express");
 const app = express();
 
-app.get('/', (req, res) => {
-  res.send('Hello, Pnpm!');
+app.get("/", (req, res) => {
+  res.send("Hello, Pnpm!");
 });
 
 app.listen(3000, () => {
-  console.log('Server is running on http://localhost:3000');
+  console.log("Server is running on http://localhost:3000");
 });
 ```
 
@@ -179,6 +179,152 @@ Pnpm 拥有丰富的生态系统，包括：
 - **Hooks**：支持在生命周期钩子中执行脚本。
 - **Plugins**：社区提供了多种插件以扩展功能。
 
+## Pnpm 高级特性
+
+### 依赖管理策略
+
+1. **严格模式**
+
+   ```bash
+   pnpm install --strict-peer-dependencies
+   ```
+
+   启用严格的 peer dependencies 检查，确保依赖版本完全匹配。
+
+2. **自动安装 peer dependencies**
+
+   ```bash
+   pnpm install --auto-install-peers
+   ```
+
+   自动安装所需的 peer dependencies。
+
+3. **依赖提升控制**
+   ```bash
+   pnpm install --shamefully-hoist
+   ```
+   在需要时可以提升依赖到顶层。
+
+### 性能优化技巧
+
+1. **并行安装优化**
+
+   ```bash
+   pnpm install --parallel-jobs 5
+   ```
+
+   控制并行安装任务数量。
+
+2. **缓存优化**
+
+   ```bash
+   pnpm store prune
+   ```
+
+   清理未使用的缓存包。
+
+3. **网络性能优化**
+   ```bash
+   pnpm config set registry https://registry.npmmirror.com
+   ```
+   使用快速的镜像源。
+
+## Monorepo 最佳实践
+
+### 工作区配置优化
+
+1. **过滤执行命令**
+
+   ```bash
+   pnpm --filter "./packages/**" build
+   ```
+
+   在特定包中执行命令。
+
+2. **依赖管理**
+
+   ```bash
+   pnpm add -w typescript
+   ```
+
+   在根目录安装开发依赖。
+
+3. **版本管理**
+   ```bash
+   pnpm -r exec npm version patch
+   ```
+   统一更新所有包版本。
+
+### 包间依赖处理
+
+```json
+{
+  "dependencies": {
+    "@scope/package-a": "workspace:*",
+    "@scope/package-b": "workspace:^1.0.0"
+  }
+}
+```
+
+## 与其他包管理工具对比
+
+### 与 npm v7+ 对比
+
+| 特性          | Pnpm              | npm v7+         |
+| ------------- | ----------------- | --------------- |
+| 依赖存储      | 硬链接 + 符号链接 | 符号链接        |
+| Monorepo 支持 | 原生支持          | 需要 Workspaces |
+| 安装速度      | 更快              | 相对较慢        |
+| 磁盘空间      | 最优              | 较大            |
+
+### 与 Bun 对比
+
+| 特性       | Pnpm     | Bun        |
+| ---------- | -------- | ---------- |
+| 成熟度     | 高       | 较新       |
+| 安装速度   | 快       | 最快       |
+| 生态兼容性 | 完全兼容 | 部分兼容   |
+| 特殊功能   | 依赖隔离 | 内置运行时 |
+
+## 常见问题与解决方案
+
+### 1. 依赖提升问题
+
+问题：某些工具无法找到依赖
+解决：使用 `.npmrc` 配置：
+
+```ini
+shameefully-hoist=true
+```
+
+### 2. Peer Dependencies 冲突
+
+问题：不同包要求不同版本的 peer dependencies
+解决：使用 `pnpm.overrides` 统一版本：
+
+```json
+{
+  "pnpm": {
+    "overrides": {
+      "react": "^18.0.0"
+    }
+  }
+}
+```
+
+### 3. CI/CD 集成
+
+在 CI 环境中使用 pnpm：
+
+```yaml
+steps:
+  - uses: pnpm/action-setup@v2
+    with:
+      version: 8
+  - name: Install dependencies
+    run: pnpm install --frozen-lockfile
+```
+
 ## 总结
 
-Pnpm 是一个高效的包管理工具，其独特的架构在性能和磁盘空间方面显著优于传统的 npm 和 Yarn。如果你正在寻找更快、更轻量的依赖管理方案，Pnpm 值得一试。
+Pnpm 是一个高效的包管理工具，其独特的架构在性能和磁盘空间方面显著优于传统的 npm 和 Yarn。通过合理利用其高级特性和最佳实践，可以显著提升项目的依赖管理效率。如果你正在寻找更快、更轻量的依赖管理方案，Pnpm 是一个值得尝试的选择。

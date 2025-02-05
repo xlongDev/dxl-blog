@@ -9,6 +9,7 @@ category: "CSS"
 CSS3（Cascading Style Sheets Level 3）是 CSS（层叠样式表）的最新版本，它引入了大量新的特性，使得 Web 开发更加灵活、高效，并且能够实现更加丰富的视觉效果。本文将全面介绍 CSS3 的核心概念、特性及实际应用。
 
 ## CSS3 简介
+
 CSS3 作为 CSS 规范的升级版，增加了许多新的模块，使开发者可以更轻松地实现复杂的页面样式。它的主要特点包括：
 
 - **模块化**：CSS3 被拆分为多个模块，如选择器、背景和边框、文本效果等，使得开发更加灵活。
@@ -18,6 +19,7 @@ CSS3 作为 CSS 规范的升级版，增加了许多新的模块，使开发者�
 - **响应式设计**：新增 `media queries`，可以根据设备的不同尺寸调整页面布局。
 
 ## CSS3 选择器
+
 CSS3 选择器提供了更精确的方式来选择 HTML 元素。例如：
 
 ```css
@@ -33,7 +35,9 @@ p:not(.special) {
 ```
 
 ## CSS3 新增属性
+
 ### 边框和背景
+
 CSS3 允许开发者创建更丰富的边框和背景效果。例如：
 
 ```css
@@ -47,6 +51,7 @@ div {
 ```
 
 ### 盒子阴影
+
 ```css
 div {
   width: 300px;
@@ -56,6 +61,7 @@ div {
 ```
 
 ## CSS3 过渡与动画
+
 CSS3 允许创建流畅的过渡效果，提升用户体验。例如：
 
 ```css
@@ -72,6 +78,7 @@ button:hover {
 ```
 
 ### CSS3 动画
+
 ```css
 @keyframes fadeIn {
   from {
@@ -88,6 +95,7 @@ div {
 ```
 
 ## CSS3 响应式设计
+
 使用 `media queries`，可以针对不同设备优化页面布局。例如：
 
 ```css
@@ -98,5 +106,190 @@ div {
 }
 ```
 
+## CSS3 高级特性
+
+### 1. 渐变效果
+
+CSS3 提供了多种渐变效果，包括线性渐变和径向渐变。
+
+```css
+/* 线性渐变 */
+.linear-gradient {
+  background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+}
+
+/* 径向渐变 */
+.radial-gradient {
+  background: radial-gradient(circle at center, #ff6b6b 0%, #4ecdc4 100%);
+}
+
+/* 重复渐变 */
+.repeating-gradient {
+  background: repeating-linear-gradient(
+    45deg,
+    #ff6b6b 0px,
+    #ff6b6b 10px,
+    #4ecdc4 10px,
+    #4ecdc4 20px
+  );
+}
+```
+
+### 2. 变换和透视
+
+CSS3 的变换属性允许对元素进行 2D 或 3D 转换。
+
+```css
+/* 2D 变换 */
+.transform-2d {
+  transform: rotate(45deg) scale(1.5) translate(100px, 50px);
+}
+
+/* 3D 变换 */
+.container-3d {
+  perspective: 1000px;
+}
+
+.transform-3d {
+  transform-style: preserve-3d;
+  transform: rotateY(45deg) translateZ(100px);
+}
+```
+
+### 3. 滤镜效果
+
+CSS3 滤镜可以为元素添加视觉效果。
+
+```css
+.filter-effects {
+  /* 模糊效果 */
+  filter: blur(5px);
+}
+
+.image-filters {
+  /* 组合多个滤镜 */
+  filter: contrast(150%) brightness(110%) sepia(30%);
+}
+```
+
+### 4. 高级动画效果
+
+```css
+/* 弹性动画 */
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-50px);
+  }
+}
+
+.bounce {
+  animation: bounce 1s cubic-bezier(0.36, 0, 0.66, -0.56) infinite;
+}
+
+/* 3D 翻转动画 */
+@keyframes flip {
+  0% {
+    transform: perspective(400px) rotateY(0);
+  }
+  100% {
+    transform: perspective(400px) rotateY(360deg);
+  }
+}
+
+.flip {
+  animation: flip 2s ease-in-out infinite;
+  backface-visibility: visible;
+}
+
+/* 脉冲动画 */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+```
+
+### 5. 多列布局
+
+CSS3 支持多列布局，适用于文本内容的排版。
+
+```css
+.multi-column {
+  column-count: 3;
+  column-gap: 2em;
+  column-rule: 1px solid #ccc;
+}
+
+/* 跨列标题 */
+.column-heading {
+  column-span: all;
+}
+```
+
+### 6. 背景增强
+
+CSS3 提供了更多背景相关的属性。
+
+```css
+.advanced-background {
+  /* 多重背景 */
+  background: url("pattern.png") repeat, linear-gradient(
+      45deg,
+      rgba(0, 0, 0, 0.1) 25%,
+      transparent 25%
+    ), #ffffff;
+
+  /* 背景尺寸和定位 */
+  background-size: auto, 20px 20px, auto;
+  background-position: center, 0 0, 0 0;
+
+  /* 背景裁剪和原点 */
+  background-clip: padding-box;
+  background-origin: border-box;
+}
+```
+
+### 7. 文本效果
+
+CSS3 增强了文本样式能力。
+
+```css
+.text-effects {
+  /* 文本阴影 */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+
+  /* 文本溢出 */
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+
+  /* 文本描边 */
+  -webkit-text-stroke: 1px black;
+
+  /* 文本装饰 */
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: #ff6b6b;
+}
+```
+
 ## 结论
+
 CSS3 的引入使 Web 开发更加现代化、灵活化，同时减少了对 JavaScript 的依赖，提高了开发效率。掌握 CSS3 的各种特性，能让你在前端开发中更具优势。

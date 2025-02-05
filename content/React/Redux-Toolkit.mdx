@@ -37,8 +37,8 @@ npm install @reduxjs/toolkit react-redux
 
 ```javascript
 // store.js
-import { configureStore } from '@reduxjs/toolkit';
-import counterReducer from './features/counter/counterSlice';
+import { configureStore } from "@reduxjs/toolkit";
+import counterReducer from "./features/counter/counterSlice";
 
 const store = configureStore({
   reducer: {
@@ -54,13 +54,13 @@ export default store;
 将 `store` 注入到 React 应用中：
 
 ```javascript
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { Provider } from 'react-redux';
-import store from './store';
-import App from './App';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { Provider } from "react-redux";
+import store from "./store";
+import App from "./App";
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <Provider store={store}>
     <App />
@@ -82,10 +82,10 @@ root.render(
 
 ```javascript
 // features/counter/counterSlice.js
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
 
 const counterSlice = createSlice({
-  name: 'counter',
+  name: "counter",
   initialState: { value: 0 },
   reducers: {
     increment: (state) => {
@@ -107,9 +107,13 @@ export default counterSlice.reducer;
 在组件中使用：
 
 ```javascript
-import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { increment, decrement, incrementByAmount } from './features/counter/counterSlice';
+import React from "react";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  increment,
+  decrement,
+  incrementByAmount,
+} from "./features/counter/counterSlice";
 
 function Counter() {
   const count = useSelector((state) => state.counter.value);
@@ -136,29 +140,31 @@ export default Counter;
 
 ```javascript
 // features/user/userSlice.js
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
 
-export const fetchUsers = createAsyncThunk('users/fetchUsers', async () => {
-  const response = await axios.get('https://jsonplaceholder.typicode.com/users');
+export const fetchUsers = createAsyncThunk("users/fetchUsers", async () => {
+  const response = await axios.get(
+    "https://jsonplaceholder.typicode.com/users"
+  );
   return response.data;
 });
 
 const userSlice = createSlice({
-  name: 'users',
-  initialState: { entities: [], loading: 'idle' },
+  name: "users",
+  initialState: { entities: [], loading: "idle" },
   reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(fetchUsers.pending, (state) => {
-        state.loading = 'loading';
+        state.loading = "loading";
       })
       .addCase(fetchUsers.fulfilled, (state, action) => {
-        state.loading = 'idle';
+        state.loading = "idle";
         state.entities = action.payload;
       })
       .addCase(fetchUsers.rejected, (state) => {
-        state.loading = 'failed';
+        state.loading = "failed";
       });
   },
 });
@@ -169,9 +175,9 @@ export default userSlice.reducer;
 在组件中使用：
 
 ```javascript
-import React, { useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { fetchUsers } from './features/user/userSlice';
+import React, { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchUsers } from "./features/user/userSlice";
 
 function UserList() {
   const users = useSelector((state) => state.users.entities);
@@ -182,8 +188,8 @@ function UserList() {
     dispatch(fetchUsers());
   }, [dispatch]);
 
-  if (loading === 'loading') return <p>Loading...</p>;
-  if (loading === 'failed') return <p>Failed to load users.</p>;
+  if (loading === "loading") return <p>Loading...</p>;
+  if (loading === "failed") return <p>Failed to load users.</p>;
 
   return (
     <ul>
@@ -215,7 +221,7 @@ interface CounterState {
 const initialState: CounterState = { value: 0 };
 
 const counterSlice = createSlice({
-  name: 'counter',
+  name: "counter",
   initialState,
   reducers: {
     increment: (state) => {
@@ -230,3 +236,194 @@ const counterSlice = createSlice({
 Redux Toolkit 极大地简化了 Redux 的使用流程，同时提供强大的功能支持。无论是小型项目还是大型应用，Redux Toolkit 都是一个值得推荐的状态管理工具。如果你还在犹豫是否使用 Redux Toolkit，现在就是学习和尝试的好时机！
 
 欢迎留言分享你的使用经验或遇到的问题！
+
+```javascript
+// 推荐的状态结构
+const initialState = {
+  entities: {},
+  ids: [],
+  status: "idle",
+  error: null,
+  filters: {
+    searchTerm: "",
+    category: "all",
+  },
+};
+
+// 使用规范化数据结构
+const slice = createSlice({
+  name: "users",
+  initialState,
+  reducers: {
+    addUser: (state, action) => {
+      const user = action.payload;
+      state.entities[user.id] = user;
+      state.ids.push(user.id);
+    },
+  },
+});
+```
+
+### 2. 异步操作优化
+
+```javascript
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+
+// 使用缓存和防抖
+const fetchUserWithCache = createAsyncThunk(
+  "users/fetchWithCache",
+  async (userId, { getState, dispatch }) => {
+    const { users } = getState();
+    if (users.entities[userId]) {
+      return users.entities[userId];
+    }
+    const response = await fetch(`/api/users/${userId}`);
+    return response.json();
+  },
+  {
+    condition: (userId, { getState }) => {
+      const { users } = getState();
+      const fetchStatus = users.fetchStatus[userId];
+      return !fetchStatus || fetchStatus === "idle";
+    },
+  }
+);
+```
+
+### 3. Selector 优化
+
+```javascript
+import { createSelector } from "@reduxjs/toolkit";
+
+// 创建记忆化的选择器
+const selectUserEntities = (state) => state.users.entities;
+const selectUserIds = (state) => state.users.ids;
+const selectFilters = (state) => state.users.filters;
+
+const selectFilteredUsers = createSelector(
+  [selectUserEntities, selectUserIds, selectFilters],
+  (entities, ids, filters) => {
+    return ids
+      .map((id) => entities[id])
+      .filter(
+        (user) =>
+          user.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) &&
+          (filters.category === "all" || user.category === filters.category)
+      );
+  }
+);
+```
+
+### 4. 中间件优化
+
+```javascript
+import { configureStore } from "@reduxjs/toolkit";
+
+const store = configureStore({
+  reducer: rootReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        // 忽略特定 action 的序列化检查
+        ignoredActions: ["users/specialAction"],
+        // 忽略特定路径的序列化检查
+        ignoredPaths: ["users.specialData"],
+      },
+      immutableCheck: {
+        // 忽略特定路径的不可变检查
+        ignoredPaths: ["users.mutableData"],
+      },
+    }),
+});
+```
+
+### 5. RTK Query 最佳实践
+
+```javascript
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+
+export const api = createApi({
+  reducerPath: "api",
+  baseQuery: fetchBaseQuery({ baseUrl: "/api" }),
+  tagTypes: ["User", "Post"],
+  endpoints: (builder) => ({
+    getUsers: builder.query({
+      query: () => "users",
+      // 优化缓存处理
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({ type: "User", id })),
+              { type: "User", id: "LIST" },
+            ]
+          : [{ type: "User", id: "LIST" }],
+    }),
+    addUser: builder.mutation({
+      query: (body) => ({
+        url: "users",
+        method: "POST",
+        body,
+      }),
+      // 自动更新缓存
+      invalidatesTags: [{ type: "User", id: "LIST" }],
+    }),
+  }),
+});
+```
+
+## 调试与错误处理
+
+### 1. 使用 Redux DevTools
+
+```javascript
+import { configureStore } from "@reduxjs/toolkit";
+
+const store = configureStore({
+  reducer: rootReducer,
+  devTools: process.env.NODE_ENV !== "production",
+  // 自定义 DevTools 配置
+  devTools: {
+    name: "应用名称",
+    trace: true,
+    traceLimit: 25,
+  },
+});
+```
+
+### 2. 错误处理最佳实践
+
+```javascript
+const userSlice = createSlice({
+  name: "users",
+  initialState,
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchUsers.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+      })
+      .addCase(fetchUsers.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.entities = action.payload.reduce((acc, user) => {
+          acc[user.id] = user;
+          return acc;
+        }, {});
+      })
+      .addCase(fetchUsers.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = {
+          message: action.error.message,
+          code: action.error.code,
+          stack:
+            process.env.NODE_ENV !== "production"
+              ? action.error.stack
+              : undefined,
+        };
+      });
+  },
+});
+```
+
+## 总结
+
+Redux Toolkit 通过提供一系列工具和最佳实践，大大简化了 Redux 的使用。通过合理运用状态设计原则、优化选择器、使用 RTK Query 等特性，我们可以构建出高性能、可维护的应用。在实际开发中，应当根据应用规模和需求，灵活运用这些优化策略。

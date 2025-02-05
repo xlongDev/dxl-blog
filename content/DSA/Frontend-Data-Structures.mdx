@@ -11,17 +11,21 @@ category: "DSA"
 ## 基本数据结构
 
 ### 1. 数组（Array）
+
 数组是一种线性数据结构，用于存储有序的元素集合，常用操作包括增删查改。
 
 **特点：**
+
 - 有序、索引访问。
 - 支持动态长度（JavaScript 中）。
 
 **常用场景：**
+
 - 数据批量处理（如批量渲染 UI）。
 - 排序、筛选等算法操作。
 
 **示例代码：**
+
 ```javascript
 const array = [1, 2, 3, 4];
 array.push(5); // 添加元素
@@ -29,17 +33,21 @@ console.log(array[2]); // 访问元素
 ```
 
 ### 2. 链表（Linked List）
+
 链表是一种由节点组成的线性数据结构，每个节点包含数据和指向下一个节点的指针。
 
 **特点：**
+
 - 动态大小。
 - 插入和删除操作效率高。
 
 **常用场景：**
+
 - 实现队列或栈。
 - 当需要频繁插入/删除操作时。
 
 **示例代码：**
+
 ```javascript
 class Node {
   constructor(value) {
@@ -71,16 +79,20 @@ class LinkedList {
 ## 高级数据结构
 
 ### 1. 栈（Stack）
+
 栈是一种后进先出（LIFO）的数据结构。
 
 **特点：**
+
 - 只能在一端进行插入和删除。
 
 **常用场景：**
+
 - 表达式求值。
 - 浏览器历史记录。
 
 **示例代码：**
+
 ```javascript
 class Stack {
   constructor() {
@@ -102,16 +114,20 @@ class Stack {
 ```
 
 ### 2. 队列（Queue）
+
 队列是一种先进先出（FIFO）的数据结构。
 
 **特点：**
+
 - 只能在一端插入，在另一端删除。
 
 **常用场景：**
+
 - 任务调度。
 - 动画队列。
 
 **示例代码：**
+
 ```javascript
 class Queue {
   constructor() {
@@ -133,17 +149,21 @@ class Queue {
 ```
 
 ### 3. 集合（Set）
+
 集合是一种无序且不重复的元素集合。
 
 **特点：**
+
 - 无重复值。
 - 高效的查找和删除。
 
 **常用场景：**
+
 - 去重。
 - 交集、并集操作。
 
 **示例代码：**
+
 ```javascript
 const set = new Set([1, 2, 3]);
 set.add(4);
@@ -152,36 +172,44 @@ console.log(set.has(3));
 ```
 
 ### 4. 字典（Map）
+
 字典是一种键值对存储的数据结构。
 
 **特点：**
+
 - 键值对存储。
 - 高效查找。
 
 **常用场景：**
+
 - 缓存。
 - 关联数据。
 
 **示例代码：**
+
 ```javascript
 const map = new Map();
-map.set('key1', 'value1');
-map.set('key2', 'value2');
-console.log(map.get('key1'));
+map.set("key1", "value1");
+map.set("key2", "value2");
+console.log(map.get("key1"));
 ```
 
 ### 5. 树（Tree）
+
 树是一种分层结构的非线性数据结构，常见的树有二叉树、二叉搜索树（BST）、红黑树等。
 
 **特点：**
+
 - 层级结构。
 - 高效的搜索和插入。
 
 **常用场景：**
+
 - DOM 树。
 - 文件系统。
 
 **示例代码（简单二叉树）：**
+
 ```javascript
 class TreeNode {
   constructor(value) {
@@ -197,17 +225,21 @@ root.right = new TreeNode(15);
 ```
 
 ### 6. 图（Graph）
+
 图是一种由顶点和边组成的非线性数据结构。
 
 **特点：**
+
 - 用于表示复杂关系。
 - 可以是有向图或无向图。
 
 **常用场景：**
+
 - 路径规划。
 - 社交网络关系。
 
 **示例代码：**
+
 ```javascript
 class Graph {
   constructor() {
@@ -227,6 +259,134 @@ class Graph {
 }
 ```
 
+## 性能分析与最佳实践
+
+### 数据结构选择指南
+
+在前端开发中选择合适的数据结构时，需要考虑以下因素：
+
+1. **时间复杂度**
+
+   - 数组：查找 O(n)，插入/删除 O(n)
+   - 链表：查找 O(n)，插入/删除 O(1)
+   - 哈希表（Map/Set）：查找/插入/删除 平均 O(1)
+   - 二叉搜索树：平均 O(log n)
+
+2. **空间复杂度**
+
+   - 数组：连续内存，额外空间 O(1)
+   - 链表：非连续内存，需要额外指针空间
+   - 哈希表：需要额外空间来存储键值对
+
+3. **使用场景分析**
+
+#### 数组 vs 链表
+
+```javascript
+// 频繁访问元素：选择数组
+const list = [1, 2, 3, 4, 5];
+const item = list[2]; // O(1) 时间复杂度
+
+// 频繁插入删除：选择链表
+class LinkedList {
+  // ... 链表实现 ...
+  insertAt(position, value) {
+    // O(1) 时间复杂度
+    const newNode = new Node(value);
+    // 插入逻辑
+  }
+}
+```
+
+#### Map vs Object
+
+```javascript
+// 需要非字符串键：使用 Map
+const map = new Map();
+const objKey = { id: 1 };
+map.set(objKey, "value");
+
+// 只需字符串键：使用 Object
+const obj = {};
+obj["key"] = "value";
+```
+
+### 实际应用案例
+
+1. **虚拟列表优化**
+
+```javascript
+class VirtualList {
+  constructor() {
+    this.cache = new Map(); // 使用 Map 缓存列表项
+    this.visibleItems = []; // 使用数组存储可见项
+  }
+
+  updateVisibleItems(scrollTop, viewportHeight) {
+    // 计算可见区域的项
+    const startIndex = Math.floor(scrollTop / itemHeight);
+    const endIndex = Math.ceil((scrollTop + viewportHeight) / itemHeight);
+
+    // 更新可见项数组
+    this.visibleItems = this.items.slice(startIndex, endIndex);
+  }
+}
+```
+
+2. **组件状态管理**
+
+```javascript
+class ComponentStore {
+  constructor() {
+    this.states = new Map(); // 使用 Map 存储组件状态
+    this.subscribers = new Set(); // 使用 Set 存储订阅者
+  }
+
+  setState(component, newState) {
+    this.states.set(component, newState);
+    this.notifySubscribers();
+  }
+
+  subscribe(callback) {
+    this.subscribers.add(callback);
+  }
+
+  notifySubscribers() {
+    this.subscribers.forEach((callback) => callback());
+  }
+}
+```
+
+3. **路由实现**
+
+```javascript
+class Router {
+  constructor() {
+    this.routes = new Map(); // 使用 Map 存储路由配置
+    this.history = []; // 使用数组存储历史记录
+  }
+
+  addRoute(path, component) {
+    this.routes.set(path, component);
+  }
+
+  navigate(path) {
+    const component = this.routes.get(path);
+    if (component) {
+      this.history.push(path);
+      // 渲染组件
+    }
+  }
+}
+```
+
 ## 总结
 
-在前端开发中，选择合适的数据结构能够显著提升代码的性能和可维护性。了解并熟练应用这些数据结构，将为开发者应对复杂场景提供强大的工具。
+在前端开发中，选择合适的数据结构能够显著提升代码的性能和可维护性。通过理解每种数据结构的特点和适用场景，我们可以：
+
+1. 优化应用性能
+2. 提高代码可读性
+3. 降低维护成本
+4. 更好地处理复杂业务逻辑
+
+在实际开发中，建议根据具体场景选择最适合的数据结构，并注意性能和内存消耗的平衡。同时，也要考虑代码的可维护性和团队的开发效率。

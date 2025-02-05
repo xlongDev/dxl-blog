@@ -124,8 +124,80 @@ export default {
 
 1. **模块化代码：** 遵循 Vue 的单文件组件设计。
 2. **使用静态站点生成（SSG）：** 对于内容固定的网站，可提前生成静态文件。
-3. **优化性能：** 使用 `nuxt/image` 模块优化图片加载。
+3. **优化性能：**
+   - 使用 `nuxt/image` 模块优化图片加载
+   - 实施智能代码分割
+   - 启用组件懒加载
+   - 配置合适的缓存策略
 4. **全局状态管理：** 利用 Vuex 或 Pinia 管理全局状态。
+5. **构建优化：**
+   - 启用 gzip/br 压缩
+   - 使用 CDN 加速静态资源
+   - 优化第三方依赖
+6. **SEO 优化：**
+   - 合理配置 meta 信息
+   - 使用动态 sitemap
+   - 实现结构化数据
+
+### 性能优化详解
+
+#### 1. 缓存策略
+
+```javascript
+// nuxt.config.js
+export default {
+  render: {
+    http2: {
+      push: true,
+    },
+    static: {
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7天缓存
+    },
+  },
+};
+```
+
+#### 2. 代码分割
+
+```javascript
+// nuxt.config.js
+export default {
+  build: {
+    splitChunks: {
+      layouts: true,
+      pages: true,
+      commons: true,
+    },
+  },
+};
+```
+
+#### 3. 组件懒加载
+
+```vue
+<template>
+  <div>
+    <client-only>
+      <lazy-component v-if="isVisible" />
+    </client-only>
+  </div>
+</template>
+```
+
+#### 4. 资源优化
+
+```javascript
+// nuxt.config.js
+export default {
+  build: {
+    optimizeCSS: true,
+    extractCSS: true,
+    optimization: {
+      minimize: true,
+    },
+  },
+};
+```
 
 ## 如何开始一个 Nuxt.js 项目？
 

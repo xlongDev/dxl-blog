@@ -58,7 +58,7 @@ function flatten(arr) {
 
 ```javascript
 function reverseString(str) {
-  return str.split('').reverse().join('');
+  return str.split("").reverse().join("");
 }
 ```
 
@@ -145,7 +145,10 @@ function knapsack(weights, values, capacity) {
   for (let i = 1; i <= n; i++) {
     for (let w = 1; w <= capacity; w++) {
       if (weights[i - 1] <= w) {
-        dp[i][w] = Math.max(dp[i - 1][w], dp[i - 1][w - weights[i - 1]] + values[i - 1]);
+        dp[i][w] = Math.max(
+          dp[i - 1][w],
+          dp[i - 1][w - weights[i - 1]] + values[i - 1]
+        );
       } else {
         dp[i][w] = dp[i - 1][w];
       }
@@ -192,6 +195,146 @@ function bfs(graph, start) {
 }
 ```
 
+### 5. 前端特有算法应用
+
+#### 虚拟列表算法
+
+虚拟列表是处理大量数据渲染的关键算法，通过只渲染可视区域的内容来优化性能。
+
+```javascript
+class VirtualList {
+  constructor(itemHeight, containerHeight) {
+    this.itemHeight = itemHeight;
+    this.containerHeight = containerHeight;
+    this.items = [];
+    this.startIndex = 0;
+    this.visibleCount = Math.ceil(containerHeight / itemHeight);
+  }
+
+  updateVisibleItems(scrollTop) {
+    this.startIndex = Math.floor(scrollTop / this.itemHeight);
+    const endIndex = this.startIndex + this.visibleCount;
+    return this.items.slice(this.startIndex, endIndex);
+  }
+}
+```
+
+#### DOM 差异化对比算法
+
+在前端框架中，DOM 差异化对比（Virtual DOM Diff）是一个重要的算法。
+
+```javascript
+function diff(oldNode, newNode) {
+  if (!oldNode) return { type: "CREATE", newNode };
+  if (!newNode) return { type: "REMOVE" };
+  if (oldNode.type !== newNode.type) return { type: "REPLACE", newNode };
+
+  const patches = [];
+  // 对比属性
+  if (oldNode.props !== newNode.props) {
+    patches.push({ type: "PROPS", props: newNode.props });
+  }
+
+  // 对比子节点
+  const minLength = Math.min(oldNode.children.length, newNode.children.length);
+  for (let i = 0; i < minLength; i++) {
+    const childPatches = diff(oldNode.children[i], newNode.children[i]);
+    patches.push(childPatches);
+  }
+
+  return patches;
+}
+```
+
+#### 防抖和节流
+
+这两个是前端性能优化中最常用的算法之一。
+
+```javascript
+// 防抖
+function debounce(fn, delay) {
+  let timer = null;
+  return function (...args) {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => {
+      fn.apply(this, args);
+    }, delay);
+  };
+}
+
+// 节流
+function throttle(fn, delay) {
+  let last = 0;
+  return function (...args) {
+    const now = Date.now();
+    if (now - last > delay) {
+      fn.apply(this, args);
+      last = now;
+    }
+  };
+}
+```
+
+#### 路由匹配算法
+
+前端路由匹配是 SPA 应用中的重要算法。
+
+```javascript
+class Router {
+  constructor() {
+    this.routes = [];
+  }
+
+  addRoute(path, component) {
+    const pattern = path
+      .split("/")
+      .map((segment) => {
+        if (segment.startsWith(":")) {
+          return "([^/]+)";
+        }
+        return segment;
+      })
+      .join("\\/");
+    this.routes.push({
+      regex: new RegExp(`^${pattern}$`),
+      component,
+    });
+  }
+
+  match(path) {
+    for (const route of this.routes) {
+      const match = path.match(route.regex);
+      if (match) {
+        return {
+          component: route.component,
+          params: match.slice(1),
+        };
+      }
+    }
+    return null;
+  }
+}
+```
+
+### 6. 算法优化最佳实践
+
+1. **时间复杂度优化**
+
+   - 优先使用 Map/Set 代替数组查找
+   - 避免嵌套循环，使用合适的数据结构
+   - 利用缓存减少重复计算
+
+2. **内存优化**
+
+   - 及时释放不需要的引用
+   - 使用对象池模式复用对象
+   - 避免频繁创建临时对象
+
+3. **代码可维护性**
+   - 模块化设计
+   - 清晰的命名和注释
+   - 单一职责原则
+
 ## 总结
 
-前端开发中，掌握常用算法不仅可以提升代码质量，还能在性能优化和复杂逻辑处理时表现得更加得心应手。希望本文能够为大家提供帮助，让算法在前端开发中发挥更大的价值！
+前端开发中，掌握常用算法不仅可以提升代码质量，还能在性能优化和复杂逻辑处理时表现的更加得心应手。希望本文能够为大家提供帮助，让算法在前端开发中发挥更大的价值！
