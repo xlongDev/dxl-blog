@@ -4,8 +4,9 @@ import { Suspense } from "react";
 import dynamicImport from "next/dynamic";
 import FadeIn from "@/components/FadeIn";
 
-// 使用 dynamic 导入所有组件，并设置 loading 优先级
+// 使用 dynamic 导入所有组件，优化加载策略
 const BlogStats = dynamicImport(() => import("@/components/BlogStats"), {
+  ssr: true,
   loading: () => (
     <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
   ),
@@ -14,6 +15,7 @@ const BlogStats = dynamicImport(() => import("@/components/BlogStats"), {
 const CategoryFilter = dynamicImport(
   () => import("@/components/CategoryFilter"),
   {
+    ssr: true,
     loading: () => (
       <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
     ),
@@ -21,38 +23,30 @@ const CategoryFilter = dynamicImport(
 );
 
 const ArticleTree = dynamicImport(() => import("@/components/ArticleTree"), {
+  ssr: true,
   loading: () => (
     <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
   ),
 });
 
 const TimelineView = dynamicImport(() => import("@/components/TimelineView"), {
+  ssr: true,
   loading: () => (
     <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
   ),
 });
 
-// 优化预加载策略，使用 Promise.all 和 requestIdleCallback
+// 优化预加载策略
 const preloadComponents = () => {
   if (typeof window === "undefined") return;
 
-  const preloadQueue = new Set<() => Promise<any>>();
-
-  const enqueuePreload = (importFn: () => Promise<any>) => {
-    if (!preloadQueue.has(importFn)) {
-      preloadQueue.add(importFn);
-      return importFn();
-    }
-  };
-
-  requestIdleCallback(() => {
-    Promise.all([
-      enqueuePreload(() => import("@/components/BlogStats")),
-      enqueuePreload(() => import("@/components/CategoryFilter")),
-      enqueuePreload(() => import("@/components/ArticleTree")),
-      enqueuePreload(() => import("@/components/TimelineView")),
-    ]).catch(console.error);
-  });
+  // 使用 Promise.all 立即预加载所有组件
+  Promise.all([
+    import("@/components/BlogStats"),
+    import("@/components/CategoryFilter"),
+    import("@/components/ArticleTree"),
+    import("@/components/TimelineView"),
+  ]).catch(console.error);
 };
 
 export const dynamic = "force-dynamic";
@@ -62,9 +56,8 @@ export default function BlogPage() {
     compareDesc(new Date(a.date), new Date(b.date))
   );
 
-  if (typeof window !== "undefined") {
-    preloadComponents();
-  }
+  // 在组件挂载时立即预加载
+  preloadComponents();
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -83,11 +76,6 @@ export default function BlogPage() {
               <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
             }
           >
-            <Suspense
-              fallback={
-                <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
-              }
-            />
             <FadeIn>
               <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow p-4 border border-gray-200/50 dark:border-gray-700/50">
                 <BlogStats posts={posts} />
