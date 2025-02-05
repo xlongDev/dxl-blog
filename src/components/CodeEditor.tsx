@@ -21,19 +21,32 @@ export default function CodeEditor({
   const [isEditorReady, setIsEditorReady] = useState(false);
 
   useEffect(() => {
-    if (monacoEl.current) {
-      // 延迟加载 Monaco Editor
-      import("monaco-editor").then(async (monaco) => {
-        // 根据当前编辑器语言动态加载语言支持
-        if (language === "javascript") {
-          await import(
-            "monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution"
-          );
-        } else if (language === "python") {
-          await import(
-            "monaco-editor/esm/vs/basic-languages/python/python.contribution"
-          );
+    if (monacoEl.current && !editorRef.current) {
+      let isMounted = true;
+
+      const initializeEditor = async () => {
+        // 确保只在客户端加载 Monaco Editor
+        if (typeof window === "undefined") return;
+
+        const monaco = await import("monaco-editor/esm/vs/editor/editor.api");
+
+        // 并行加载语言支持
+        const languageLoaders = {
+          javascript: () =>
+            import(
+              "monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution"
+            ),
+          python: () =>
+            import(
+              "monaco-editor/esm/vs/basic-languages/python/python.contribution"
+            ),
+        };
+
+        if (language in languageLoaders) {
+          await languageLoaders[language as keyof typeof languageLoaders]();
         }
+
+        if (!isMounted) return;
 
         // 定义编辑器主题
         monaco.editor.defineTheme("custom-dark", {
@@ -98,12 +111,15 @@ export default function CodeEditor({
         });
 
         setIsEditorReady(true);
-      });
-    }
+      };
 
-    return () => {
-      editorRef.current?.dispose();
-    };
+      initializeEditor().catch(console.error);
+
+      return () => {
+        isMounted = false;
+        editorRef.current?.dispose();
+      };
+    }
   }, [initialCode, language, onChange]);
 
   return (
@@ -111,6 +127,14 @@ export default function CodeEditor({
       ref={monacoEl}
       style={{ height }}
       className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700"
-    />
+    >
+      {!isEditorReady && (
+        <div className="flex items-center justify-center h-full bg-gray-100 dark:bg-gray-800">
+          <div className="text-gray-500 dark:text-gray-400">
+            加载编辑器中...
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

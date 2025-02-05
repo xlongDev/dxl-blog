@@ -7,7 +7,7 @@ const nextConfig = {
     config.resolve.alias = {
       ...config.resolve.alias,
       // 优化 Monaco Editor 的加载，只加载核心模块
-      "monaco-editor": "monaco-editor/esm/vs/editor/editor.main",
+      "monaco-editor": "monaco-editor/esm/vs/editor/editor.api",
     };
 
     // 优化 Monaco Editor 的 chunk 分割
