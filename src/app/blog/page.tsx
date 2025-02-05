@@ -1,63 +1,46 @@
 import { allPosts } from "contentlayer/generated";
 import { compareDesc } from "date-fns";
 import { Suspense } from "react";
-import dynamicImport from "next/dynamic";
+import dynamic from "next/dynamic";
 import FadeIn from "@/components/FadeIn";
 
-// 使用 dynamic 导入所有组件，优化加载策略
-const BlogStats = dynamicImport(() => import("@/components/BlogStats"), {
+// 优化动态导入策略，预加载关键组件
+const BlogStats = dynamic(() => import("@/components/BlogStats"), {
   ssr: true,
   loading: () => (
     <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
   ),
 });
 
-const CategoryFilter = dynamicImport(
-  () => import("@/components/CategoryFilter"),
-  {
-    ssr: true,
-    loading: () => (
-      <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
-    ),
-  }
-);
-
-const ArticleTree = dynamicImport(() => import("@/components/ArticleTree"), {
+const CategoryFilter = dynamic(() => import("@/components/CategoryFilter"), {
   ssr: true,
   loading: () => (
     <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
   ),
 });
 
-const TimelineView = dynamicImport(() => import("@/components/TimelineView"), {
+const ArticleTree = dynamic(() => import("@/components/ArticleTree"), {
   ssr: true,
   loading: () => (
     <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
   ),
 });
 
-// 优化预加载策略
-const preloadComponents = () => {
-  if (typeof window === "undefined") return;
+const TimelineView = dynamic(() => import("@/components/TimelineView"), {
+  ssr: true,
+  loading: () => (
+    <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
+  ),
+});
 
-  // 使用 Promise.all 立即预加载所有组件
-  Promise.all([
-    import("@/components/BlogStats"),
-    import("@/components/CategoryFilter"),
-    import("@/components/ArticleTree"),
-    import("@/components/TimelineView"),
-  ]).catch(console.error);
+export const metadata = {
+  dynamic: "force-dynamic",
 };
-
-export const dynamic = "force-dynamic";
 
 export default function BlogPage() {
   const posts = allPosts.sort((a, b) =>
     compareDesc(new Date(a.date), new Date(b.date))
   );
-
-  // 在组件挂载时立即预加载
-  preloadComponents();
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
