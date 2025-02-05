@@ -2,6 +2,9 @@ import { withContentlayer } from "next-contentlayer";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // 设置全局的重新验证时间
+  revalidate: 3600, // 每小时重新验证一次
+  staticPageGenerationTimeout: 120,
   images: {
     remotePatterns: [
       {
