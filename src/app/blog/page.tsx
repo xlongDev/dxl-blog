@@ -3,6 +3,7 @@ import { compareDesc } from "date-fns";
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import FadeIn from "@/components/FadeIn";
+import InfiniteArticleList from "@/components/InfiniteArticleList";
 
 // 优化动态导入策略，预加载关键组件
 const BlogStats = dynamic(() => import("@/components/BlogStats"), {
@@ -72,17 +73,6 @@ export default function BlogPage() {
             </FadeIn>
           </Suspense>
 
-          <Suspense
-            fallback={
-              <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
-            }
-          >
-            <FadeIn>
-              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow p-4 border border-gray-200/50 dark:border-gray-700/50">
-                <ArticleTree posts={posts} />
-              </div>
-            </FadeIn>
-          </Suspense>
         </div>
         <div className="lg:col-span-4 space-y-6">
           <Suspense

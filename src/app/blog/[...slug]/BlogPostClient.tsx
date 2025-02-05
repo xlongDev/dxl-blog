@@ -128,9 +128,7 @@ export default function BlogPostClient({
             </div>
           </div>
         </div>
-        <Suspense fallback={null}>
-          <MobileTableOfContents />
-        </Suspense>
+
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
           <Suspense fallback={null}>
             <Comments />

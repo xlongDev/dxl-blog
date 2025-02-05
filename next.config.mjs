@@ -2,6 +2,9 @@ import { withContentlayer } from "next-contentlayer";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  distDir: ".next",
+  generateBuildId: () => "build",
+  generateEtags: false,
   webpack: (config, { isServer }) => {
     // Monaco Editor Webpack 配置
     config.resolve.alias = {
@@ -58,7 +61,7 @@ const nextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   experimental: {
-    serverComponentsExternalPackages: ["@contentlayer/core"],
+    largePageDataBytes: 128 * 1000000,
     optimizeCss: true,
     optimizePackageImports: [
       "@heroicons/react",
@@ -67,9 +70,6 @@ const nextConfig = {
       "framer-motion",
     ],
     scrollRestoration: true,
-    typedRoutes: true,
-    mdxRs: true,
-    webVitalsAttribution: ["CLS", "LCP"],
   },
   swcMinify: true,
   compress: true,
@@ -78,6 +78,7 @@ const nextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
   },
+  pageExtensions: ["js", "jsx", "ts", "tsx", "mdx"],
   onDemandEntries: {
     maxInactiveAge: 60 * 60 * 1000,
     pagesBufferLength: 5,
