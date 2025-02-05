@@ -6,7 +6,6 @@ import FadeIn from "@/components/FadeIn";
 
 // 使用 dynamic 导入所有组件，并设置 loading 优先级
 const BlogStats = dynamicImport(() => import("@/components/BlogStats"), {
-  ssr: false,
   loading: () => (
     <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
   ),
@@ -15,7 +14,6 @@ const BlogStats = dynamicImport(() => import("@/components/BlogStats"), {
 const CategoryFilter = dynamicImport(
   () => import("@/components/CategoryFilter"),
   {
-    ssr: false,
     loading: () => (
       <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
     ),
@@ -23,14 +21,12 @@ const CategoryFilter = dynamicImport(
 );
 
 const ArticleTree = dynamicImport(() => import("@/components/ArticleTree"), {
-  ssr: false,
   loading: () => (
     <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
   ),
 });
 
 const TimelineView = dynamicImport(() => import("@/components/TimelineView"), {
-  ssr: false,
   loading: () => (
     <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
   ),
@@ -87,6 +83,11 @@ export default function BlogPage() {
               <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
             }
           >
+            <Suspense
+              fallback={
+                <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
+              }
+            />
             <FadeIn>
               <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow p-4 border border-gray-200/50 dark:border-gray-700/50">
                 <BlogStats posts={posts} />
@@ -113,6 +114,19 @@ export default function BlogPage() {
           >
             <FadeIn>
               <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow p-4 border border-gray-200/50 dark:border-gray-700/50">
+                <ArticleTree posts={posts} />
+              </div>
+            </FadeIn>
+          </Suspense>
+        </div>
+        <div className="lg:col-span-4 space-y-6">
+          <Suspense
+            fallback={
+              <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
+            }
+          >
+            <FadeIn>
+              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow p-4 border border-gray-200/50 dark:border-gray-700/50 sticky top-20">
                 <ArticleTree posts={posts} />
               </div>
             </FadeIn>
