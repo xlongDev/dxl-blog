@@ -1,63 +1,71 @@
 import { allPosts } from "contentlayer/generated";
 import { compareDesc } from "date-fns";
 import { Suspense } from "react";
-import dynamic from "next/dynamic";
+import dynamicImport from "next/dynamic";
 import FadeIn from "@/components/FadeIn";
 
-// 使用 dynamic 导入所有组件，并设置 ssr: false 来减少服务端渲染的内容
-const BlogStats = dynamic(() => import("@/components/BlogStats"), {
+// 使用 dynamic 导入所有组件，并设置 loading 优先级
+const BlogStats = dynamicImport(() => import("@/components/BlogStats"), {
   ssr: false,
   loading: () => (
     <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
   ),
 });
 
-const CategoryFilter = dynamic(() => import("@/components/CategoryFilter"), {
+const CategoryFilter = dynamicImport(
+  () => import("@/components/CategoryFilter"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
+    ),
+  }
+);
+
+const ArticleTree = dynamicImport(() => import("@/components/ArticleTree"), {
   ssr: false,
   loading: () => (
     <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
   ),
 });
 
-const ArticleTree = dynamic(() => import("@/components/ArticleTree"), {
+const TimelineView = dynamicImport(() => import("@/components/TimelineView"), {
   ssr: false,
   loading: () => (
     <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
   ),
 });
 
-const TimelineView = dynamic(() => import("@/components/TimelineView"), {
-  ssr: false,
-  loading: () => (
-    <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
-  ),
-});
-
-// 优化预加载策略
+// 优化预加载策略，使用 Promise.all 和 requestIdleCallback
 const preloadComponents = () => {
   if (typeof window === "undefined") return;
 
-  requestIdleCallback(() => {
-    const components = [
-      () => import("@/components/BlogStats"),
-      () => import("@/components/CategoryFilter"),
-      () => import("@/components/ArticleTree"),
-      () => import("@/components/TimelineView"),
-    ];
+  const preloadQueue = new Set<() => Promise<any>>();
 
-    components.forEach((importFn) => {
-      importFn();
-    });
+  const enqueuePreload = (importFn: () => Promise<any>) => {
+    if (!preloadQueue.has(importFn)) {
+      preloadQueue.add(importFn);
+      return importFn();
+    }
+  };
+
+  requestIdleCallback(() => {
+    Promise.all([
+      enqueuePreload(() => import("@/components/BlogStats")),
+      enqueuePreload(() => import("@/components/CategoryFilter")),
+      enqueuePreload(() => import("@/components/ArticleTree")),
+      enqueuePreload(() => import("@/components/TimelineView")),
+    ]).catch(console.error);
   });
 };
 
+export const dynamic = "force-dynamic";
+
 export default function BlogPage() {
-  // 只在客户端进行文章排序
   const posts = allPosts.sort((a, b) =>
     compareDesc(new Date(a.date), new Date(b.date))
   );
 
-  // 在客户端执行预加载
   if (typeof window !== "undefined") {
     preloadComponents();
   }
