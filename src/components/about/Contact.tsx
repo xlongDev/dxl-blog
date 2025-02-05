@@ -61,7 +61,7 @@ export default function Contact({ itemVariants }: ContactProps) {
             </div>
           </div>
         </div>
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           {isWeChatQRVisible && (
             <motion.div
               className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-full backdrop-blur-sm bg-white/30 dark:bg-gray-800/30 p-4 rounded-2xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 z-50"
@@ -69,12 +69,8 @@ export default function Contact({ itemVariants }: ContactProps) {
               animate={{ opacity: 1, y: -120, scale: 1 }}
               exit={{ opacity: 0, y: -60, scale: 0.8 }}
               transition={{
-                duration: 0.4,
-                ease: [0.4, 0, 0.2, 1],
-                scale: {
-                  duration: 0.35,
-                  ease: [0.34, 1.56, 0.64, 1],
-                },
+                duration: 0.3,
+                ease: "easeInOut",
               }}
             >
               <Image

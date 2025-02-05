@@ -58,14 +58,14 @@ const MDXComponents: MDXComponentsType = {
 
     return (
       <div className="relative my-6 group">
-        <AnimatePresence mode="wait">
+        <AnimatePresence>
           {isEditing ? (
             <motion.div
               key="editor"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
             >
               <CodeEditor
                 code={codeText}
@@ -81,10 +81,10 @@ const MDXComponents: MDXComponentsType = {
           ) : (
             <motion.div
               key="preview"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
             >
               <pre
                 className={`overflow-hidden rounded-lg bg-gray-800/95 dark:bg-gray-900/95 backdrop-blur-sm transition-all duration-300 ease-in-out ${

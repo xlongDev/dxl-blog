@@ -40,13 +40,13 @@ export default function OptimizedImage({
 
   return (
     <div className={`relative overflow-hidden ${className}`}>
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {isLoading && (
           <motion.div
             initial={{ opacity: 0.5 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.2 }}
             className={`absolute inset-0 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-lg ${skeletonSizes[loadingSize]}`}
           />
         )}

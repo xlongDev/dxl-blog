@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface FadeInProps {
   children: React.ReactNode;
@@ -13,26 +14,38 @@ export default function FadeIn({
   className = "",
   delay = 0,
 }: FadeInProps) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return null;
+  }
+
   return (
-    <motion.div
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-20px" }}
-      variants={{
-        hidden: { opacity: 0, y: 20 },
-        visible: {
-          opacity: 1,
-          y: 0,
-          transition: {
-            duration: 0.5,
-            delay: delay,
-            ease: "easeOut",
+    <AnimatePresence>
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        exit="hidden"
+        variants={{
+          hidden: { opacity: 0, y: 20 },
+          visible: {
+            opacity: 1,
+            y: 0,
+            transition: {
+              duration: 0.5,
+              delay: delay,
+              ease: "easeOut",
+            },
           },
-        },
-      }}
-      className={className}
-    >
-      {children}
-    </motion.div>
+        }}
+        className={className}
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
   );
 }

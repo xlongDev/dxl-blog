@@ -105,7 +105,7 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
   };
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {isOpen && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -123,7 +123,7 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
             initial={{ opacity: 0, scale: 0.95, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
-            transition={{ duration: 0.2, delay: 0.1 }}
+            transition={{ duration: 0.2 }}
             className="fixed inset-x-4 top-8 max-w-2xl mx-auto"
           >
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl">
