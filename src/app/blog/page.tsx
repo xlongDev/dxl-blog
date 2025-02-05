@@ -6,34 +6,30 @@ import FadeIn from "@/components/FadeIn";
 
 // 优化动态导入策略，预加载关键组件
 const BlogStats = dynamic(() => import("@/components/BlogStats"), {
-  ssr: true,
   loading: () => (
     <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
   ),
 });
 
 const CategoryFilter = dynamic(() => import("@/components/CategoryFilter"), {
-  ssr: true,
   loading: () => (
     <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
   ),
 });
 
 const ArticleTree = dynamic(() => import("@/components/ArticleTree"), {
-  ssr: true,
   loading: () => (
     <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
   ),
 });
 
 const TimelineView = dynamic(() => import("@/components/TimelineView"), {
-  ssr: true,
   loading: () => (
     <div className="h-12 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
   ),
 });
 
-export const revalidate = 3600; // 每小时重新验证一次
+// 移除revalidate配置，改为按需更新
 
 export default function BlogPage() {
   const posts = allPosts.sort((a, b) =>

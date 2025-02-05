@@ -160,18 +160,11 @@ const MDXComponents: MDXComponentsType = {
       </div>
     );
   },
-  code: (
-    props: React.DetailedHTMLProps<
-      React.HTMLAttributes<HTMLElement>,
-      HTMLElement
-    >
-  ) => {
-    return (
-      <code className="font-mono text-sm" {...props}>
-        {props.children}
-      </code>
-    );
-  },
+  code: (props) => (
+    <code className="font-mono text-sm" {...props}>
+      {props.children}
+    </code>
+  ),
 };
 
 export default MDXComponents;

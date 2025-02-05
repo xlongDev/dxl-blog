@@ -4,28 +4,37 @@ import { useMDXComponent } from "next-contentlayer/hooks";
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
 import { Post } from "contentlayer/generated";
+import { Suspense } from "react";
+import dynamic from "next/dynamic";
 import MDXComponents from "@/components/MDXComponents";
-import ArticleActions from "@/components/ArticleActions";
-import Comments from "@/components/Comments";
-import RelatedPosts from "@/components/RelatedPosts";
-import TableOfContents from "@/components/TableOfContents";
-import MobileTableOfContents from "@/components/MobileTableOfContents";
-import ReadingProgress from "@/components/ReadingProgress";
-import ShareButtons from "@/components/ShareButtons";
-import ReadingTime from "@/components/ReadingTime";
-import SeriesNav from "@/components/SeriesNav";
-import { allPosts } from "contentlayer/generated";
+const ArticleActions = dynamic(() => import("@/components/ArticleActions"));
+const Comments = dynamic(() => import("@/components/Comments"));
+const RelatedPosts = dynamic(() => import("@/components/RelatedPosts"));
+const TableOfContents = dynamic(() => import("@/components/TableOfContents"));
+const MobileTableOfContents = dynamic(
+  () => import("@/components/MobileTableOfContents")
+);
+const ReadingProgress = dynamic(() => import("@/components/ReadingProgress"));
+const ShareButtons = dynamic(() => import("@/components/ShareButtons"));
+const ReadingTime = dynamic(() => import("@/components/ReadingTime"));
+const SeriesNav = dynamic(() => import("@/components/SeriesNav"));
 
 interface BlogPostClientProps {
   post: Post;
+  allPosts: Post[];
 }
 
-export default function BlogPostClient({ post }: BlogPostClientProps) {
+export default function BlogPostClient({
+  post,
+  allPosts,
+}: BlogPostClientProps) {
   const MDXContent = useMDXComponent(post.body.code);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
-      <ReadingProgress />
+      <Suspense fallback={null}>
+        <ReadingProgress />
+      </Suspense>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row gap-8">
           <article className="flex-1 w-full lg:max-w-3xl mx-auto">
@@ -58,24 +67,28 @@ export default function BlogPostClient({ post }: BlogPostClientProps) {
                   </time>
                 </div>
                 <span className="text-gray-300 dark:text-gray-600">|</span>
-                <div className="flex items-center gap-2">
-                  <svg
-                    className="w-4 h-4 text-purple-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <ReadingTime content={post.body.raw} />
-                </div>
+                <Suspense fallback={null}>
+                  <div className="flex items-center gap-2">
+                    <svg
+                      className="w-4 h-4 text-purple-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <ReadingTime content={post.body.raw} />
+                  </div>
+                </Suspense>
                 <span className="text-gray-300 dark:text-gray-600">|</span>
-                <ShareButtons url={post.url} title={post.title} />
+                <Suspense fallback={null}>
+                  <ShareButtons url={post.url} title={post.title} />
+                </Suspense>
                 {post.tags && post.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2 w-full">
                     {post.tags.map((tag) => (
@@ -89,26 +102,42 @@ export default function BlogPostClient({ post }: BlogPostClientProps) {
                   </div>
                 )}
               </div>
-              {post.series && (
-                <SeriesNav
-                  currentPost={post}
-                  seriesPosts={allPosts.filter((p) => p.series === post.series)}
-                />
-              )}
-              <MDXContent components={MDXComponents} />
-              <ArticleActions slug={post.url} />
+              <Suspense fallback={null}>
+                {post.series && (
+                  <SeriesNav
+                    currentPost={post}
+                    seriesPosts={allPosts.filter(
+                      (p) => p.series === post.series
+                    )}
+                  />
+                )}
+              </Suspense>
+              <Suspense fallback={<div>Loading content...</div>}>
+                <MDXContent components={MDXComponents} />
+              </Suspense>
+              <Suspense fallback={null}>
+                <ArticleActions slug={post.url} />
+              </Suspense>
             </div>
           </article>
           <div className="hidden lg:block w-64 relative">
             <div className="sticky top-24">
-              <TableOfContents />
+              <Suspense fallback={null}>
+                <TableOfContents />
+              </Suspense>
             </div>
           </div>
         </div>
-        <MobileTableOfContents />
+        <Suspense fallback={null}>
+          <MobileTableOfContents />
+        </Suspense>
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-          <Comments />
-          <RelatedPosts currentPost={post} allPosts={allPosts} />
+          <Suspense fallback={null}>
+            <Comments />
+          </Suspense>
+          <Suspense fallback={null}>
+            <RelatedPosts currentPost={post} allPosts={allPosts} />
+          </Suspense>
         </div>
       </div>
     </div>
