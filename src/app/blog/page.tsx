@@ -33,9 +33,7 @@ const TimelineView = dynamic(() => import("@/components/TimelineView"), {
   ),
 });
 
-export const metadata = {
-  dynamic: "force-dynamic",
-};
+export const revalidate = 3600; // 每小时重新验证一次
 
 export default function BlogPage() {
   const posts = allPosts.sort((a, b) =>
