@@ -91,9 +91,7 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,
-  compiler: {
-    removeConsole: process.env.NODE_ENV === "production",
-  },
+
   pageExtensions: ["js", "jsx", "ts", "tsx", "mdx"],
   onDemandEntries: {
     maxInactiveAge: 120 * 60 * 1000, // 增加页面缓存时间
