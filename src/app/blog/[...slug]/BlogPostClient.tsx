@@ -13,12 +13,25 @@ import ReadingTime from "@/components/ReadingTime";
 import SeriesNav from "@/components/SeriesNav";
 import TableOfContents from "@/components/TableOfContents";
 
+// 预加载核心组件
 const Comments = dynamic(() => import("@/components/Comments"), {
   ssr: false,
+  loading: () => (
+    <div className="animate-pulse h-32 bg-gray-200 dark:bg-gray-700 rounded my-4" />
+  ),
 });
-const RelatedPosts = dynamic(() => import("@/components/RelatedPosts"));
+
+const RelatedPosts = dynamic(() => import("@/components/RelatedPosts"), {
+  loading: () => (
+    <div className="animate-pulse h-48 bg-gray-200 dark:bg-gray-700 rounded my-4" />
+  ),
+});
+
 const ReadingProgress = dynamic(() => import("@/components/ReadingProgress"), {
   ssr: false,
+  loading: () => (
+    <div className="h-1 bg-gray-200 dark:bg-gray-700 fixed top-0 left-0 w-full z-50" />
+  ),
 });
 
 interface BlogPostClientProps {

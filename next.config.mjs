@@ -4,7 +4,25 @@ import { withContentlayer } from "next-contentlayer";
 const nextConfig = {
   distDir: ".next",
   generateBuildId: () => "build",
-  generateEtags: false,
+  generateEtags: true,
+  // 启用增量静态再生成
+  async rewrites() {
+    return {
+      beforeFiles: [
+        {
+          source: "/blog/:path*",
+          has: [
+            {
+              type: "query",
+              key: "revalidate",
+              value: "true",
+            },
+          ],
+          destination: "/api/revalidate?path=/blog/:path*",
+        },
+      ],
+    };
+  },
   webpack: (config, { isServer }) => {
     // 处理 punycode 警告
     config.resolve = {
