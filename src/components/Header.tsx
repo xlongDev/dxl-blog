@@ -7,7 +7,7 @@ import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import Logo from "./Header/Logo";
 import Navigation from "./Header/Navigation";
 import Actions from "./Header/Actions";
-import ReadingProgress from "./ReadingProgress";
+import ReadingProgress from "@/components/ReadingProgress";
 
 export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -15,11 +15,11 @@ export default function Header() {
 
   return (
     <>
-      <ReadingProgress />
       <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-gray-200/50 dark:border-gray-700/50 shadow-lg transition-all duration-300 hover:shadow-xl">
         <nav className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <Logo />
+            <ReadingProgress />
             {/* 桌面端导航 */}
             <div className="hidden md:flex items-center space-x-6">
               <Navigation />
