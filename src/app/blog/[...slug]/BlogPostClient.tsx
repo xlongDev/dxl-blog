@@ -7,17 +7,19 @@ import { Post } from "contentlayer/generated";
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import MDXComponents from "@/components/MDXComponents";
-const ArticleActions = dynamic(() => import("@/components/ArticleActions"));
-const Comments = dynamic(() => import("@/components/Comments"));
+import ArticleActions from "@/components/ArticleActions";
+import ShareButtons from "@/components/ShareButtons";
+import ReadingTime from "@/components/ReadingTime";
+import SeriesNav from "@/components/SeriesNav";
+import TableOfContents from "@/components/TableOfContents";
+
+const Comments = dynamic(() => import("@/components/Comments"), {
+  ssr: false,
+});
 const RelatedPosts = dynamic(() => import("@/components/RelatedPosts"));
-const TableOfContents = dynamic(() => import("@/components/TableOfContents"));
-const MobileTableOfContents = dynamic(
-  () => import("@/components/MobileTableOfContents")
-);
-const ReadingProgress = dynamic(() => import("@/components/ReadingProgress"));
-const ShareButtons = dynamic(() => import("@/components/ShareButtons"));
-const ReadingTime = dynamic(() => import("@/components/ReadingTime"));
-const SeriesNav = dynamic(() => import("@/components/SeriesNav"));
+const ReadingProgress = dynamic(() => import("@/components/ReadingProgress"), {
+  ssr: false,
+});
 
 interface BlogPostClientProps {
   post: Post;
@@ -32,9 +34,7 @@ export default function BlogPostClient({
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
-      <Suspense fallback={null}>
-        <ReadingProgress />
-      </Suspense>
+      <ReadingProgress />
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row gap-8">
           <article className="flex-1 w-full lg:max-w-3xl mx-auto">
@@ -67,28 +67,24 @@ export default function BlogPostClient({
                   </time>
                 </div>
                 <span className="text-gray-300 dark:text-gray-600">|</span>
-                <Suspense fallback={null}>
-                  <div className="flex items-center gap-2">
-                    <svg
-                      className="w-4 h-4 text-purple-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <ReadingTime content={post.body.raw} />
-                  </div>
-                </Suspense>
+                <div className="flex items-center gap-2">
+                  <svg
+                    className="w-4 h-4 text-purple-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <ReadingTime content={post.body.raw} />
+                </div>
                 <span className="text-gray-300 dark:text-gray-600">|</span>
-                <Suspense fallback={null}>
-                  <ShareButtons url={post.url} title={post.title} />
-                </Suspense>
+                <ShareButtons url={post.url} title={post.title} />
                 {post.tags && post.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2 w-full">
                     {post.tags.map((tag) => (
@@ -102,38 +98,30 @@ export default function BlogPostClient({
                   </div>
                 )}
               </div>
-              <Suspense fallback={null}>
-                {post.series && (
-                  <SeriesNav
-                    currentPost={post}
-                    seriesPosts={allPosts.filter(
-                      (p) => p.series === post.series
-                    )}
-                  />
-                )}
-              </Suspense>
+              {post.series && (
+                <SeriesNav
+                  currentPost={post}
+                  seriesPosts={allPosts.filter((p) => p.series === post.series)}
+                />
+              )}
               <Suspense fallback={<div>Loading content...</div>}>
                 <MDXContent components={MDXComponents} />
               </Suspense>
-              <Suspense fallback={null}>
-                <ArticleActions slug={post.url} />
-              </Suspense>
+              <ArticleActions slug={post.url} />
             </div>
           </article>
           <div className="hidden lg:block w-64 relative">
             <div className="sticky top-24">
-              <Suspense fallback={null}>
-                <TableOfContents />
-              </Suspense>
+              <TableOfContents />
             </div>
           </div>
         </div>
 
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-          <Suspense fallback={null}>
+          <Suspense fallback={<div>Loading comments...</div>}>
             <Comments />
           </Suspense>
-          <Suspense fallback={null}>
+          <Suspense fallback={<div>Loading related posts...</div>}>
             <RelatedPosts currentPost={post} allPosts={allPosts} />
           </Suspense>
         </div>

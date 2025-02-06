@@ -37,12 +37,12 @@ export default function RootLayout({
         className={`${inter.className} bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans`}
       >
         <Providers>
-            <div className="min-h-screen flex flex-col">
-              <Header />
-              <main className="flex-grow">{children}</main>
-              <Footer />
-              <BackToTop />
-            </div>
+          <div className="min-h-screen flex flex-col">
+            <Header />
+            <main className="flex-grow">{children}</main>
+            <Footer />
+            <BackToTop />
+          </div>
         </Providers>
       </body>
     </html>
