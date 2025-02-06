@@ -50,7 +50,6 @@
   .border,
   .shadow-lg,
   .backdrop-blur-sm {
-    @apply transition-all duration-300 ease-in-out will-change-auto;
     transform: translateZ(0);
     backface-visibility: hidden;
   }
@@ -62,7 +61,6 @@
     --foreground-rgb: 0, 0, 0;
     --background-start-rgb: 255, 255, 255;
     --background-end-rgb: 255, 255, 255;
-    transition: color 0.2s ease-out, background-color 0.2s ease-out;
   }
 
   [data-theme="dark"] {
@@ -155,7 +153,7 @@ code {
 
 /* 保留你原有的部分样式 */
 .prose a {
-  @apply text-blue-600/90 dark:text-blue-400/90 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-300;
+  @apply text-blue-600/90 dark:text-blue-400/90 hover:text-blue-700 dark:hover:text-blue-300;
 }
 
 .prose h1,
