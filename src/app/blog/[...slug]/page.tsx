@@ -10,14 +10,20 @@ const BlogPostClient = dynamic(() => import("./BlogPostClient"), {
 });
 
 export async function generateStaticParams() {
-  return allPosts.map((post) => ({
-    slug: post._raw.flattenedPath.split("/"),
-  }));
+  return allPosts
+    .filter(
+      (post) => post._raw.flattenedPath && post._raw.flattenedPath.length > 0
+    )
+    .map((post) => ({
+      slug: post._raw.flattenedPath.split("/"),
+    }));
 }
 
 export default function BlogPost({ params }: { params: { slug: string[] } }) {
+  // 对路径参数进行解码，以支持中文路径
+  const decodedSlug = params.slug.map((segment) => decodeURIComponent(segment));
   const post = allPosts.find(
-    (post) => post._raw.flattenedPath === params.slug.join("/")
+    (post) => post._raw.flattenedPath === decodedSlug.join("/")
   );
 
   if (!post) {

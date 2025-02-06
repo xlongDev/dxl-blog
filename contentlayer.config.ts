@@ -59,7 +59,11 @@ export const Post = defineDocumentType(() => ({
     url: {
       type: "string",
       resolve: (post) => {
-        return `/blog/${post._raw.flattenedPath}`;
+        const encodedPath = post._raw.flattenedPath
+          .split("/")
+          .map((segment) => encodeURIComponent(segment))
+          .join("/");
+        return `/blog/${encodedPath}`;
       },
     },
     category: {

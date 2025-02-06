@@ -16,7 +16,7 @@ export async function generateMetadata() {
 }
 
 export default function BlogPage() {
-  const sortedPosts = allPosts.sort((a, b) =>
+  const sortedPosts = [...allPosts].sort((a, b) =>
     compareDesc(new Date(a.date), new Date(b.date))
   );
 

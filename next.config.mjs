@@ -6,6 +6,22 @@ const nextConfig = {
   generateBuildId: () => "build",
   generateEtags: false,
   webpack: (config, { isServer }) => {
+    // 处理 punycode 警告
+    config.resolve = {
+      ...config.resolve,
+      fallback: {
+        ...config.resolve?.fallback,
+        punycode: false,
+      },
+    };
+
+    // 优化文件监视配置
+    config.watchOptions = {
+      ...config.watchOptions,
+      ignored: ["**/.git/**", "**/node_modules/**", "**/.next/**"],
+      aggregateTimeout: 300,
+      poll: 1000,
+    };
     // Monaco Editor Webpack 配置
     config.resolve.alias = {
       ...config.resolve.alias,
@@ -44,7 +60,7 @@ const nextConfig = {
 
     return config;
   },
-  staticPageGenerationTimeout: 180, // 增加静态页面生成超时时间
+  staticPageGenerationTimeout: 300, // 增加静态页面生成超时时间以确保所有页面都能正确生成
   images: {
     remotePatterns: [
       {
@@ -80,8 +96,8 @@ const nextConfig = {
   },
   pageExtensions: ["js", "jsx", "ts", "tsx", "mdx"],
   onDemandEntries: {
-    maxInactiveAge: 60 * 60 * 1000,
-    pagesBufferLength: 5,
+    maxInactiveAge: 120 * 60 * 1000, // 增加页面缓存时间
+    pagesBufferLength: 10, // 增加页面缓存数量
   },
 };
 
