@@ -38,7 +38,8 @@ const getCategoryInfo = (): CategoryInfo[] => {
     const isChineseB = /[\u4e00-\u9fa5]/.test(b.name);
 
     if (isChineseA === isChineseB) {
-      return a.name.localeCompare(b.name);
+      // 明确指定 locale 来保证服务端和客户端的排序一致性
+      return a.name.localeCompare(b.name, "zh-CN");
     }
     return isChineseA ? 1 : -1;
   });
