@@ -1,6 +1,5 @@
 import { ImageResponse } from "@vercel/og";
 
-export const runtime = "edge";
 export const contentType = "image/png";
 
 export default async function OpenGraphImage({
@@ -47,3 +46,5 @@ export default async function OpenGraphImage({
     }
   );
 }
+
+// 移除 edge runtime 配置，使用默认的 Node.js runtime

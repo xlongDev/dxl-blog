@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { Viewport } from "next/types";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
   ),
   manifest: "/manifest.json",
-  themeColor: "#000000",
+
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -24,7 +25,12 @@ export const metadata: Metadata = {
   other: {
     "mobile-web-app-capable": "yes",
   },
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
