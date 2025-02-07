@@ -14,10 +14,15 @@ export default function TypewriterQuote({
   author,
   onTypingComplete,
 }: TypewriterQuoteProps) {
+  const [mounted, setMounted] = useState(false);
   const [displayText, setDisplayText] = useState("");
   const [isTypingComplete, setIsTypingComplete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showCursor, setShowCursor] = useState(true);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     let currentIndex = 0;
@@ -79,6 +84,16 @@ export default function TypewriterQuote({
       };
     }
   }, [isDeleting, displayText, onTypingComplete]);
+
+  if (!mounted) {
+    return (
+      <div className="relative">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-4 tracking-wider leading-relaxed text-white">
+          {text}
+        </h1>
+      </div>
+    );
+  }
 
   return (
     <div className="relative">
