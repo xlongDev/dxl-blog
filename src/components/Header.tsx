@@ -19,7 +19,7 @@ export default function Header() {
         <nav className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <Logo />
-            <ReadingProgress />
+            {/* <ReadingProgress /> */}
             {/* 桌面端导航 */}
             <div className="hidden md:flex items-center space-x-6">
               <Navigation />

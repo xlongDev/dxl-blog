@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { Calendar, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
@@ -13,7 +14,7 @@ const TimeStats = ({ latestUpdate, avgReadingTime }: TimeStatsProps) => {
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-4 mb-8">
-        <div className="p-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg transform transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-xl">
+        <div className="p-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg transform transition-all duration-500 hover:scale-125 hover:animate-pulse hover:from-pink-500 hover:to-purple-500 hover:shadow-[0_0_15px_rgba(219,39,119,0.5)]">
           <Clock className="w-6 h-6" />
         </div>
         <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
@@ -56,4 +57,4 @@ const TimeStats = ({ latestUpdate, avgReadingTime }: TimeStatsProps) => {
   );
 };
 
-export default TimeStats;
+export default React.memo(TimeStats);

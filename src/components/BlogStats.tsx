@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import { Post } from "contentlayer/generated";
 import BasicStats from "./BlogStats/BasicStats";
 import TimeStats from "./BlogStats/TimeStats";
@@ -109,4 +109,4 @@ const BlogStats = ({ posts }: BlogStatsProps) => {
   );
 };
 
-export default BlogStats;
+export default React.memo(BlogStats);

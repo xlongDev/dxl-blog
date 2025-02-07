@@ -1,12 +1,13 @@
 "use client";
 
-import { Suspense, lazy, useState } from "react";
+import { Suspense, lazy, useState, useEffect } from "react";
 import { Post } from "contentlayer/generated";
 import { usePaginatedPosts } from "@/hooks/usePaginatedPosts";
 
 // 懒加载组件
 const BlogStats = lazy(() => import("@/components/BlogStats"));
 const Categories = lazy(() => import("@/components/Categories"));
+const MobileCategories = lazy(() => import("@/components/MobileCategories"));
 const BlogFilter = lazy(() => import("@/components/BlogFilter"));
 const ArticleTree = lazy(() => import("@/components/ArticleTree"));
 const TimelineView = lazy(() => import("@/components/TimelineView"));
@@ -23,6 +24,7 @@ const LoadingSpinner = () => (
 
 export default function BlogPageClient({ posts }: BlogPageClientProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(true);
   const {
     paginatedPosts,
     currentPage,
@@ -30,22 +32,37 @@ export default function BlogPageClient({ posts }: BlogPageClientProps) {
     goToNextPage,
     goToPreviousPage,
     goToPage,
-  } = usePaginatedPosts({ posts });
+  } = usePaginatedPosts({ posts, postsPerPage: isMobile ? 10 : 70 });
+
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+
+    checkIsMobile();
+    window.addEventListener("resize", checkIsMobile);
+
+    return () => window.removeEventListener("resize", checkIsMobile);
+  }, []);
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 space-y-8" id="post-list-container">
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow p-4 border border-gray-200/50 dark:border-gray-700/50">
-            <Suspense fallback={<LoadingSpinner />}>
-              <BlogStats posts={posts} />
-            </Suspense>
-          </div>
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow p-4 border border-gray-200/50 dark:border-gray-700/50">
-            <Suspense fallback={<LoadingSpinner />}>
-              <Categories posts={posts} />
-            </Suspense>
-          </div>
+          {!isMobile && (
+            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow p-4 border border-gray-200/50 dark:border-gray-700/50">
+              <Suspense fallback={<LoadingSpinner />}>
+                <BlogStats posts={posts} />
+              </Suspense>
+            </div>
+          )}
+          {isMobile && (
+            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow p-4 border border-gray-200/50 dark:border-gray-700/50 space-y-4 w-full relative z-20">
+              <Suspense fallback={<LoadingSpinner />}>
+                <MobileCategories posts={posts} />
+              </Suspense>
+            </div>
+          )}
           <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow p-4 border border-gray-200/50 dark:border-gray-700/50">
             <Suspense fallback={<LoadingSpinner />}>
               <BlogFilter posts={paginatedPosts} />
@@ -74,18 +91,20 @@ export default function BlogPageClient({ posts }: BlogPageClientProps) {
             )}
           </div>
         </div>
-        <div className="lg:col-span-4 space-y-8">
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow p-4 border border-gray-200/50 dark:border-gray-700/50 sticky top-20">
-            <Suspense fallback={<LoadingSpinner />}>
-              <ArticleTree posts={posts} />
-            </Suspense>
+        {!isMobile && (
+          <div className="lg:col-span-4 space-y-8">
+            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow p-4 border border-gray-200/50 dark:border-gray-700/50">
+              <Suspense fallback={<LoadingSpinner />}>
+                <ArticleTree posts={posts} />
+              </Suspense>
+            </div>
+            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow p-4 border border-gray-200/50 dark:border-gray-700/50">
+              <Suspense fallback={<LoadingSpinner />}>
+                <TimelineView posts={posts} />
+              </Suspense>
+            </div>
           </div>
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow p-4 border border-gray-200/50 dark:border-gray-700/50">
-            <Suspense fallback={<LoadingSpinner />}>
-              <TimelineView posts={posts} />
-            </Suspense>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

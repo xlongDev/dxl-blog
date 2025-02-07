@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { Post } from "contentlayer/generated";
 import { TrendingUp } from "lucide-react";
 
@@ -11,7 +12,7 @@ const PopularPosts = ({ topPosts }: PopularPostsProps) => {
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-4 mb-8">
-        <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-500 to-blue-500 text-white shadow-lg transform transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-xl">
+        <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-500 to-blue-500 text-white shadow-lg transform transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_0_20px_rgba(16,185,129,0.6)] hover:from-blue-500 hover:to-emerald-500">
           <TrendingUp className="w-6 h-6" />
         </div>
         <h3 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
@@ -44,4 +45,4 @@ const PopularPosts = ({ topPosts }: PopularPostsProps) => {
   );
 };
 
-export default PopularPosts;
+export default React.memo(PopularPosts);
