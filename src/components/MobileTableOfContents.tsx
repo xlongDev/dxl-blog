@@ -54,7 +54,7 @@ export default function MobileTableOfContents() {
   if (headings.length === 0) return null;
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-t border-gray-200 dark:border-gray-800 shadow-lg">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[100] bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-t border-gray-200 dark:border-gray-800 shadow-lg">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center justify-between w-full px-4 py-3 text-sm font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-50/80 dark:hover:bg-gray-800/80 transition-colors"
@@ -73,14 +73,14 @@ export default function MobileTableOfContents() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="absolute bottom-full left-0 right-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg border-t border-gray-200/50 dark:border-gray-700/50 shadow-lg overflow-hidden"
+            className="absolute bottom-full left-0 right-0 max-h-[70vh] overflow-y-auto bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg border-t border-gray-200/50 dark:border-gray-700/50 shadow-lg"
           >
             <motion.div
               initial={{ y: 20 }}
               animate={{ y: 0 }}
               exit={{ y: 20 }}
               transition={{ duration: 0.2 }}
-              className="px-4 py-4 max-h-[60vh] overflow-y-auto"
+              className="px-4 py-4"
             >
               <ul className="space-y-1">
                 {headings.map((heading, index) => (
