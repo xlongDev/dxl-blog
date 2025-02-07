@@ -14,15 +14,11 @@ export default function TypewriterQuote({
   author,
   onTypingComplete,
 }: TypewriterQuoteProps) {
-  const [mounted, setMounted] = useState(false);
+  // 初始状态均为 ""，确保服务端和客户端一致
   const [displayText, setDisplayText] = useState("");
   const [isTypingComplete, setIsTypingComplete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showCursor, setShowCursor] = useState(true);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     let currentIndex = 0;
@@ -45,15 +41,14 @@ export default function TypewriterQuote({
         clearInterval(typingInterval);
         setIsTypingComplete(true);
 
-        // 等待3.5秒后开始删除动画
+        // 等待 3.5 秒后开始删除动画
         deleteTimeout = setTimeout(() => {
           setShowCursor(false);
           setIsDeleting(true);
         }, 3500);
       }
-    }, 140); // 调整这里的值来改变打字速度，值越小打字越快
+    }, 140);
 
-    // 清理函数
     return () => {
       clearInterval(typingInterval);
       clearTimeout(deleteTimeout);
@@ -74,26 +69,15 @@ export default function TypewriterQuote({
         } else {
           clearInterval(deletingInterval);
           setIsDeleting(false);
-          onTypingComplete(); // 通知父组件打字完成
+          onTypingComplete();
         }
-      }, 50); // 调整这里的值来改变删除速度，值越小删除越快
+      }, 50);
 
-      // 清理函数
       return () => {
         clearInterval(deletingInterval);
       };
     }
   }, [isDeleting, displayText, onTypingComplete]);
-
-  if (!mounted) {
-    return (
-      <div className="relative">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-4 tracking-wider leading-relaxed text-white">
-          {text}
-        </h1>
-      </div>
-    );
-  }
 
   return (
     <div className="relative">
