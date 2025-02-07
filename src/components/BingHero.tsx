@@ -24,20 +24,16 @@ export default function BingHero() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showInfo, setShowInfo] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentQuote, setCurrentQuote] = useState(quotes[0]);
+  // 直接在初始化时生成随机标语
+  const [currentQuote, setCurrentQuote] = useState(getRandomQuote());
   const [offset, setOffset] = useState(0);
-  const [isPreloading, setIsPreloading] = useState(false); // 用于标记是否正在预加载
+  const [isPreloading, setIsPreloading] = useState(false);
 
   // 随机选择一个标语
-  const getRandomQuote = () => {
+  function getRandomQuote() {
     const quoteIndex = Math.floor(Math.random() * quotes.length);
     return quotes[quoteIndex];
-  };
-
-  // 初始化时随机选择一个标语
-  useEffect(() => {
-    setCurrentQuote(getRandomQuote());
-  }, []);
+  }
 
   // 获取 Bing 壁纸数据
   const fetchBingWallpapers = async (offset: number) => {
@@ -54,26 +50,21 @@ export default function BingHero() {
         location: image.copyright.split("(")[1]?.split(")")[0] || "未知地点",
       }));
 
-      // 将新获取的壁纸追加到现有壁纸列表中
       setWallpapers((prev) => {
-        // 如果是初始加载（offset为0），直接使用新数据
         if (offset === 0) {
           return wallpaperData;
         }
-
-        // 否则检查新数据是否已经存在，避免重复追加
         const existingUrls = prev.map((w: BingWallpaper) => w.url);
         const uniqueWallpaperData = wallpaperData.filter(
           (w: BingWallpaper) => !existingUrls.includes(w.url)
         );
-
         return [...prev, ...uniqueWallpaperData];
       });
     } catch (error) {
       console.error("Failed to fetch Bing wallpapers:", error);
     } finally {
       setIsLoading(false);
-      setIsPreloading(false); // 预加载完成
+      setIsPreloading(false);
     }
   };
 
@@ -81,7 +72,6 @@ export default function BingHero() {
   useEffect(() => {
     const initWallpapers = async () => {
       await fetchBingWallpapers(offset);
-      // 设置 currentIndex 为0，因为最新的壁纸在数组的开始位置
       setCurrentIndex(0);
     };
     initWallpapers();
@@ -89,23 +79,19 @@ export default function BingHero() {
 
   // 预加载下一组壁纸和图片
   useEffect(() => {
-    // 当用户浏览到当前组壁纸的后半部分时预加载下一组壁纸
     if (currentIndex >= wallpapers.length - 3 && !isPreloading) {
       let newOffset = offset + 8;
       if (newOffset > 16) newOffset = 0;
-
       setOffset(newOffset);
       setIsPreloading(true);
       fetchBingWallpapers(newOffset);
 
-      // 预加载下一张图片
       if (currentIndex < wallpapers.length - 1) {
         const nextImage = new Image();
         nextImage.src = wallpapers[currentIndex + 1].url;
       }
     }
 
-    // 预加载当前显示的图片的前后各一张
     const preloadImages = () => {
       if (currentIndex > 0) {
         const prevImage = new Image();
@@ -134,11 +120,8 @@ export default function BingHero() {
       setCurrentIndex((prev) => prev + 1);
       setCurrentQuote(getRandomQuote());
     } else if (currentIndex === wallpapers.length - 1) {
-      // 如果当前是最后一张壁纸，重置 currentIndex 为 0
       setCurrentIndex(0);
       setCurrentQuote(getRandomQuote());
-
-      // 如果 offset 超过 16，重置为 0
       if (offset + 8 > 16) {
         setOffset(0);
       }
@@ -151,7 +134,6 @@ export default function BingHero() {
       setCurrentIndex((prev) => prev - 1);
       setCurrentQuote(getRandomQuote());
     } else if (currentIndex === 0) {
-      // 如果当前是第一张壁纸，切换到数组的最后一张
       setCurrentIndex(wallpapers.length - 1);
       setCurrentQuote(getRandomQuote());
     }
@@ -159,9 +141,7 @@ export default function BingHero() {
 
   // 处理打字完成后的回调
   const handleTypingComplete = () => {
-    // 获取新的随机标语
     const newQuote = getRandomQuote();
-    // 确保不会连续显示相同的标语
     if (newQuote.text === currentQuote.text) {
       setCurrentQuote(
         quotes[
@@ -174,7 +154,6 @@ export default function BingHero() {
     }
   };
 
-  // 如果壁纸数据未加载完成，显示加载状态
   if (isLoading || !wallpapers.length) {
     return (
       <div
