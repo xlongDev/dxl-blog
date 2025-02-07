@@ -21,7 +21,7 @@ export default function FadeIn({
   }, []);
 
   if (!isMounted) {
-    return null;
+    return <div className={className}>{children}</div>;
   }
 
   return (
