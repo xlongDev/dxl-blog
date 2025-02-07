@@ -14,11 +14,12 @@ export default function MobileTableOfContents() {
   const [headings, setHeadings] = useState<Heading[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [activeId, setActiveId] = useState<string>("");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const elements = Array.from(document.querySelectorAll("h2, h3, h4")).map(
       (element) => {
-        // 如果元素没有 id，生成一个唯一的 id
         if (!element.id) {
           element.id =
             element.textContent?.toLowerCase().replace(/\s+/g, "-") ||
@@ -51,7 +52,7 @@ export default function MobileTableOfContents() {
     return () => observer.disconnect();
   }, []);
 
-  if (headings.length === 0) return null;
+  if (!mounted || headings.length === 0) return null;
 
   return (
     <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[100] bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-t border-gray-200 dark:border-gray-800 shadow-lg">
@@ -101,7 +102,7 @@ export default function MobileTableOfContents() {
                         e.preventDefault();
                         const element = document.getElementById(heading.id);
                         if (element) {
-                          const headerHeight = 80; // 顶部导航栏的高度
+                          const headerHeight = 80;
                           const elementPosition =
                             element.getBoundingClientRect().top +
                             window.scrollY;
@@ -127,7 +128,6 @@ export default function MobileTableOfContents() {
                             behavior: "smooth",
                           });
 
-                          // 设置一个超时，以防滚动没有完全到达目标位置
                           setTimeout(() => {
                             window.removeEventListener("scroll", handleScroll);
                             setIsOpen(false);

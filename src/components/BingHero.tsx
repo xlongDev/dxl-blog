@@ -26,7 +26,8 @@ export default function BingHero() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentQuote, setCurrentQuote] = useState(quotes[0]);
   const [offset, setOffset] = useState(0);
-  const [isPreloading, setIsPreloading] = useState(false); // 用于标记是否正在预加载
+  const [isPreloading, setIsPreloading] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   // 随机选择一个标语
   const getRandomQuote = () => {
@@ -34,8 +35,9 @@ export default function BingHero() {
     return quotes[quoteIndex];
   };
 
-  // 初始化时随机选择一个标语
+  // 仅在客户端初始化时设置mounted状态和随机标语
   useEffect(() => {
+    setMounted(true);
     setCurrentQuote(getRandomQuote());
   }, []);
 
@@ -54,38 +56,38 @@ export default function BingHero() {
         location: image.copyright.split("(")[1]?.split(")")[0] || "未知地点",
       }));
 
-      // 将新获取的壁纸追加到现有壁纸列表中
       setWallpapers((prev) => {
-        // 如果是初始加载（offset为0），直接使用新数据
         if (offset === 0) {
           return wallpaperData;
         }
-
-        // 否则检查新数据是否已经存在，避免重复追加
         const existingUrls = prev.map((w: BingWallpaper) => w.url);
         const uniqueWallpaperData = wallpaperData.filter(
           (w: BingWallpaper) => !existingUrls.includes(w.url)
         );
-
         return [...prev, ...uniqueWallpaperData];
       });
     } catch (error) {
       console.error("Failed to fetch Bing wallpapers:", error);
     } finally {
       setIsLoading(false);
-      setIsPreloading(false); // 预加载完成
+      setIsPreloading(false);
     }
   };
 
-  // 初始化时获取第一批壁纸
+  // 仅在客户端初始化时获取第一批壁纸
   useEffect(() => {
-    const initWallpapers = async () => {
-      await fetchBingWallpapers(offset);
-      // 设置 currentIndex 为0，因为最新的壁纸在数组的开始位置
-      setCurrentIndex(0);
-    };
-    initWallpapers();
-  }, []);
+    if (mounted) {
+      const initWallpapers = async () => {
+        await fetchBingWallpapers(offset);
+        setCurrentIndex(0);
+      };
+      initWallpapers();
+    }
+  }, [mounted]);
+
+  if (!mounted) {
+    return null;
+  }
 
   // 预加载下一组壁纸和图片
   useEffect(() => {
@@ -174,8 +176,8 @@ export default function BingHero() {
     }
   };
 
-  // 如果壁纸数据未加载完成，显示加载状态
-  if (isLoading || !wallpapers.length) {
+  // 如果组件未挂载或壁纸数据未加载完成，显示加载状态
+  if (!mounted || isLoading || !wallpapers.length) {
     return (
       <div
         className="relative w-full flex items-center justify-center"
