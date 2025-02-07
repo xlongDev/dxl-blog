@@ -50,7 +50,18 @@ const nextConfig = {
 
     // 配置 Web Worker
     if (!isServer) {
-      config.output.globalObject = "self";
+      config.output.globalObject = "typeof self !== 'undefined' ? self : this";
+      config.module.rules.unshift({
+        test: /\.worker\.js$/,
+        use: {
+          loader: "worker-loader",
+          options: {
+            filename: "static/[hash].worker.js",
+            publicPath: "/_next/",
+            inline: "no-fallback",
+          },
+        },
+      });
     }
 
     return config;

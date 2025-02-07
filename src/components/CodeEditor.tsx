@@ -30,6 +30,36 @@ export default function CodeEditor({
 
         const monaco = await import("monaco-editor/esm/vs/editor/editor.api");
 
+        // 确保在生产环境中正确加载Web Worker
+        if (typeof window !== "undefined") {
+          const workerPath = "/_next/static";
+          window.MonacoEnvironment = {
+            getWorker: function (workerId, label) {
+              const getWorkerModule = (moduleUrl: string): Worker => {
+                return new Worker(new URL(moduleUrl, window.location.origin));
+              };
+
+              if (label === "json") {
+                return getWorkerModule(`${workerPath}/json.worker.js`);
+              }
+              if (label === "css" || label === "scss" || label === "less") {
+                return getWorkerModule(`${workerPath}/css.worker.js`);
+              }
+              if (
+                label === "html" ||
+                label === "handlebars" ||
+                label === "razor"
+              ) {
+                return getWorkerModule(`${workerPath}/html.worker.js`);
+              }
+              if (label === "typescript" || label === "javascript") {
+                return getWorkerModule(`${workerPath}/ts.worker.js`);
+              }
+              return getWorkerModule(`${workerPath}/editor.worker.js`);
+            },
+          };
+        }
+
         // 并行加载语言支持
         const languageLoaders = {
           javascript: () =>
