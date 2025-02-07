@@ -25,27 +25,31 @@ export default function FadeIn({
   }
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial="hidden"
-        animate="visible"
-        exit="hidden"
-        variants={{
-          hidden: { opacity: 0, y: 20 },
-          visible: {
-            opacity: 1,
-            y: 0,
-            transition: {
-              duration: 0.5,
-              delay: delay,
-              ease: "easeOut",
-            },
-          },
-        }}
-        className={className}
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
+    <div>
+      <AnimatePresence mode="wait">
+        {isMounted && (
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+            variants={{
+              hidden: { opacity: 0, y: 20 },
+              visible: {
+                opacity: 1,
+                y: 0,
+                transition: {
+                  duration: 0.5,
+                  delay: delay,
+                  ease: "easeOut",
+                },
+              },
+            }}
+            className={className}
+          >
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
