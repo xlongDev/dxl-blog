@@ -45,14 +45,22 @@ export default function Header() {
 
       {/* 移动端菜单 */}
       <div
-        className={`md:hidden fixed inset-0 z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg transform transition-transform duration-300 ease-in-out ${
+        className={`md:hidden fixed top-0 right-0 w-85 h-screen z-40 bg-white/70 dark:bg-gray-900/90 backdrop-blur-sm transform transition-all duration-300 ease-in-out shadow-xl border-l border-gray-200/50 dark:border-gray-700/50 ${
           isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="flex flex-col items-center space-y-6 pt-20">
+        <div className="flex flex-col items-start space-y-6 p-6 pt-20 h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500 scrollbar-thumb-rounded-full ">
           <Navigation onNavigate={() => setIsMobileMenuOpen(false)} />
         </div>
       </div>
+
+      {/* 移动端菜单背景遮罩 */}
+      {isMobileMenuOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-30 bg-black/20 backdrop-blur-sm"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
 
       {/* 搜索对话框 */}
       <Search

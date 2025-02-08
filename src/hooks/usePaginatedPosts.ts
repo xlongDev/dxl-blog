@@ -23,7 +23,7 @@ export function usePaginatedPosts({
   const scrollToPostList = () => {
     const postListContainer = document.getElementById("post-list-container");
     if (postListContainer) {
-      const headerOffset = -1000; // 调整偏移量，使滚动位置更合理
+      const headerOffset = -100; // 调整偏移量，使滚动位置更合理
       const elementPosition =
         postListContainer.getBoundingClientRect().top + window.scrollY;
       const offsetPosition = elementPosition - headerOffset;
