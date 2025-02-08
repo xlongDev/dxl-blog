@@ -160,7 +160,7 @@ export default function BingHero() {
         className="relative w-full flex items-center justify-center"
         style={{ height: "100vh" }}
       >
-        <div className="text-white text-lg">加载中...</div>
+        <div className="text-gray-900 dark:text-white text-lg">加载中...</div>
       </div>
     );
   }

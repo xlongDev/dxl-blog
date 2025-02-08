@@ -16,7 +16,7 @@ export default function Contact({ itemVariants }: ContactProps) {
   return (
     <motion.div variants={itemVariants} className="space-y-6">
       <div className="flex items-center gap-4 mb-6">
-        <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent text-center lg:text-left">
+        <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-600 bg-clip-text text-transparent text-center lg:text-left">
           联系方式
         </h3>
         <div className="hidden lg:block h-0.5 flex-grow bg-gradient-to-r from-blue-600/50 to-transparent" />
@@ -47,6 +47,8 @@ export default function Contact({ itemVariants }: ContactProps) {
         className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:shadow-lg transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm relative"
         whileHover={{ scale: 1.02, translateY: -5 }}
         onClick={() => setIsWeChatQRVisible(!isWeChatQRVisible)}
+        onMouseEnter={() => setIsWeChatQRVisible(true)}
+        onMouseLeave={() => setIsWeChatQRVisible(false)}
       >
         <div className="flex items-center gap-4 justify-center lg:justify-start">
           <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-lg">

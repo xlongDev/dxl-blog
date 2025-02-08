@@ -11,12 +11,13 @@ export default function TechStack({ itemVariants }: TechStackProps) {
   const techStacks = [
     {
       category: "前端基础",
-      skills: "HTML5 / CSS3 / Sass / Less / TailwindCSS / Bootstrap",
+      skills:
+        "HTML5 / CSS3 / Sass / Less / TailwindCSS / JavaScript / TypeScript",
       gradient: "from-blue-500 to-cyan-500",
     },
     {
       category: "前端框架",
-      skills: "React / Vue / Next.js / Nuxt / TypeScript / JavaScript",
+      skills: "React / Vue / Next.js / Nuxt",
       gradient: "from-purple-500 to-pink-500",
     },
     {
@@ -25,46 +26,46 @@ export default function TechStack({ itemVariants }: TechStackProps) {
       gradient: "from-yellow-500 to-orange-500",
     },
     {
-      category: "后端技术",
-      skills: "Node.js / Express / Koa / Nest.js / RESTful API",
-      gradient: "from-green-500 to-emerald-500",
-    },
-    {
       category: "跨平台开发",
-      skills: "UniApp / Taro / 微信小程序 / React Native / Flutter",
+      skills: "UniApp / Taro / 小程序",
       gradient: "from-indigo-500 to-violet-500",
     },
     {
+      category: "可视化技能",
+      skills: "SVG / Canvas / ECharts",
+      gradient: "from-pink-500 to-rose-500",
+    },
+    {
+      category: "UI组件库",
+      skills: "Ant Design / Element Plus / Vant / Material-UI",
+      gradient: "from-emerald-500 to-green-500",
+    },
+    {
+      category: "后端技术",
+      skills: "Node.js / Express / Koa / RESTful API",
+      gradient: "from-teal-500 to-cyan-500",
+    },
+    {
       category: "数据库技术",
-      skills: "MySQL / MongoDB / Redis / PostgreSQL",
-      gradient: "from-rose-500 to-red-500",
+      skills: "MySQL / MongoDB",
+      gradient: "from-fuchsia-500 to-pink-500",
     },
     {
       category: "容器技术",
-      skills: "Docker / Kubernetes / CI/CD / Jenkins",
-      gradient: "from-teal-500 to-cyan-500",
+      skills: "Docker / CI/CD / Jenkins",
+      gradient: "from-amber-500 to-yellow-500",
     },
     {
       category: "开发工具",
       skills: "Git / VS Code / Chrome DevTools / Postman",
-      gradient: "from-blue-500 to-indigo-500",
-    },
-    {
-      category: "可视化技能",
-      skills: "Echarts / D3.js / Three.js / Chart.js / AntV",
-      gradient: "from-amber-500 to-orange-500",
-    },
-    {
-      category: "UI组件库",
-      skills: "Ant Design / Element Plus / Vant / Material-UI / Chakra UI",
-      gradient: "from-lime-500 to-green-500",
+      gradient: "from-sky-500 to-blue-500",
     },
   ];
 
   return (
     <motion.div variants={itemVariants}>
       <div className="flex items-center gap-4 mb-8">
-        <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent text-center lg:text-left">
+        <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-600 bg-clip-text text-transparent text-center lg:text-left">
           技术栈
         </h3>
         <div className="hidden lg:block h-0.5 flex-grow bg-gradient-to-r from-blue-600/50 to-transparent" />
