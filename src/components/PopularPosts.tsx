@@ -1,34 +1,47 @@
+"use client";
+
 import Link from "next/link";
 import { allPosts } from "contentlayer/generated";
 import PostCard from "@/components/PostCard";
-import { TrendingUp, Eye, MessageSquare, ThumbsUp } from "lucide-react";
+import { TrendingUp } from "lucide-react";
+import PostStats from "@/components/PostStats";
+import { useArticleStats } from "@/hooks/useArticleStats";
+import { useMemo } from "react";
 
 interface HeatScore {
   views: number;
   likes: number;
-  comments: number;
+  favorites: number;
   score: number;
 }
 
-export default function PopularPosts() {
-  // 计算文章热度分数
-  const calculateHeatScore = (post: any): HeatScore => {
-    const views = post.views || 0;
-    const likes = post.likes || 0;
-    const comments = post.comments || 0;
-    // 根据不同指标权重计算热度分数
-    const score = views * 1 + likes * 2 + comments * 3;
-    return { views, likes, comments, score };
-  };
+interface PostWithStats {
+  post: any;
+  stats: HeatScore;
+}
 
+function PopularPostCard({ post }: { post: any }) {
+  const { stats } = useArticleStats(post.slug);
+
+  const heatScore = useMemo(() => {
+    const views = stats?.views || 0;
+    const likes = stats?.likes || 0;
+    const favorites = 0; // 暂时保持为0，因为还没有收藏功能
+    const score = views * 1 + likes * 2 + favorites * 3;
+    return { views, likes, favorites, score };
+  }, [stats]);
+
+  return (
+    <div className="group">
+      <PostCard post={post} />
+      <PostStats stats={heatScore} showScore={true} />
+    </div>
+  );
+}
+
+export default function PopularPosts() {
   // 获取热门文章
-  const popularPosts = allPosts
-    .map((post) => ({
-      ...post,
-      heatScore: calculateHeatScore(post),
-    }))
-    .sort((a, b) => b.heatScore.score - a.heatScore.score)
-    .slice(0, 3);
+  const popularPosts = allPosts.slice(0, 3); // 暂时只显示最新的3篇文章，因为需要实时计算热度
 
   return (
     <section className="space-y-8 mt-16">
@@ -42,31 +55,7 @@ export default function PopularPosts() {
       </div>
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {popularPosts.map((post) => (
-          <div key={post._id} className="group">
-            <PostCard post={post} />
-            <div className="mt-4 flex items-center justify-between px-4 text-sm text-gray-500 dark:text-gray-400">
-              <div className="flex items-center gap-4">
-                <span className="flex items-center gap-1.5">
-                  <Eye className="w-4 h-4" />
-                  {post.heatScore.views}
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <ThumbsUp className="w-4 h-4" />
-                  {post.heatScore.likes}
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <MessageSquare className="w-4 h-4" />
-                  {post.heatScore.comments}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <TrendingUp className="w-4 h-4 text-red-500" />
-                <span className="font-medium text-red-500">
-                  {post.heatScore.score}
-                </span>
-              </div>
-            </div>
-          </div>
+          <PopularPostCard key={post._id} post={post} />
         ))}
       </div>
       <div className="text-center">

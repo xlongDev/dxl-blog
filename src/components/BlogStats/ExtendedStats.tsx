@@ -8,6 +8,8 @@ import {
   TrendingUp,
 } from "lucide-react";
 
+import { useBlogStats } from "@/hooks/useBlogStats";
+
 interface ExtendedStatsProps {
   totalViews: number;
   totalWords: number;
@@ -16,11 +18,21 @@ interface ExtendedStatsProps {
 }
 
 const ExtendedStats = ({
-  totalViews,
   totalWords,
   readingTimeDistribution,
+  totalViews,
   totalLikes,
 }: ExtendedStatsProps) => {
+  const { stats, loading, error } = useBlogStats();
+
+  if (loading) {
+    return <div>加载中...</div>;
+  }
+
+  if (error) {
+    return <div>加载失败: {error}</div>;
+  }
+
   return (
     <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 lg:gap-6">
       <div className="group/item hover:transform hover:translate-y-[-0.5rem] transition-all duration-300 p-4 md:p-5 lg:p-6 rounded-xl bg-gradient-to-br from-white to-green-50 dark:from-gray-800 dark:to-green-900/20 shadow-md hover:shadow-xl">
@@ -34,7 +46,7 @@ const ExtendedStats = ({
           </span>
         </div>
         <span className="text-2xl md:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
-          {totalViews.toLocaleString()}
+          {stats.totalViews.toLocaleString()}
         </span>
       </div>
       <div className="group/item hover:transform hover:translate-y-[-0.5rem] transition-all duration-300 p-4 md:p-5 lg:p-6 rounded-xl bg-gradient-to-br from-white to-green-50 dark:from-gray-800 dark:to-green-900/20 shadow-md hover:shadow-xl">
@@ -88,7 +100,7 @@ const ExtendedStats = ({
           </span>
         </div>
         <span className="text-2xl md:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
-          {totalLikes.toLocaleString()}
+          {stats.totalLikes.toLocaleString()}
         </span>
       </div>
     </div>

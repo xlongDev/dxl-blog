@@ -47,7 +47,7 @@ export default function Profile({ itemVariants }: ProfileProps) {
         className="text-gray-500 dark:text-gray-400 text-base sm:text-lg leading-relaxed max-w-md mx-auto"
         variants={itemVariants}
       >
-        热爱技术，专注于前端开发。致力于创造优秀的用户体验和高质量的代码。
+        热爱技术、跑步，专注于前端开发领域。
       </motion.p>
     </div>
   );

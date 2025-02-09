@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import {
   HeartIcon,
   BookmarkIcon,
   ShareIcon,
 } from "@heroicons/react/24/outline";
+import { useArticleStats } from "@/hooks/useArticleStats";
 import {
   HeartIcon as HeartIconSolid,
   BookmarkIcon as BookmarkIconSolid,
@@ -16,58 +16,8 @@ interface ArticleActionsProps {
 }
 
 export default function ArticleActions({ slug }: ArticleActionsProps) {
-  const [isLiked, setIsLiked] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false);
-
-  useEffect(() => {
-    // 从localStorage加载状态
-    const likedPosts = JSON.parse(localStorage.getItem("likedPosts") || "[]");
-    const bookmarkedPosts = JSON.parse(
-      localStorage.getItem("bookmarkedPosts") || "[]"
-    );
-    setIsLiked(likedPosts.includes(slug));
-    setIsBookmarked(bookmarkedPosts.includes(slug));
-  }, [slug]);
-
-  const handleLike = async () => {
-    const newLikedState = !isLiked;
-    setIsLiked(newLikedState);
-
-    // 更新localStorage
-    const likedPosts = JSON.parse(localStorage.getItem("likedPosts") || "[]");
-    if (newLikedState) {
-      likedPosts.push(slug);
-    } else {
-      const index = likedPosts.indexOf(slug);
-      if (index > -1) {
-        likedPosts.splice(index, 1);
-      }
-    }
-    localStorage.setItem("likedPosts", JSON.stringify(likedPosts));
-
-    // TODO: 发送请求到后端API更新点赞状态
-  };
-
-  const handleBookmark = () => {
-    const newBookmarkedState = !isBookmarked;
-    setIsBookmarked(newBookmarkedState);
-
-    // 更新localStorage
-    const bookmarkedPosts = JSON.parse(
-      localStorage.getItem("bookmarkedPosts") || "[]"
-    );
-    if (newBookmarkedState) {
-      bookmarkedPosts.push(slug);
-    } else {
-      const index = bookmarkedPosts.indexOf(slug);
-      if (index > -1) {
-        bookmarkedPosts.splice(index, 1);
-      }
-    }
-    localStorage.setItem("bookmarkedPosts", JSON.stringify(bookmarkedPosts));
-
-    // TODO: 发送请求到后端API更新收藏状态
-  };
+  const { stats, hasLiked, hasFavorited, handleLike, handleFavorite } =
+    useArticleStats(slug);
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -91,7 +41,7 @@ export default function ArticleActions({ slug }: ArticleActionsProps) {
         onClick={handleLike}
         className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
       >
-        {isLiked ? (
+        {hasLiked ? (
           <HeartIconSolid className="w-5 h-5 text-red-500" />
         ) : (
           <HeartIcon className="w-5 h-5" />
@@ -99,10 +49,10 @@ export default function ArticleActions({ slug }: ArticleActionsProps) {
         <span>点赞</span>
       </button>
       <button
-        onClick={handleBookmark}
+        onClick={handleFavorite}
         className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
       >
-        {isBookmarked ? (
+        {hasFavorited ? (
           <BookmarkIconSolid className="w-5 h-5 text-blue-500" />
         ) : (
           <BookmarkIcon className="w-5 h-5" />

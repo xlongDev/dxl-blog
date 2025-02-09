@@ -18,6 +18,14 @@ export function useArticleStats(slug: string) {
     }
     return false;
   });
+
+  const [hasFavorited, setHasFavorited] = useState(() => {
+    if (typeof window !== "undefined") {
+      const favoriteState = localStorage.getItem(`article-favorite-${slug}`);
+      return favoriteState ? JSON.parse(favoriteState).favorited : false;
+    }
+    return false;
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -76,10 +84,36 @@ export function useArticleStats(slug: string) {
     }
   };
 
+  const handleFavorite = async () => {
+    try {
+      const action = hasFavorited ? "unfavorite" : "favorite";
+      const response = await fetch(
+        `/api/article-stats?slug=${slug}&action=${action}`,
+        {
+          method: "POST",
+        }
+      );
+      if (!response.ok)
+        throw new Error(action === "favorite" ? "收藏失败" : "取消收藏失败");
+      const data = await response.json();
+      setStats(data);
+      setHasFavorited(!hasFavorited);
+      localStorage.setItem(
+        `article-favorite-${slug}`,
+        JSON.stringify({ favorited: !hasFavorited })
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "未知错误");
+    }
+  };
+
   return {
     stats,
     isLoading,
     error,
+    hasLiked,
+    hasFavorited,
     handleLike,
+    handleFavorite,
   };
 }
