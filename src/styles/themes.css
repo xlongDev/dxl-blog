@@ -1,0 +1,329 @@
+/* 定义主题变量 */
+/* 这些变量依赖于@tailwind base，通过index.css的导入顺序确保正确加载 */
+/* 定义根元素的 CSS 变量，用于浅色主题 */
+:root {
+  --background: 210 30% 96%; /* 背景颜色：调整为更柔和的蓝灰色调 */
+  --foreground: 215 25% 27%; /* 前景（文字）颜色 */
+  --code-bg: #1a1b26; /* 代码块背景颜色 */
+  --code-text: #3b82f6; /* 代码文字颜色：蓝色 */
+  --code-inline-bg: rgba(59, 130, 246, 0.08); /* 内联代码背景颜色：淡蓝色 */
+  --header-gradient: linear-gradient(
+    to right,
+    #2563eb,
+    #4f46e5,
+    #7c3aed,
+    #9333ea,
+    #c026d3
+  ); /* 默认标题渐变色：增强蓝紫色渐变 */
+  --blog-title-gradient: linear-gradient(
+    to right,
+    #1e40af,
+    #4338ca,
+    #6d28d9,
+    #8b5cf6,
+    #a855f7
+  ); /* 默认博客标题渐变色：增强蓝紫色渐变 */
+  --blog-title-hover-gradient: linear-gradient(
+    to right,
+    #1e3a8a,
+    #3730a3,
+    #5b21b6,
+    #7e22ce,
+    #9d174d
+  ); /* 默认博客标题悬停渐变色：增强深蓝紫色渐变 */
+  --reading-progress-gradient: linear-gradient(
+    to right,
+    #2563eb,
+    #3b82f6,
+    #60a5fa,
+    #93c5fd,
+    #bfdbfe
+  ); /* 默认阅读时间线渐变色：增强蓝色渐变 */
+}
+
+/* 定义深色主题的 CSS 变量 */
+.dark {
+  --background: 225 35% 12%; /* 调整后的深色背景颜色：更深的蓝色调，与图片相似 */
+  --foreground: 0 0% 100%; /* 深色前景（文字）颜色 */
+  --code-bg: #0d1117; /* 深色代码块背景颜色 */
+  --code-text: #60a5fa; /* 深色代码文字颜色：亮蓝色 */
+  --code-inline-bg: rgba(96, 165, 250, 0.15); /* 深色内联代码背景颜色 */
+  --header-gradient: linear-gradient(
+    to right,
+    #60a5fa,
+    #818cf8,
+    #a78bfa,
+    #c084fc,
+    #e879f9
+  ); /* 深色主题标题渐变色：增强蓝紫色渐变 */
+  --blog-title-gradient: linear-gradient(
+    to right,
+    #3b82f6,
+    #6366f1,
+    #8b5cf6,
+    #a855f7,
+    #d946ef
+  ); /* 深色主题博客标题渐变色：增强蓝紫色渐变 */
+  --blog-title-hover-gradient: linear-gradient(
+    to right,
+    #0ea5e9,
+    #06b6d4,
+    #0d9488,
+    #10b981,
+    #14b8a6
+  ); /* 深色主题博客标题悬停渐变色：青绿色渐变效果 */
+  --reading-progress-gradient: linear-gradient(
+    to right,
+    #3b82f6,
+    #60a5fa,
+    #7dd3fc,
+    #93c5fd,
+    #bfdbfe
+  ); /* 深色主题阅读时间线渐变色：增强蓝色渐变 */
+}
+
+/* 定义绿色主题的 CSS 变量 */
+.theme-green {
+  --background: 150 30% 96%; /* 绿色背景颜色 */
+  --foreground: 155 25% 27%; /* 前景（文字）颜色 */
+  --code-bg: #0f2a1b; /* 代码块背景颜色 */
+  --code-text: #10b981; /* 代码文字颜色：绿色 */
+  --code-inline-bg: rgba(16, 185, 129, 0.08); /* 绿色内联代码背景颜色 */
+  --header-gradient: linear-gradient(
+    to right,
+    #047857,
+    #059669,
+    #10b981,
+    #34d399,
+    #6ee7b7
+  ); /* 绿色主题标题渐变色：增强绿色渐变 */
+  --blog-title-gradient: linear-gradient(
+    to right,
+    #065f46,
+    #047857,
+    #059669,
+    #10b981,
+    #34d399
+  ); /* 绿色主题博客标题渐变色：增强绿色渐变 */
+  --blog-title-hover-gradient: linear-gradient(
+    to right,
+    #064e3b,
+    #065f46,
+    #047857,
+    #059669,
+    #10b981
+  ); /* 绿色主题博客标题悬停渐变色：更深的绿色渐变 */
+  --reading-progress-gradient: linear-gradient(
+    to right,
+    #059669,
+    #10b981,
+    #34d399,
+    #6ee7b7,
+    #a7f3d0
+  ); /* 绿色主题阅读时间线渐变色：增强绿色渐变 */
+}
+
+/* 定义紫色主题的 CSS 变量 */
+.theme-purple {
+  --background: 270 30% 96%; /* 紫色背景颜色 */
+  --foreground: 275 25% 27%; /* 前景（文字）颜色 */
+  --code-bg: #2a1b3a; /* 代码块背景颜色 */
+  --code-text: #8b5cf6; /* 代码文字颜色：紫色 */
+  --code-inline-bg: rgba(139, 92, 246, 0.08); /* 紫色内联代码背景颜色 */
+  --header-gradient: linear-gradient(
+    to right,
+    #6d28d9,
+    #7c3aed,
+    #8b5cf6,
+    #a78bfa,
+    #c4b5fd
+  ); /* 紫色主题标题渐变色：增强紫色渐变 */
+  --blog-title-gradient: linear-gradient(
+    to right,
+    #5b21b6,
+    #6d28d9,
+    #7c3aed,
+    #8b5cf6,
+    #a78bfa
+  ); /* 紫色主题博客标题渐变色：增强紫色渐变 */
+  --blog-title-hover-gradient: linear-gradient(
+    to right,
+    #4c1d95,
+    #5b21b6,
+    #6d28d9,
+    #7c3aed,
+    #8b5cf6
+  ); /* 紫色主题博客标题悬停渐变色：更深的紫色渐变 */
+  --reading-progress-gradient: linear-gradient(
+    to right,
+    #7c3aed,
+    #8b5cf6,
+    #a78bfa,
+    #c4b5fd,
+    #ddd6fe
+  ); /* 紫色主题阅读时间线渐变色：增强紫色渐变 */
+}
+
+/* 定义橙色主题的 CSS 变量 */
+.theme-orange {
+  --background: 30 30% 96%; /* 橙色背景颜色 */
+  --foreground: 35 25% 27%; /* 前景（文字）颜色 */
+  --code-bg: #2a1b0f; /* 代码块背景颜色 */
+  --code-text: #f97316; /* 代码文字颜色：橙色 */
+  --code-inline-bg: rgba(249, 115, 22, 0.08); /* 橙色内联代码背景颜色 */
+  --header-gradient: linear-gradient(
+    to right,
+    #c2410c,
+    #ea580c,
+    #f97316,
+    #fb923c,
+    #fdba74
+  ); /* 橙色主题标题渐变色：增强橙色渐变 */
+  --blog-title-gradient: linear-gradient(
+    to right,
+    #9a3412,
+    #c2410c,
+    #ea580c,
+    #f97316,
+    #fb923c
+  ); /* 橙色主题博客标题渐变色：增强橙色渐变 */
+  --blog-title-hover-gradient: linear-gradient(
+    to right,
+    #7c2d12,
+    #9a3412,
+    #c2410c,
+    #ea580c,
+    #f97316
+  ); /* 橙色主题博客标题悬停渐变色：更深的橙色渐变 */
+  --reading-progress-gradient: linear-gradient(
+    to right,
+    #ea580c,
+    #f97316,
+    #fb923c,
+    #fdba74,
+    #fed7aa
+  ); /* 橙色主题阅读时间线渐变色：增强橙色渐变 */
+}
+
+/* 定义蓝色主题的 CSS 变量 */
+.theme-blue {
+  --background: 210 30% 96%; /* 蓝色背景颜色 */
+  --foreground: 215 25% 27%; /* 前景（文字）颜色 */
+  --code-bg: #0f1b2a; /* 代码块背景颜色 */
+  --code-text: #0ea5e9; /* 代码文字颜色：天蓝色 */
+  --code-inline-bg: rgba(14, 165, 233, 0.08); /* 蓝色内联代码背景颜色 */
+  --header-gradient: linear-gradient(
+    to right,
+    #0369a1,
+    #0284c7,
+    #0ea5e9,
+    #38bdf8,
+    #7dd3fc
+  ); /* 蓝色主题标题渐变色：增强蓝色渐变 */
+  --blog-title-gradient: linear-gradient(
+    to right,
+    #075985,
+    #0369a1,
+    #0284c7,
+    #0ea5e9,
+    #38bdf8
+  ); /* 蓝色主题博客标题渐变色：增强蓝色渐变 */
+  --blog-title-hover-gradient: linear-gradient(
+    to right,
+    #0c4a6e,
+    #075985,
+    #0369a1,
+    #0284c7,
+    #0ea5e9
+  ); /* 蓝色主题博客标题悬停渐变色：更深的蓝色渐变 */
+  --reading-progress-gradient: linear-gradient(
+    to right,
+    #0284c7,
+    #0ea5e9,
+    #38bdf8,
+    #7dd3fc,
+    #bae6fd
+  ); /* 蓝色主题阅读时间线渐变色：增强蓝色渐变 */
+}
+
+/* 定义粉色主题的 CSS 变量 */
+.theme-pink {
+  --background: 330 30% 96%; /* 粉色背景颜色 */
+  --foreground: 335 25% 27%; /* 前景（文字）颜色 */
+  --code-bg: #2a0f1b; /* 代码块背景颜色 */
+  --code-text: #ec4899; /* 代码文字颜色：粉色 */
+  --code-inline-bg: rgba(236, 72, 153, 0.08); /* 粉色内联代码背景颜色 */
+  --header-gradient: linear-gradient(
+    to right,
+    #be185d,
+    #db2777,
+    #ec4899,
+    #f472b6,
+    #f9a8d4
+  ); /* 粉色主题标题渐变色：增强粉色渐变 */
+  --blog-title-gradient: linear-gradient(
+    to right,
+    #9d174d,
+    #be185d,
+    #db2777,
+    #ec4899,
+    #f472b6
+  ); /* 粉色主题博客标题渐变色：增强粉色渐变 */
+  --blog-title-hover-gradient: linear-gradient(
+    to right,
+    #831843,
+    #9d174d,
+    #be185d,
+    #db2777,
+    #ec4899
+  ); /* 粉色主题博客标题悬停渐变色：更深的粉色渐变 */
+  --reading-progress-gradient: linear-gradient(
+    to right,
+    #db2777,
+    #ec4899,
+    #f472b6,
+    #fbcfe8,
+    #fce7f3
+  ); /* 粉色主题阅读时间线渐变色：增强粉色渐变 */
+}
+
+/* 定义棕色主题的 CSS 变量 */
+.theme-brown {
+  --background: 30 25% 94%; /* 棕色背景颜色 */
+  --foreground: 35 30% 25%; /* 前景（文字）颜色 */
+  --code-bg: #231a12; /* 代码块背景颜色 */
+  --code-text: #b45309; /* 代码文字颜色：棕色 */
+  --code-inline-bg: rgba(180, 83, 9, 0.08); /* 棕色内联代码背景颜色 */
+  --header-gradient: linear-gradient(
+    to right,
+    #78350f,
+    #92400e,
+    #b45309,
+    #d97706,
+    #f59e0b
+  ); /* 棕色主题标题渐变色：增强棕色渐变 */
+  --blog-title-gradient: linear-gradient(
+    to right,
+    #451a03,
+    #78350f,
+    #92400e,
+    #b45309,
+    #d97706
+  ); /* 棕色主题博客标题渐变色：增强棕色渐变 */
+  --blog-title-hover-gradient: linear-gradient(
+    to right,
+    #7c2d12,
+    #9a3412,
+    #c2410c,
+    #ea580c,
+    #f97316
+  ); /* 棕色主题博客标题悬停渐变色：更深的棕色渐变 */
+  --reading-progress-gradient: linear-gradient(
+    to right,
+    #92400e,
+    #b45309,
+    #d97706,
+    #f59e0b,
+    #fbbf24
+  ); /* 棕色主题阅读时间线渐变色：增强棕色渐变 */
+}

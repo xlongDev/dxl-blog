@@ -405,7 +405,7 @@ export default function TechCategoryIcon({
             <image href="/svg/nestjs.svg" width="512" height="512" />
           </motion.svg>
         );
-      case "大前端": // 修改为中文分类名
+      case "前端技术": // 修改为中文分类名
         return (
           <motion.svg
             viewBox="0 0 512 512"
@@ -527,7 +527,7 @@ export default function TechCategoryIcon({
             <image href="/svg/nestjs.svg" width="512" height="512" />
           </motion.svg>
         );
-      case "大前端": // 修改为中文分类名
+      case "前端技术": // 修改为中文分类名
         return (
           <motion.svg
             viewBox="0 0 24 24"
@@ -602,7 +602,7 @@ export default function TechCategoryIcon({
             />
           </motion.svg>
         );
-      case "Vue":
+      case "Vue.js":
         return (
           <motion.svg
             viewBox="0 0 512 512"

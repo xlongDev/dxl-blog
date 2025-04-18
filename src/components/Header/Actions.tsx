@@ -8,6 +8,8 @@ import {
   SearchIcon,
   GithubIcon,
 } from "@/components/icons/HeaderIcons";
+import ThemeSwitcher from "@/components/ThemeSwitcher";
+import { useThemeUtils } from "@/hooks/useThemeUtils";
 
 interface ActionsProps {
   onSearchClick: () => void;
@@ -15,7 +17,7 @@ interface ActionsProps {
 
 export default function Actions({ onSearchClick }: ActionsProps) {
   const [mounted, setMounted] = useState(false);
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme } = useThemeUtils();
 
   useEffect(() => {
     setMounted(true);
@@ -49,6 +51,8 @@ export default function Actions({ onSearchClick }: ActionsProps) {
           <MoonIcon className="w-5 h-5 transform transition-transform duration-300 hover:scale-110" />
         )}
       </button>
+
+      <ThemeSwitcher />
     </div>
   );
 }

@@ -1,16 +1,16 @@
 ---
-title: "HTML 全面指南"
-date: "2020-05-18"
+title: "HTML 上手指南"
+date: "2021-02-18"
 description: "全面介绍 HTML 的基础概念、语法结构、常见标签、最佳实践及示例代码。"
 tags: ["HTML", "前端开发", "Web开发"]
 category: "HTML"
 ---
 
-HTML（HyperText Markup Language，超文本标记语言）是构建 Web 页面和 Web 应用的标准标记语言。它定义了网页的基本结构，并与 CSS 和 JavaScript 共同构成现代 Web 技术的基础。
+HTML（HyperText Markup Language，超文本标记语言）是构建 Web 页面和 Web 应用的标准标记语言。就像建筑需要骨架，网页也需要 HTML 来搭建其基础结构。它与 CSS（负责外观）和 JavaScript（负责交互）一起，构成了现代 Web 技术的三大支柱。在实际开发中，一个结构良好的 HTML 文档就像是一座精心设计的建筑，不仅要保证功能完备，还要兼顾可访问性和性能优化。
 
 ## HTML 基础概念
 
-HTML 由一系列的**标签（tags）**组成，标签用来描述网页的结构和内容。HTML 文档通常以 `.html` 为扩展名，并由以下基本结构组成：
+HTML 由一系列的**标签（tags）**组成，这些标签就像乐高积木一样，可以组合构建出各种复杂的网页结构。在实际开发中，我们常常会遇到一些关键问题：如何选择合适的标签？如何保证代码的可维护性？如何优化页面性能？让我们从最基本的 HTML 文档结构开始探讨这些问题：
 
 ```html
 <!DOCTYPE html>
@@ -97,14 +97,41 @@ HTML 由一系列的**标签（tags）**组成，标签用来描述网页的结�
 </form>
 ```
 
-## HTML5 新特性
+## HTML5 新特性与最新进展
 
-HTML5 引入了一些新的标签和 API，如：
+HTML 规范在不断发展，除了广为人知的 HTML5 特性外，还有许多新的激动人心的功能。让我们来看看一些重要的特性和它们的实际应用场景：
 
-- 语义化标签：`<header>`、`<article>`、`<section>`、`<footer>`。
-- 多媒体支持：`<audio>`、`<video>`。
-- 表单增强：新的输入类型（如 `email`、`date`）。
-- Canvas API：`<canvas>` 用于绘图。
+### 经典 HTML5 特性
+
+- 语义化标签：`<header>`、`<article>`、`<section>`、`<footer>` 等，让代码结构更清晰。
+- 多媒体支持：`<audio>`、`<video>` 原生支持音视频播放，告别 Flash 时代。
+- 表单增强：新的输入类型如 `email`、`date`，提供了更好的移动端体验。
+- Canvas API：`<canvas>` 提供强大的 2D/3D 绘图能力。
+
+### 新一代 HTML 特性
+
+- `<dialog>` 元素：原生模态框支持，告别自己实现遮罩层的痛苦。
+
+```html
+<dialog id="myDialog">
+  <h2>原生模态框</h2>
+  <p>这是一个原生的模态框实现，支持 Esc 关闭等特性</p>
+  <button onclick="this.closest('dialog').close()">关闭</button>
+</dialog>
+```
+
+- Popover API：原生的弹出层支持，简化交互实现。
+
+```html
+<button popovertarget="myPopover">显示提示</button>
+<div id="myPopover" popover>这是一个原生的弹出层</div>
+```
+
+- 懒加载属性：图片和 iframe 的原生懒加载支持。
+
+```html
+<img loading="lazy" src="large-image.jpg" alt="延迟加载的图片" />
+```
 
 示例：
 
@@ -190,18 +217,77 @@ HTML5 引入了一些新的标签和 API，如：
 </form>
 ```
 
-## HTML 性能优化
+## HTML 性能优化实战
 
-1. **资源加载优化**
+在实际项目中，HTML 的性能优化对用户体验至关重要。以下是一些经过实践检验的优化技巧：
+
+### 1. 资源加载策略
 
 ```html
 <!-- 预加载关键资源 -->
 <link rel="preload" href="critical.css" as="style" />
 <link rel="preload" href="main.js" as="script" />
 
+<!-- 预连接到重要的第三方域名 -->
+<link rel="preconnect" href="https://api.example.com" />
+<link rel="dns-prefetch" href="https://api.example.com" />
+
 <!-- 懒加载图片 -->
 <img loading="lazy" src="image.jpg" alt="描述" />
+
+<!-- 使用 srcset 响应式图片 -->
+<img
+  srcset="small.jpg 300w, medium.jpg 600w, large.jpg 900w"
+  sizes="(max-width: 500px) 300px,
+            (max-width: 900px) 600px,
+            900px"
+  src="fallback.jpg"
+  alt="响应式图片示例"
+/>
 ```
+
+### 2. 关键渲染路径优化
+
+```html
+<!-- 内联关键 CSS -->
+<style>
+  /* 首屏关键样式 */
+  .hero {
+    /* ... */
+  }
+  .nav {
+    /* ... */
+  }
+</style>
+
+<!-- 异步加载非关键 CSS -->
+<link
+  rel="preload"
+  href="non-critical.css"
+  as="style"
+  onload="this.rel='stylesheet'"
+/>
+
+<!-- 异步加载 JavaScript -->
+<script defer src="app.js"></script>
+```
+
+### 3. 性能检测与监控
+
+```html
+<!-- 使用 Performance API 监控性能 -->
+<script>
+  if (window.performance) {
+    const timing = performance.timing;
+    window.addEventListener("load", () => {
+      const pageLoadTime = timing.loadEventEnd - timing.navigationStart;
+      console.log(`页面加载时间：${pageLoadTime}ms`);
+    });
+  }
+</script>
+```
+
+````
 
 2. **Meta 标签优化**
 
@@ -213,7 +299,7 @@ HTML5 引入了一些新的标签和 API，如：
 <!-- 社交媒体优化 -->
 <meta property="og:title" content="页面标题" />
 <meta property="og:description" content="页面描述" />
-```
+````
 
 3. **跨浏览器兼容性**
 

@@ -1,0 +1,481 @@
+---
+title: "面试官：说一下 useRef 是如何实现的？我：❓ 😭"
+date: "2023-11-25"
+description: "深入剖析 React useRef Hook 的实现原理，结合代码、类比和最佳实践，为前端开发者提供全面的技术解读。"
+keywords: "React, useRef, Hooks, React Fiber,前端开发, JavaScript, React 原理, 面试"
+author: "晓龙"
+image: "/images/hero/useRef.jpg"
+tags: ["React", "Hooks", "前端开发", "JavaScript"]
+category: "React"
+---
+
+你有没有经历过这样的面试场景？面试官笑眯眯地抛出一句：“说一下 `useRef` 是怎么实现的？” 你脑海里瞬间浮现出一堆问号 ❓，紧接着是一阵冷汗 😓，甚至恨不得当场表演一出“程序员的崩溃” 🎭。别慌，这篇文章就是你的救命稻草！我们将深入剖析 `useRef` 的实现原理，带你从“一脸懵”到“自信满满” 💪。不仅会讲清楚 `useRef` 的底层机制，还会结合类比、代码示例、最佳实践，甚至一点高级幽默，让你读完后既能应付面试官的“灵魂拷问”，又能在项目中优雅地使用 `useRef`。
+
+这篇文章的目标受众是前端开发者，尤其是那些对 React Hooks 感兴趣、想深入理解 React 内部原理的同学。我们会从 `useRef` 的基本用法讲起，逐步深入到 React Fiber 的实现细节，穿插大量代码示例和类比，辅以清晰的表格和实用技巧。文章会尽量幽默风趣，文笔流畅，避免生硬的术语堆砌，同时保持专业性和技术深度。准备好了吗？让我们一起跳进 `useRef` 的奇妙世界吧！🚀
+
+## 目录
+
+1. **什么是 `useRef`？从“表象”到“本质”**
+2. **为什么需要 `useRef`？它的独特价值**
+3. **`useRef` 的基本用法：从 DOM 到状态管理**
+4. **深入 React 源码：`useRef` 的实现原理**
+5. **类比与直觉：用生活中的例子理解 `useRef`**
+6. **高级用法与最佳实践：让 `useRef` 发挥最大价值**
+7. **常见误区与面试陷阱：如何避免翻车**
+8. **总结与展望：`useRef` 的未来与 React 的进化**
+
+## 1. 什么是 `useRef`？从“表象”到“本质”
+
+在 React 的 Hooks 体系中，`useRef` 是一个看似简单却异常强大的工具。表面上看，它只是一个“用来获取 DOM 引用”的 Hook，但实际上，它是一个“跨渲染周期的持久化存储箱” 📦。官方文档对 `useRef` 的定义是：
+
+> `useRef` 返回一个可变的 ref 对象，其 `.current` 属性被初始化为传入的参数（`initialValue`）。返回的 ref 对象在组件的整个生命周期内保持不变。
+
+听起来是不是有点抽象？别急，我们来拆解一下：
+
+- **可变的 ref 对象**：`useRef` 返回的对象可以存储任意值（DOM 节点、普通值、甚至一个函数），而且你可以通过 `.current` 属性随意修改它。
+- **生命周期内不变**：无论组件渲染多少次，这个 ref 对象的引用（内存地址）永远不会变。
+- **不触发重新渲染**：修改 `.current` 的值不会导致组件重新渲染，这和 `useState` 的区别尤为关键。
+
+用一句通俗的话总结：`useRef` 就像一个“随身携带的小笔记本” 📝，你可以随时在上面记东西、改东西，但它不会因为你记了新内容就强制刷新整个页面。
+
+*Tips: 如果你只把 `useRef` 当成获取 DOM 的工具，那你可能只发挥了它 10% 的威力。试着用它来存储跨渲染的任意数据，你会发现它的真正魅力！*
+
+## 2. 为什么需要 `useRef`？它的独特价值
+
+在 React 的世界里，我们有 `useState` 来管理状态，有 `useEffect` 来处理副作用，为什么还需要 `useRef`？答案在于它的“低调但强大”的特性：
+
+1. **持久化存储**：不像 `useState` 那样每次更新都会触发渲染，`useRef` 提供了一种“静默存储”的方式，适合保存那些不需要触发 UI 更新的数据。
+2. **引用 DOM 或组件实例**：通过 `useRef`，你可以直接操作 DOM 节点或类组件的实例，绕过 React 的虚拟 DOM 机制。
+3. **避免闭包陷阱**：在定时器、事件监听器等场景中，`useRef` 可以保存最新的值，避免因为闭包导致的“过期状态”问题。
+4. **性能优化**：`useRef` 的 `.current` 修改是同步的，且不会触发重新渲染，适合高频更新的场景。
+
+想象一下，如果没有 `useRef`，你可能会被迫用 `useState` 来存一个 DOM 引用，然后每次更新都会触发不必要的渲染，性能直接“崩盘” 💥。或者，你可能得用一堆 hacky 的方式来保存跨渲染的数据，代码写得像“拼图游戏” 🧩。
+
+*Tips: 下次遇到“需要保存数据但不想触发渲染”的场景，第一时间想想 `useRef`。它可能是你性能优化的秘密武器！*
+
+## 3. `useRef` 的基本用法：从 DOM 到状态管理
+
+让我们通过几个实际的代码示例来直观感受 `useRef` 的用法。以下是 `useRef` 的三大典型场景：DOM 操作、状态管理、以及保存实例。
+
+### 3.1 获取 DOM 引用
+
+最常见的 `useRef` 用法是获取 DOM 元素，比如让一个输入框自动聚焦：
+
+```jsx
+import { useRef, useEffect } from 'react';
+
+function AutoFocusInput() {
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    inputRef.current.focus(); // 直接操作 DOM
+  }, []);
+
+  return <input ref={inputRef} type="text" />;
+}
+```
+
+在这个例子中，`inputRef` 是一个 ref 对象，初始化时 `inputRef.current` 是 `null`。当 React 渲染 `<input>` 时，会把真实的 DOM 节点赋值给 `inputRef.current`。然后在 `useEffect` 中，我们通过 `inputRef.current.focus()` 让输入框自动聚焦。
+
+*Tips: 使用 `useRef` 操作 DOM 时，记得在 `useEffect` 中检查 `ref.current` 是否存在，以防组件卸载后访问空引用导致报错。*
+
+### 3.2 保存跨渲染的状态
+
+`useRef` 不仅能存 DOM，还能存任意数据，且这些数据在多次渲染间保持不变。来看一个计时器的例子：
+
+```jsx
+import { useRef, useState } from 'react';
+
+function Timer() {
+  const [count, setCount] = useState(0);
+  const intervalRef = useRef(null);
+
+  const startTimer = () => {
+    intervalRef.current = setInterval(() => {
+      setCount((prev) => prev + 1);
+    }, 1000);
+  };
+
+  const stopTimer = () => {
+    clearInterval(intervalRef.current);
+  };
+
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={startTimer}>Start</button>
+      <button onClick={stopTimer}>Stop</button>
+    </div>
+  );
+}
+```
+
+这里，`intervalRef` 保存了定时器的 ID。每次渲染，`intervalRef.current` 始终指向同一个值，直到我们手动修改它。相比之下，如果用 `useState` 来存定时器 ID，每次 `setState` 都会触发渲染，效率低下。
+
+*Tips: 在需要保存“不会触发 UI 更新”的数据时，比如定时器 ID、事件监听器回调，优先考虑 `useRef` 而不是 `useState`。*
+
+### 3.3 保存实例或复杂对象
+
+`useRef` 还能用来保存类实例或复杂对象，特别适合需要“单例模式”的场景。假设我们要创建一个简单的动画控制器：
+
+```jsx
+import { useRef } from 'react';
+
+class AnimationController {
+  constructor() {
+    this.isRunning = false;
+  }
+
+  start() {
+    this.isRunning = true;
+    console.log('Animation started');
+  }
+
+  stop() {
+    this.isRunning = false;
+    console.log('Animation stopped');
+  }
+}
+
+function AnimationComponent() {
+  const controllerRef = useRef(new AnimationController());
+
+  return (
+    <div>
+      <button onClick={() => controllerRef.current.start()}>Start Animation</button>
+      <button onClick={() => controllerRef.current.stop()}>Stop Animation</button>
+    </div>
+  );
+}
+```
+
+在这个例子中，`controllerRef` 保存了一个 `AnimationController` 实例。这个实例在组件的整个生命周期内只创建一次，完美实现了“单例”效果。
+
+*Tips: 如果你的组件需要管理复杂的对象或状态机，考虑用 `useRef` 来保存实例，避免重复创建对象带来的性能开销。*
+
+## 4. 深入 React 源码：`useRef` 的实现原理
+
+好了，接下来是重头戏！面试官问“`useRef` 是如何实现的？”时，我们不能只停留在“它返回一个 ref 对象”这种表面答案上。我们需要深入 React 的源码，搞清楚 `useRef` 在 React Fiber 架构下的工作原理。别紧张，我会尽量用通俗的语言和类比来讲解，同时结合代码片段让你一目了然。
+
+### 4.1 React Fiber 简介
+
+在讲解 `useRef` 之前，我们得先简单了解 React 的 Fiber 架构。Fiber 是 React 16 引入的一种新的协调（reconciliation）机制，用来管理组件的渲染和更新。每个 React 组件在运行时都会被表示为一个 Fiber 节点，这些节点组成了一棵 Fiber 树 🌳。
+
+每个 Fiber 节点包含以下关键信息：
+
+- **type**：组件的类型（比如 `div` 或自定义组件）。
+- **stateNode**：对应的 DOM 节点或类组件实例。
+- **memoizedState**：用来存储 Hooks 的状态（`useState`、`useRef` 等都依赖它）。
+- **updateQueue**：更新队列，用于处理状态变更。
+
+`useRef` 的实现就隐藏在 Fiber 节点的 `memoizedState` 中。接下来，我们一步步拆解它的实现。
+
+### 4.2 `useRef` 的源码分析
+
+在 React 的源码中，`useRef` 的定义位于 `react-reconciler` 包中。我们可以简化它的实现为以下伪代码：
+
+```javascript
+function useRef(initialValue) {
+  // 获取当前 Fiber 节点的 Hook 链表
+  const hook = mountOrUpdateHook();
+
+  // 如果是首次渲染（mount），初始化 ref 对象
+  if (isMounting()) {
+    hook.memoizedState = { current: initialValue };
+  }
+
+  // 返回 ref 对象（在整个生命周期内保持不变）
+  return hook.memoizedState;
+}
+```
+
+这段伪代码揭示了 `useRef` 的核心逻辑：
+
+1. **Hook 链表**：React 为每个函数组件维护一个 Hook 链表，存储所有 Hook 的状态。`useRef` 的状态就保存在这个链表的某个节点上。
+2. **初始化 ref 对象**：在组件首次渲染（mount）时，React 创建一个 `{ current: initialValue }` 对象，并将其存储在 Hook 的 `memoizedState` 中。
+3. **保持引用不变**：在后续的渲染（update）中，React 直接返回之前创建的 ref 对象，确保它的引用（内存地址）始终不变。
+
+为了更直观，我们来看看 React 内部的 Hook 数据结构（简化版）：
+
+```javascript
+// Fiber 节点的结构（简化）
+const fiber = {
+  memoizedState: null, // 指向 Hook 链表
+  // 其他属性...
+};
+
+// Hook 节点的结构
+const hook = {
+  memoizedState: null, // 存储 Hook 的状态（对于 useRef 来说是 { current: initialValue }）
+  next: null, // 指向下一个 Hook
+};
+```
+
+当你在一个组件中调用 `useRef(initialValue)` 时，React 会在 Hook 链表中分配一个新的 Hook 节点，并初始化 `memoizedState` 为 `{ current: initialValue }`。这个对象会被复用，直到组件卸载。
+
+### 4.3 为什么 `.current` 修改不触发渲染？
+
+一个常见的问题是：为什么修改 `ref.current` 不会触发组件重新渲染？答案在于 React 的更新机制。React 的重新渲染是由 `useState` 或 `useReducer` 的状态变更触发的，这些 Hook 会通过 `scheduleUpdate` 通知 Fiber 树需要更新。而 `useRef` 的 `ref.current` 只是一个普通的 JavaScript 对象，修改它并不会触发任何更新队列的操作。
+
+用类比来说，`useState` 像是一个“会自动通知老板的智能笔记本” 📖，每次写新内容都会让组件重新渲染。而 `useRef` 更像是一个“普通笔记本” 📝，你随便写什么，React 都不会“多管闲事”。
+
+### 4.4 源码中的关键函数
+
+为了更深入，我们来看 React 源码中与 `useRef` 相关的几个关键函数（基于 React 18）：
+
+- **`mountRef`**：处理 `useRef` 的首次渲染逻辑。
+- **`updateRef`**：处理 `useRef` 的更新逻辑（实际上只是返回已有的 ref 对象）。
+
+以下是简化后的源码（去掉了部分边界检查）：
+
+```javascript
+// packages/react-reconciler/src/ReactFiberHooks.js
+function mountRef(initialValue) {
+  const hook = mountWorkInProgressHook();
+  const ref = { current: initialValue };
+  hook.memoizedState = ref;
+  return ref;
+}
+
+function updateRef(initialValue) {
+  const hook = updateWorkInProgressHook();
+  return hook.memoizedState;
+}
+```
+
+从代码中可以看出：
+
+- 在 `mount` 阶段，React 创建一个新的 ref 对象并存储在 Hook 的 `memoizedState` 中。
+- 在 `update` 阶段，React 直接返回之前创建的 ref 对象，完全忽略 `initialValue`（这也是为什么 `useRef` 的初始值只在首次渲染时生效）。
+
+*Tips: 面试时如果被问到 `useRef` 的实现，提到“Fiber 节点的 Hook 链表”和“memoizedState 的持久化存储”会让你的回答显得非常专业！*
+
+## 5. 类比与直觉：用生活中的例子理解 `useRef`
+
+技术原理讲完了，我们来点轻松的类比，让 `useRef` 的概念更直观。假设你是一个咖啡店的店员 ☕，你的工作是接待顾客、管理订单和操作咖啡机。React 组件就像你的工作流程，而 `useRef` 和其他 Hooks 是你的工具。
+
+- **useState**：你的订单板 📋。每次顾客点单（状态变更），你都会更新订单板，然后大声喊“新订单来了！”（触发渲染），让整个咖啡店重新忙碌起来。
+- **useEffect**：你的清洁清单 🧹。每次店里状态变化（比如新顾客来了），你会按照清单做一些清理工作（副作用），比如擦桌子、洗杯子。
+- **useRef**：你的私人小笔记本 📝。你可以在上面记一些“私密信息”（比如咖啡机的当前温度、某个顾客的特殊喜好），这些信息不会影响订单板，也不会让咖啡店重新忙碌。你可以随时查看或修改笔记本的内容，而且它永远在你的口袋里，永远是同一本。
+
+通过这个类比，`useRef` 的几个关键特性就很好理解了：
+
+- **持久化**：你的小笔记本在整个工作日（组件生命周期）内都是同一本，不会因为店里忙碌而换一本。
+- **不触发渲染**：你在笔记本上记东西（修改 `.current`）不会让咖啡店重新洗杯子或擦桌子（重新渲染）。
+- **任意存储**：笔记本可以记任何内容（DOM 引用、状态、函数），完全由你决定。
+
+*Tips: 下次写代码时，把 `useRef` 想象成你的“私人笔记本”，问自己：“这个数据需要通知整个组件吗？” 如果不需要，那就用 `useRef`！*
+
+## 6. 高级用法与最佳实践：让 `useRef` 发挥最大价值
+
+掌握了 `useRef` 的基本用法和原理后，我们来看一些高级用法和最佳实践。这些技巧可以让你的代码更优雅、更高效，同时在面试中也能展现你的技术深度。
+
+### 6.1 避免闭包陷阱
+
+在定时器或事件监听器中，`useState` 的值可能会因为闭包而“过期”。`useRef` 可以帮你保存最新的状态。来看一个例子：
+
+```jsx
+import { useState, useRef, useEffect } from 'react';
+
+function Counter() {
+  const [count, setCount] = useState(0);
+  const countRef = useRef(count);
+
+  // 同步 count 到 countRef
+  useEffect(() => {
+    countRef.current = count;
+  }, [count]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log(`Current count: ${countRef.current}`);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+    </div>
+  );
+}
+```
+
+在这个例子中，`countRef` 始终保存最新的 `count` 值。即使定时器是在组件首次渲染时创建的，它也能通过 `countRef.current` 访问到最新的 `count`，避免了闭包陷阱。
+
+*Tips: 在异步回调中需要访问最新状态时，用 `useRef` 存一个“镜像状态”，然后通过 `useEffect` 同步更新。*
+
+### 6.2 实现防抖和节流
+
+`useRef` 可以用来保存防抖或节流的定时器或状态，优化高频事件的性能。以下是一个防抖输入框的例子：
+
+```jsx
+import { useState, useRef } from 'react';
+
+function DebouncedInput() {
+  const [value, setValue] = useState('');
+  const timeoutRef = useRef(null);
+
+  const handleChange = (e) => {
+    const newValue = e.target.value;
+
+    // 清除上一次的定时器
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    // 设置新的定时器
+    timeoutRef.current = setTimeout(() => {
+      setValue(newValue);
+      console.log('Debounced value:', newValue);
+    }, 500);
+  };
+
+  return <input type="text" onChange={handleChange} placeholder="Type something..." />;
+}
+```
+
+这里，`timeoutRef` 保存了防抖的定时器 ID，确保每次输入时只触发最新的定时器。
+
+*Tips: 使用 `useRef` 实现防抖或节流时，记得在组件卸载时清理定时器，避免内存泄漏。*
+
+### 6.3 缓存计算结果
+
+`useRef` 可以用来缓存昂贵的计算结果，避免重复计算。假设我们有一个需要计算斐波那契数的组件：
+
+```jsx
+import { useState, useRef } from 'react';
+
+function FibonacciCalculator() {
+  const [n, setN] = useState(0);
+  const cacheRef = useRef({});
+
+  const fib = (n) => {
+    if (n <= 1) return n;
+    if (cacheRef.current[n]) return cacheRef.current[n];
+    cacheRef.current[n] = fib(n - 1) + fib(n - 2);
+    return cacheRef.current[n];
+  };
+
+  const result = fib(n);
+
+  return (
+    <div>
+      <input
+        type="number"
+        value={n}
+        onChange={(e) => setN(Number(e.target.value))}
+      />
+      <p>Fibonacci({n}) = {result}</p>
+    </div>
+  );
+}
+```
+
+这里，`cacheRef` 保存了一个缓存对象，避免重复计算斐波那契数，提升性能。
+
+*Tips: 对于昂贵的纯函数计算，用 `useRef` 存一个缓存对象，比每次重新计算要高效得多。*
+
+### 6.4 实现可取消的异步操作
+
+在处理异步操作（比如 API 请求）时，`useRef` 可以用来保存“取消标记”。以下是一个可取消的 fetch 请求的例子：
+
+```jsx
+import { useState, useRef, useEffect } from 'react';
+
+function CancellableFetch() {
+  const [data, setData] = useState(null);
+  const cancelRef = useRef(false);
+
+  useEffect(() => {
+    cancelRef.current = false;
+
+    const fetchData = async () => {
+      try {
+        const response = await fetch('https://api.example.com/data');
+        const result = await response.json();
+        if (!cancelRef.current) {
+          setData(result);
+        }
+      } catch (error) {
+        if (!cancelRef.current) {
+          console.error('Fetch error:', error);
+        }
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      cancelRef.current = true; // 组件卸载时取消请求
+    };
+  }, []);
+
+  return <div>{data ? JSON.stringify(data) : 'Loading...'}</div>;
+}
+```
+
+这里，`cancelRef` 用于标记请求是否被取消，避免在组件卸载后更新状态导致的错误。
+
+*Tips: 在异步操作中用 `useRef` 保存取消标记，可以有效防止“已卸载组件的状态更新”问题。*
+
+## 7. 常见误区与面试陷阱：如何避免翻车
+
+即使你对 `useRef` 的原理和用法了如指掌，面试中还是可能遇到一些“陷阱问题”。以下是几个常见的误区和应对策略：
+
+### 7.1 误区：以为 `useRef` 能代替 `useState`
+
+**问题**：有些开发者认为 `useRef` 可以完全替代 `useState`，因为它也能存状态且不触发渲染。
+
+**真相**：`useRef` 和 `useState` 的职责不同。`useState` 用于管理需要触发 UI 更新的状态，而 `useRef` 用于存储不影响渲染的数据。如果用 `useRef` 存所有状态，UI 可能不会正确更新。
+
+**应对**：在面试中，可以这样回答：“`useRef` 适合存储不需要触发渲染的数据，比如 DOM 引用、定时器 ID 或缓存值。而 `useState` 适合管理 UI 依赖的状态，比如计数器或表单输入值。”
+
+*Tips: 面试时可以举一个例子，比如用 `useRef` 存定时器 ID vs 用 `useState` 存计数器，清晰对比两者的适用场景。*
+
+### 7.2 陷阱：初始值只在首次渲染时生效
+
+**问题**：面试官可能会问：“如果我多次调用 `useRef` 并传入不同的初始值，会发生什么？”
+
+**真相**：`useRef` 的初始值只在组件首次渲染时生效，后续渲染中传入的 `initialValue` 会被忽略。看下面的代码：
+
+```jsx
+function ProblematicRef() {
+  const ref = useRef(Math.random()); // 每次渲染都传入新的随机数
+  console.log(ref.current); // 始终是首次渲染时的值
+  return <div>Check console</div>;
+}
+```
+
+**应对**：可以回答：“`useRef` 的实现保证了 ref 对象的引用在组件生命周期内不变。初始值只在 `mount` 阶段生效，后续的 `initialValue` 会被忽略。这是 React 为了性能优化和一致性做的设计。”
+
+*Tips: 如果需要动态更新初始值，可以在 `useEffect` 中手动修改 `ref.current`，但要确保逻辑清晰。*
+
+### 7.3 陷阱：忽视 `useRef` 的内存管理
+
+**问题**：如果用 `useRef` 保存大量数据或复杂对象，可能会导致内存泄漏吗？
+
+**真相**：`useRef` 的 `.current` 值在组件卸载时会自动被垃圾回收，但如果你在 `useRef` 中保存了事件监听器、定时器或外部引用，需要手动清理。
+
+**应对**：可以回答：“`useRef` 本身不会导致内存泄漏，因为它的值在组件卸载时会被 GC 回收。但如果 `ref.current` 保存了需要手动清理的资源，比如定时器或事件监听器，我们需要在 `useEffect` 的清理函数中释放它们。”
+
+*Tips: 养成在 `useEffect` 中清理 `useRef` 相关资源的好习惯，比如清除定时器、移除事件监听器。*
+
+## 8. 总结与展望：`useRef` 的未来与 React 的进化
+
+通过这篇文章，我们从 `useRef` 的基本用法到实现原理，再到高级实践和面试应对，全面剖析了这个看似简单却无比强大的 Hook。总结一下 `useRef` 的核心要点：
+
+- **本质**：一个跨渲染周期的持久化存储箱，适合保存不触发渲染的数据。
+- **实现**：基于 Fiber 节点的 Hook 链表，`memoizedState` 存储 `{ current: initialValue }`。
+- **用法**：从 DOM 操作到状态管理，再到性能优化，`useRef` 无处不在。
+- **最佳实践**：避免闭包陷阱、实现防抖节流、缓存计算结果、处理可取消操作。
+- **面试技巧**：结合源码和类比，清晰讲解 `useRef` 的原理和适用场景。
+
+展望未来，随着 React 19 和 Server Components 的进一步发展，`useRef` 的地位可能会更加重要。Server Components 强调更细粒度的状态管理和性能优化，而 `useRef` 的“静默存储”特性正好契合这一趋势。同时，随着前端生态对实时性和交互性的要求越来越高，`useRef` 在处理复杂交互逻辑（如动画、拖拽、实时协作）中的应用也会更加广泛。
+
+最后，送你一句话：**“`useRef` 不是万能的，但没有 `useRef` 是万万不能的。”** 下次面试遇到“说一下 `useRef` 是如何实现的？”时，相信你已经能自信地抛出一堆干货，让面试官刮目相看！😎
+
+*Tips: 学习 React Hooks 不仅要会用，还要理解其设计理念。花点时间读读 React 源码，你会发现更多“隐藏的宝藏”！*
+
+---

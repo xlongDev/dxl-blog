@@ -1,0 +1,269 @@
+---
+title: "深入理解 ES6 所有新特性"
+date: "2021-06-02"
+description: "全面解析 ES6 的所有新特性，深入原理，结合实例，带你掌握现代 JavaScript 的核心升级。"
+keywords: "ES6, JavaScript, let const, 箭头函数, 解构赋值, Promise, 模块化, Symbol, Iterator, Generator"
+author: "晓龙"
+image: "/images/hero/es6-features.jpg"
+tags: ["JavaScript", "ES6", "前端开发"]
+category: "JavaScript"
+---
+
+# 深入理解 ES6 所有新特性
+
+ES6（ECMAScript 2015）是 JavaScript 的一次里程碑式升级，引入了大量新特性，彻底改变了我们编写代码的方式。从块级作用域到模块化，从 Promise 到 Generator，这些特性不仅让代码更简洁优雅，还提升了语言的表达能力和工程化能力。本文将带你深入剖析 ES6 的所有核心特性，结合原理和实例，让你不仅知其然，还知其所以然。
+
+## 1. 块级作用域：`let` 和 `const`
+
+在 ES5 中，变量只有全局作用域和函数作用域，`var` 的缺陷（如变量提升、无法限制作用域）常常让人头疼。ES6 引入了 `let` 和 `const`，带来了真正的块级作用域。
+
+### 原理
+`let` 和 `const` 的块级作用域是通过词法环境（Lexical Environment）和作用域链实现的。每个 `{}` 会创建一个新的词法环境，`let` 和 `const` 声明的变量被绑定在这个环境中，不会提升到顶部。
+
+### 示例
+```javascript
+for (var i = 0; i < 3; i++) {
+  setTimeout(() => console.log(i), 0); // 输出 3 3 3
+}
+
+for (let j = 0; j < 3; j++) {
+  setTimeout(() => console.log(j), 0); // 输出 0 1 2
+}
+```
+`var` 的变量提升导致 `i` 被共享，而 `let` 为每次循环创建独立的作用域，完美解决闭包问题。
+
+### `const` 的不变之道
+`const` 声明的是一个常量，但它并不意味着值不可变，而是绑定的引用不可变：
+```javascript
+const obj = { name: "ES6" };
+obj.name = "ES2015"; // 合法
+obj = {}; // 报错：Assignment to constant variable
+```
+
+## 2. 箭头函数：简洁与词法 `this`
+
+箭头函数（Arrow Function）是 ES6 中最受欢迎的特性之一，它不仅语法简洁，还解决了 `this` 绑定的痛点。
+
+### 原理
+箭头函数没有自己的 `this`，它的 `this` 是从外层词法作用域继承的。这得益于 JavaScript 的词法作用域规则，而不是传统的动态绑定。
+
+### 示例
+```javascript
+const obj = {
+  name: "ES6",
+  say: function () {
+    setTimeout(() => console.log(this.name), 0);
+  },
+};
+obj.say(); // 输出 "ES6"
+```
+在 ES5 中，普通函数的 `this` 会指向 `window`，需要用 `bind(this)` 或保存 `that`。箭头函数直接省去了这些麻烦。
+
+### 注意事项
+- 箭头函数没有 `arguments` 对象，可以用 rest 参数替代。
+- 不能作为构造函数使用，因为没有 `prototype`。
+
+## 3. 解构赋值：优雅的数据提取
+
+解构赋值（Destructuring Assignment）让从数组或对象中提取数据变得异常简单。
+
+### 原理
+解构本质上是模式匹配，编译器会根据解构的语法生成对应的赋值逻辑。
+
+### 示例
+```javascript
+// 数组解构
+const [a, b, ...rest] = [1, 2, 3, 4];
+console.log(a, b, rest); // 1 2 [3, 4]
+
+// 对象解构
+const { name: n, age = 25 } = { name: "晓龙" };
+console.log(n, age); // "晓龙" 25
+```
+默认值和重命名让解构更灵活，rest 操作符还能处理剩余元素。
+
+## 4. 模板字面量：字符串的革命
+
+模板字面量（Template Literals）用反引号（`` ` ``）替代了传统的字符串拼接。
+
+### 示例
+```javascript
+const name = "ES6";
+const greeting = `Hello, ${name}!`;
+console.log(greeting); // "Hello, ES6!"
+```
+它还支持多行字符串和表达式嵌入，极大提升了可读性。
+
+## 5. 默认参数与 rest/spread 操作符
+
+### 默认参数
+ES5 中需要用 `||` 设置默认值，ES6 直接支持：
+```javascript
+function greet(name = "Guest") {
+  return `Hello, ${name}`;
+}
+console.log(greet()); // "Hello, Guest"
+```
+
+### Rest 参数
+收集剩余参数为数组：
+```javascript
+function sum(...numbers) {
+  return numbers.reduce((a, b) => a + b, 0);
+}
+console.log(sum(1, 2, 3, 4)); // 10
+```
+
+### Spread 操作符
+展开数组或对象：
+```javascript
+const arr1 = [1, 2];
+const arr2 = [...arr1, 3, 4];
+console.log(arr2); // [1, 2, 3, 4]
+```
+
+## 6. Promise：异步编程的基石
+
+Promise 是 ES6 对异步操作的标准化解决方案，解决了回调地狱问题。
+
+### 原理
+Promise 是一个状态机，拥有 `pending`、`fulfilled` 和 `rejected` 三种状态，通过 `then` 和 `catch` 链式处理结果。
+
+### 示例
+```javascript
+const delay = (ms) =>
+  new Promise((resolve) => setTimeout(() => resolve("Done"), ms));
+
+delay(1000)
+  .then((res) => console.log(res)) // "Done"
+  .catch((err) => console.error(err));
+```
+
+## 7. 模块化：`import` 和 `export`
+
+ES6 引入了原生模块系统，取代了 CommonJS 和 AMD。
+
+### 示例
+```javascript
+// math.js
+export const add = (a, b) => a + b;
+export default (x) => x * 2;
+
+// main.js
+import double, { add } from "./math.js";
+console.log(add(2, 3)); // 5
+console.log(double(5)); // 10
+```
+
+### 原理
+模块化基于静态分析，编译时就能确定依赖关系，比动态加载更高效。
+
+## 8. Symbol：独一无二的标识符
+
+`Symbol` 是 ES6 引入的基本数据类型，用于创建唯一标识符。
+
+### 示例
+```javascript
+const sym1 = Symbol("id");
+const sym2 = Symbol("id");
+console.log(sym1 === sym2); // false
+```
+
+### 应用
+常用于对象属性键，避免命名冲突：
+```javascript
+const key = Symbol("key");
+const obj = { [key]: "hidden" };
+console.log(obj[key]); // "hidden"
+```
+
+## 9. Iterator 和 for...of：迭代的艺术
+
+ES6 引入了 `Iterator` 接口和 `for...of` 循环，统一了迭代方式。
+
+### 原理
+对象实现 `[Symbol.iterator]` 方法即可被迭代：
+```javascript
+const myIterable = {
+  data: [1, 2, 3],
+  [Symbol.iterator]() {
+    let index = 0;
+    return {
+      next: () => ({
+        value: this.data[index++],
+        done: index > this.data.length,
+      }),
+    };
+  },
+};
+
+for (const val of myIterable) {
+  console.log(val); // 1 2 3
+}
+```
+
+## 10. Generator：暂停与恢复的魔法
+
+Generator 是一种特殊的函数，可以暂停执行并返回中间结果。
+
+### 示例
+```javascript
+function* gen() {
+  yield 1;
+  yield 2;
+  return 3;
+}
+
+const g = gen();
+console.log(g.next()); // { value: 1, done: false }
+console.log(g.next()); // { value: 2, done: false }
+console.log(g.next()); // { value: 3, done: true }
+```
+
+### 应用
+Generator 常用于异步流程控制和惰性计算。
+
+## 11. 类（Class）：面向对象的语法糖
+
+ES6 的 `class` 是对原型继承的封装，语法更直观。
+
+### 示例
+```javascript
+class Person {
+  constructor(name) {
+    this.name = name;
+  }
+  say() {
+    return `Hi, I'm ${this.name}`;
+  }
+}
+
+class Student extends Person {
+  constructor(name, grade) {
+    super(name);
+    this.grade = grade;
+  }
+}
+
+const s = new Student("晓龙", "A");
+console.log(s.say()); // "Hi, I'm 晓龙"
+```
+
+### 原理
+`class` 只是原型链的语法糖，底层仍是构造函数和原型。
+
+## 12. 其他实用特性
+
+- **Set 和 Map**：高效的集合和键值对数据结构。
+  ```javascript
+  const set = new Set([1, 1, 2]); // {1, 2}
+  const map = new Map([[ "key", "value" ]]);
+  ```
+- **Array 方法**：`find`、`findIndex`、`includes` 等。
+- **对象增强**：属性简写、计算属性名等。
+
+## 总结
+
+ES6 是 JavaScript 的一次全面革新，无论是语法糖还是新功能，都让开发者能更高效地编写健壮代码。从块级作用域到模块化，从 Promise 到 Generator，每一个特性背后都有深刻的原理支撑。希望这篇文章能帮你不仅学会使用 ES6，更能理解它的设计思想，写出更优雅的代码。
+
+---

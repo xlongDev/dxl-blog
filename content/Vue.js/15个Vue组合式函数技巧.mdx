@@ -1,0 +1,490 @@
+---
+title: "15 个 Vue 组合式函数技巧，让你的代码更出色"
+date: "2023-11-21"
+description: "深入探讨 Vue 3 组合式 API 的 15 个实用技巧，帮助前端开发者写出更高效、更优雅的代码，提升开发体验。"
+keywords: "Vue 3, 组合式 API, Composition API, 前端开发, JavaScript, 响应式编程, 代码复用, 性能优化, hooks"
+author: "晓龙"
+image: "/images/hero/vue-composition-api.jpg"
+tags: ["Vue", "前端开发", "JavaScript"]
+category: "Vue.js"
+---
+
+Vue 3 的组合式 API（Composition API）就像是为前端开发者量身打造的一把瑞士军刀：小巧、灵活、功能强大。它不仅改变了我们编写 Vue 代码的方式，还让代码组织和逻辑复用变得更加得心应手。作为一名前端开发者，如果你还没完全挖掘出它的潜力，那这篇文章就是为你准备的。我将分享 **15 个实用技巧**，从基础到进阶，再到最佳实践，带你玩转组合式 API，让你的代码不仅能跑，还能“飞”得优雅。准备好了吗？让我们一起跳进这个充满创造力的 Vue 世界吧！🚀
+
+---
+
+## 引言：为什么组合式 API 是你的超级英雄？
+
+Vue 2 的 Options API 就像一本按章节分的教科书：`data` 是你的变量章节，`methods` 是你的函数章节，`computed` 是你的计算章节……虽然清晰，但当组件逻辑变得复杂时，这些章节就像被打乱的书页，散落在各处，找起来让人头晕。Vue 3 的组合式 API 来了，它像一个魔法文件夹，把所有相关逻辑打包在一起，用函数的方式组织代码，既灵活又直观。
+
+它的超能力在于：
+- **逻辑复用**：通过自定义 hooks，你可以把代码片段变成“乐高积木”，随处拼装。
+- **类型推断**：搭配 TypeScript，代码补全和类型检查简直不要太爽。
+- **灵活性**：不再被固定的选项限制，想怎么写就怎么写。
+
+这篇文章将带你探索 15 个实用技巧，涵盖基础用法、进阶玩法和最佳实践。每个技巧都有代码示例、小贴士（Tips），还有我的个人理解和一点幽默调味（别担心，不会是“程序员冷笑话”那种）。无论你是刚上手 Vue 的新手，还是想精进技能的老司机，这里总有适合你的东西。好了，废话不多说，进入正题吧！
+
+---
+
+## 基础技巧：从入门到起飞
+
+### 1. `ref` 和 `reactive`：响应式世界的双生花
+
+在组合式 API 中，`ref` 和 `reactive` 是响应式数据的两大支柱，但它们就像咖啡和茶，味道不同，用法也各有千秋。
+
+- **`ref`**：专为基本类型（数字、字符串、布尔值）设计，返回一个带 `.value` 的对象。想想它是个小盒子，里面装着你的数据，要用的时候得打开盒子（`.value`）。
+- **`reactive`**：为对象和数组量身打造，返回一个代理对象（Proxy），直接操作属性就行，不用掏盒子。
+
+**Tip**：🎯 用 `ref` 管简单数据，`reactive` 管复杂对象，别把鸡蛋和蛋糕混在一起！
+
+**示例**：一个计数器和用户信息管理
+
+```javascript
+import { ref, reactive } from 'vue';
+
+export default {
+  setup() {
+    const count = ref(0); // 小盒子装数字
+    const user = reactive({ name: '晓龙', age: 25 }); // 代理对象装用户信息
+
+    const increment = () => count.value++; // 打开盒子加一
+    const growOlder = () => user.age++; // 直接操作代理对象
+
+    return { count, user, increment, growOlder };
+  }
+};
+```
+
+**深入一点**：为什么 `ref` 要 `.value`？因为基本类型在 JavaScript 中是值传递，没有引用特性，Vue 用对象包装它来模拟响应性。而 `reactive` 用 Proxy 包裹对象，监听属性的 getter 和 setter，天然适合复杂数据。
+
+---
+
+### 2. `watch` vs `watchEffect`：监听器的双人舞
+
+Vue 给了我们 `watch` 和 `watchEffect` 两个监听工具，它们就像侦探和自动雷达，各有绝活。
+
+- **`watch`**：需要你指定“监听谁”（数据源）和“做什么”（回调），适合精确打击。
+- **`watchEffect`**：自动追踪依赖，像个聪明的机器人，依赖变了就干活，不用你指手画脚。
+
+**Tip**：🔍 需要精确控制就用 `watch`，想偷懒交给自动驾驶用 `watchEffect`。
+
+**示例**：监听输入和自动更新
+
+```javascript
+import { ref, watch, watchEffect } from 'vue';
+
+export default {
+  setup() {
+    const name = ref('');
+    const greeting = ref('');
+
+    // watch：精确监听 name
+    watch(name, (newName) => {
+      greeting.value = `你好，${newName || '陌生人'}！`;
+    });
+
+    // watchEffect：自动追踪依赖
+    watchEffect(() => {
+      console.log(`当前名字是：${name.value}`);
+    });
+
+    return { name, greeting };
+  }
+};
+```
+
+**小故事**：我第一次用 `watchEffect` 时，像个新手厨师乱放调料，结果它追踪了所有依赖，打印了一堆没用的日志。后来发现，精准的 `watch` 才是我的“量勺”。
+
+---
+
+### 3. `computed`：你的数学小助手
+
+计算属性（`computed`）是 Vue 的老朋友，在组合式 API 中依然闪亮登场。它根据依赖自动更新，避免你在模板里写一堆复杂的逻辑。
+
+**Tip**：🧮 用 `computed` 把重复计算交给 Vue，既省力又高效。
+
+**示例**：购物车总价计算
+
+```javascript
+import { ref, computed } from 'vue';
+
+export default {
+  setup() {
+    const price = ref(50);
+    const quantity = ref(3);
+
+    const total = computed(() => price.value * quantity.value);
+
+    return { price, quantity, total };
+  }
+};
+```
+
+**深入原理**：`computed` 内部会缓存结果，只有依赖变化时才会重新计算。相比直接在模板里写 `price * quantity`，它能显著提升性能，尤其在大数据量时。
+
+---
+
+## 进阶技巧：从熟练到大师
+
+### 4. 自定义 hooks：打造你的代码“乐高”
+
+自定义 hooks 是组合式 API 的杀手锏，能把重复逻辑封装成可复用的函数，像搭积木一样用在不同组件里。
+
+**Tip**：🔄 自定义 hooks 是代码复用的“传送门”，让你的逻辑随处可用。
+
+**示例**：`useFetch` 获取数据
+
+```javascript
+import { ref, onMounted } from 'vue';
+
+export function useFetch(url) {
+  const data = ref(null);
+  const error = ref(null);
+  const loading = ref(true);
+
+  const fetchData = async () => {
+    try {
+      const res = await fetch(url);
+      data.value = await res.json();
+    } catch (err) {
+      error.value = err.message;
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  onMounted(fetchData);
+
+  return { data, error, loading };
+}
+
+// 在组件中使用
+export default {
+  setup() {
+    const { data, error, loading } = useFetch('https://api.example.com/users');
+    return { data, error, loading };
+  }
+};
+```
+
+**我的经验**：我曾在一个项目里写了五次几乎一样的请求逻辑，后来改成 `useFetch`，代码量减半，维护起来简直像喝了咖啡一样清醒。
+
+---
+
+### 5. `provide` 和 `inject`：跨层级的“快递员”
+
+`provide` 和 `inject` 让你在组件树中传递数据，不用一级级 props 传下去，像个快递员直接送到目的地。
+
+**Tip**：🔗 用 `provide/inject` 传递全局配置或状态，深层组件也能轻松拿到。
+
+**示例**：主题切换
+
+```javascript
+// 顶层组件
+import { provide, ref } from 'vue';
+
+export default {
+  setup() {
+    const theme = ref('light');
+    provide('theme', theme); // 快递发出
+    const toggleTheme = () => {
+      theme.value = theme.value === 'light' ? 'dark' : 'light';
+    };
+    return { theme, toggleTheme };
+  }
+};
+
+// 深层组件
+import { inject } from 'vue';
+
+export default {
+  setup() {
+    const theme = inject('theme'); // 签收快递
+    return { theme };
+  }
+};
+```
+
+**类比**：把它想象成家族聚会，爷爷（顶层组件）喊一声“今天吃火锅”，所有孙子（子组件）都能听到，不用一级级传话。
+
+---
+
+### 6. `teleport`：DOM 的“任意门”
+
+`teleport` 是个神奇的内置组件，能把你的内容“传送”到 DOM 树的其他位置，非常适合模态框、弹窗这种需要跳出父级限制的场景。
+
+**Tip**：🚀 用 `teleport` 摆脱样式冲突和 z-index 噩梦。
+
+**示例**：模态框
+
+```html
+<template>
+  <button @click="showModal = true">打开模态框</button>
+  <teleport to="body">
+    <div v-if="showModal" class="modal">
+      <p>这是一个模态框，自由自在！</p>
+      <button @click="showModal = false">关闭</button>
+    </div>
+  </teleport>
+</template>
+
+<script>
+import { ref } from 'vue';
+
+export default {
+  setup() {
+    const showModal = ref(false);
+    return { showModal };
+  }
+};
+</script>
+
+<style>
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 20px;
+}
+</style>
+```
+
+**小吐槽**：没用 `teleport` 前，我为了调模态框的层级，z-index 从 100 调到 9999，最后发现直接传送走更省事。
+
+---
+
+## 最佳实践：让代码更优雅
+
+### 7. 命名规范：`useXXX` 是你的招牌
+
+给自定义 hooks 和组合式函数取名时，遵循 `useXXX` 规范，就像给你的代码挂上“可复用”的标签。
+
+**Tip**：📝 规范命名就像给文件起好标题，团队协作时一目了然。
+
+**示例**：
+- `useMousePosition`：追踪鼠标位置。
+- `useLocalStorage`：操作本地存储。
+
+**我的习惯**：我喜欢把功能写在名字里，比如 `useDebouncedSearch`，一看就知道是防抖搜索。
+
+---
+
+### 8. 拆分逻辑：积木式开发
+
+复杂逻辑不要塞在一个函数里，拆成多个小的组合式函数，每个函数只干一件事。
+
+**Tip**：🧩 拆分逻辑就像整理房间，小块收拾完再组装，干净又高效。
+
+**示例**：表单管理
+
+```javascript
+// useForm.js
+import { reactive } from 'vue';
+
+export function useForm(initialValues) {
+  const form = reactive({ ...initialValues });
+  const reset = () => Object.assign(form, initialValues);
+  return { form, reset };
+}
+
+// useValidation.js
+import { ref } from 'vue';
+
+export function useValidation(form) {
+  const errors = ref({});
+  const validate = () => {
+    errors.value = form.name ? {} : { name: '姓名必填' };
+  };
+  return { errors, validate };
+}
+
+// 组件中使用
+export default {
+  setup() {
+    const { form, reset } = useForm({ name: '' });
+    const { errors, validate } = useValidation(form);
+    return { form, reset, errors, validate };
+  }
+};
+```
+
+**感悟**：拆分后，调试 bug 就像找针，不用大海捞，直接去小池塘。
+
+---
+
+### 9. 避免副作用：时机很重要
+
+`setup` 是组件初始化时运行的，别在这儿直接操作 DOM，交给生命周期钩子吧。
+
+**Tip**：🚫 副作用放错地方就像在饭前吃甜点，时机不对就尴尬。
+
+**示例**：
+
+```javascript
+import { onMounted } from 'vue';
+
+export default {
+  setup() {
+    onMounted(() => {
+      document.querySelector('.input').focus(); // 等 DOM ready 再操作
+    });
+  }
+};
+```
+
+---
+
+## 常见问题与解决方案：避坑指南
+
+### 10. 数据响应性丢失：别让魔法失效
+
+从 `reactive` 对象解构赋值会丢响应性，因为普通变量不再是 Proxy 的代理。用 `toRefs` 解决。
+
+**Tip**：🔄 解构 `reactive` 时，`toRefs` 是你的“魔法棒”。
+
+**示例**：
+
+```javascript
+import { reactive, toRefs } from 'vue';
+
+export default {
+  setup() {
+    const state = reactive({ count: 0 });
+    const { count } = toRefs(state); // 保持响应性
+    return { count };
+  }
+};
+```
+
+**原理**：`toRefs` 把每个属性转成 `ref`，保留了响应式链接。
+
+---
+
+### 11. `watch` 不触发：侦探失灵？
+
+`watch` 不工作？可能是监听的不是响应式数据，或者对象嵌套太深没设 `deep`。
+
+**Tip**：🔍 确保监听的是 `ref` 或 `reactive`，深层对象加 `deep: true`。
+
+**示例**：
+
+```javascript
+import { reactive, watch } from 'vue';
+
+export default {
+  setup() {
+    const user = reactive({ info: { age: 25 } });
+    watch(
+      () => user.info.age,
+      (newAge) => console.log(`新年龄：${newAge}`)
+    );
+    return { user };
+  }
+};
+```
+
+---
+
+### 12. 性能优化：别让代码“喘不过气”
+
+`watchEffect` 追踪所有依赖，如果里面有昂贵操作（比如复杂计算或请求），用防抖或节流优化。
+
+**Tip**：⚡ 防抖就像给跑步机设个缓冲，别让它跑太快。
+
+**示例**：
+
+```javascript
+import { ref, watchEffect } from 'vue';
+import debounce from 'lodash/debounce';
+
+export default {
+  setup() {
+    const query = ref('');
+    const search = debounce(() => {
+      console.log(`搜索：${query.value}`);
+    }, 300);
+
+    watchEffect(() => search());
+    return { query };
+  }
+};
+```
+
+---
+
+## 更多技巧：锦上添花
+
+### 13. `onUnmounted`：清理现场
+
+组件销毁时，别忘了清理副作用，比如清除定时器或事件监听。
+
+**Tip**：🧹 像离开酒店前收拾行李，别留下“垃圾”。
+
+**示例**：
+
+```javascript
+import { onMounted, onUnmounted } from 'vue';
+
+export default {
+  setup() {
+    let timer;
+    onMounted(() => {
+      timer = setInterval(() => console.log('滴答'), 1000);
+    });
+    onUnmounted(() => clearInterval(timer));
+  }
+};
+```
+
+---
+
+### 14. `shallowRef`：轻量级响应式
+
+如果只关心数据的顶层变化，用 `shallowRef`，性能更好。
+
+**Tip**：🏋️‍♂️ `shallowRef` 是响应式的“轻装版”，适合大数据。
+
+**示例**：
+
+```javascript
+import { shallowRef } from 'vue';
+
+export default {
+  setup() {
+    const data = shallowRef({ list: [] });
+    return { data };
+  }
+};
+```
+
+---
+
+### 15. 组合式函数的返回值：清晰为王
+
+返回的对象尽量扁平化，避免嵌套太深，保持可读性。
+
+**Tip**：📦 返回值像超市货架，整齐摆放最好找。
+
+**示例**：
+
+```javascript
+export default {
+  setup() {
+    const count = ref(0);
+    const increment = () => count.value++;
+    return { count, increment }; // 简洁明了
+  }
+};
+```
+
+---
+
+## 结论：让代码飞起来！
+
+这 15 个技巧从基础用法到进阶玩法，再到避坑指南，覆盖了组合式 API 的方方面面。无论是 `ref` 和 `reactive` 的基础搭配，还是自定义 hooks 的复用魔法，亦或是 `teleport` 的 DOM 传送，这些工具都能让你的 Vue 代码更高效、更优雅。
+
+我的建议？别光看，动手试试！代码是写出来的，不是看出来的。挑一个技巧，在你的项目里实践一下，感受它的魅力。Vue 3 的组合式 API 就像一盒颜料，技巧是你的画笔，画出什么样的作品，全看你怎么挥洒。祝你 coding 愉快，代码如诗！✨
+
+---

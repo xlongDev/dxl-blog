@@ -1,5 +1,6 @@
 import { defineDocumentType, makeSource } from "contentlayer/source-files";
 import rehypePrettyCode from "rehype-pretty-code";
+import remarkGfm from "remark-gfm";
 
 export const Post = defineDocumentType(() => ({
   name: "Post",
@@ -87,6 +88,9 @@ export default makeSource({
   contentDirPath: "content",
   documentTypes: [Post],
   mdx: {
+    remarkPlugins: [
+      remarkGfm, // 添加GitHub风格Markdown支持，包括表格
+    ],
     rehypePlugins: [
       [
         rehypePrettyCode as any,

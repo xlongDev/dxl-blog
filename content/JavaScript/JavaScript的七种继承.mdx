@@ -1,0 +1,298 @@
+---
+title: "JavaScript 里的七种继承"
+date: "2022-08-19"
+description: "详细解析 JavaScript 中的七种继承方式，包括原型链继承、借用构造函数、组合继承、寄生式继承、寄生组合继承、ES6 class 继承及对象混入，附示例代码。"
+keywords: "JavaScript, 继承, 原型链, class, 面向对象, 前端开发"
+author: "晓龙"
+image: "/images/hero/javascript-inheritance.jpg"
+tags: ["JavaScript", "继承", "面向对象", "前端"]
+category: "JavaScript"
+---
+
+在前端开发中，继承是一个既常见又容易被误用的概念。作为一个基于原型的语言，JavaScript 提供了多种继承方式，每种方式都有其特定的应用场景。本文将结合实际开发经验，深入剖析这些继承方式的原理、优缺点及最佳实践。
+
+## 1. 原型链继承
+
+### 原理
+
+原型链继承是 JavaScript 最基础的继承方式，它利用原型链的特性实现继承。当我们访问一个对象的属性时，如果对象本身没有这个属性，JavaScript 引擎会沿着原型链向上查找，直到找到该属性或到达原型链的末端（`null`）。
+
+### 实战示例
+
+```js
+function Animal() {
+  this.species = ["哺乳类", "爬行类"];
+}
+Animal.prototype.getSpecies = function () {
+  return this.species;
+};
+
+function Dog() {}
+Dog.prototype = new Animal(); // 继承自 Animal
+
+const dog1 = new Dog();
+const dog2 = new Dog();
+
+dog1.species.push("犬科");
+console.log(dog2.species); // ["哺乳类", "爬行类", "犬科"] - 注意这里！
+```
+
+### 踩坑提醒
+
+- 引用类型属性被所有实例共享，这在实际开发中经常会造成意外的数据污染
+- 创建子类实例时无法向父类构造函数传参
+- 在实际项目中，我建议只在需要共享方法时使用原型链继承
+
+## 2. 借用构造函数（经典继承）
+
+### 原理
+
+这种方式通过在子类构造函数中调用父类构造函数来实现继承。它解决了原型链继承中的两个主要问题：引用类型共享和无法传参。
+
+### 实战示例
+
+```js
+function User(name, permissions) {
+  this.name = name;
+  this.permissions = permissions;
+  this.token = Math.random().toString(36).substr(2);
+}
+
+function Admin(name) {
+  User.call(this, name, ["read", "write", "delete"]); // 通过 call 继承并传递参数
+  this.role = "admin";
+}
+
+const admin = new Admin("张三");
+console.log(admin.permissions); // ["read", "write", "delete"]
+console.log(admin.token); // 随机生成的token
+```
+
+### 实践建议
+
+- 适合需要独立实例属性的场景，特别是处理敏感数据时
+- 配合工厂模式可以实现更灵活的对象创建
+- 注意：无法继承原型上的方法，这可能导致代码重复
+
+## 3. 组合继承
+
+### 原理
+
+组合继承结合了原型链和构造函数两种方式的优点，是 ES6 之前最常用的继承模式。它通过构造函数继承实例属性，通过原型链继承原型方法。
+
+### 实战示例
+
+```js
+function Component(props) {
+  this.props = props;
+  this.state = {};
+}
+Component.prototype.setState = function (newState) {
+  this.state = { ...this.state, ...newState };
+  this.render();
+};
+
+function Button(props) {
+  Component.call(this, props); // 继承实例属性
+  this.state = { clicked: false };
+}
+Button.prototype = Object.create(Component.prototype);
+Button.prototype.constructor = Button;
+
+Button.prototype.render = function () {
+  console.log(`Button: ${this.props.text}, Clicked: ${this.state.clicked}`);
+};
+
+const btn = new Button({ text: "点击我" });
+btn.setState({ clicked: true });
+```
+
+### 最佳实践
+
+- 在需要扩展已有组件或类库时，组合继承是很好的选择
+- 注意性能：父类构造函数会被调用两次
+- 推荐在大型项目中使用，因为它的结构清晰，便于维护
+
+## 4. 原型式继承
+
+### 原理
+
+原型式继承本质上是对传入对象的浅复制。ES5 将这种模式规范化，提供了 `Object.create` 方法。
+
+### 实战示例
+
+```js
+const defaultConfig = {
+  theme: "light",
+  language: "zh-CN",
+  getLocalizedText(key) {
+    return this.language === "zh-CN" ? "中文" : "English";
+  },
+};
+
+const userConfig = Object.create(defaultConfig);
+userConfig.theme = "dark";
+
+console.log(userConfig.theme); // "dark"
+console.log(userConfig.getLocalizedText()); // "中文"
+```
+
+### 使用场景
+
+- 适合用于创建基于已有对象的新对象
+- 常用于配置对象的继承
+- 需要注意引用类型属性共享的问题
+
+## 5. 寄生式继承
+
+### 原理
+
+寄生式继承是对原型式继承的增强，在继承的同时可以添加新的属性和方法。
+
+### 实战示例
+
+```js
+function createAPIClient(baseClient) {
+  const client = Object.create(baseClient);
+
+  client.get = async function (url) {
+    console.log(`[${new Date().toISOString()}] GET ${url}`);
+    return await baseClient.request("GET", url);
+  };
+
+  client.post = async function (url, data) {
+    console.log(`[${new Date().toISOString()}] POST ${url}`);
+    return await baseClient.request("POST", url, data);
+  };
+
+  return client;
+}
+
+const baseClient = {
+  baseURL: "https://api.example.com",
+  request(method, url, data) {
+    // 基础请求实现
+  },
+};
+
+const apiClient = createAPIClient(baseClient);
+```
+
+### 应用建议
+
+- 适合用于扩展第三方库或工具类
+- 可以结合工厂模式创建特定功能的对象
+- 注意避免创建重复的方法
+
+## 6. 寄生组合继承
+
+### 原理
+
+寄生组合继承是对组合继承的优化，通过寄生式继承来继承父类原型，避免了组合继承中多余的父类构造函数调用。
+
+### 实战示例
+
+```js
+function inherit(Child, Parent) {
+  const prototype = Object.create(Parent.prototype);
+  prototype.constructor = Child;
+  Child.prototype = prototype;
+}
+
+function HttpClient(baseURL) {
+  this.baseURL = baseURL;
+  this.headers = new Map();
+}
+
+HttpClient.prototype.setHeader = function (key, value) {
+  this.headers.set(key, value);
+};
+
+function JsonClient(baseURL) {
+  HttpClient.call(this, baseURL);
+  this.setHeader("Content-Type", "application/json");
+}
+
+inherit(JsonClient, HttpClient);
+
+JsonClient.prototype.post = function (url, data) {
+  console.log(`Sending JSON to ${this.baseURL}${url}`);
+  // 实际发送逻辑
+};
+
+const client = new JsonClient("https://api.example.com");
+```
+
+### 工程实践
+
+- 是 ES6 之前最理想的继承实现方式
+- 在需要扩展原生对象或处理复杂继承关系时特别有用
+- 建议封装成工具函数以提高代码复用性
+
+## 7. ES6 class 继承
+
+### 原理
+
+ES6 引入的 `class` 语法让 JavaScript 的继承更接近传统面向对象语言，但底层仍然是基于原型的继承。
+
+### 实战示例
+
+```js
+class EventEmitter {
+  constructor() {
+    this.events = new Map();
+  }
+
+  on(event, callback) {
+    if (!this.events.has(event)) {
+      this.events.set(event, []);
+    }
+    this.events.get(event).push(callback);
+  }
+
+  emit(event, ...args) {
+    if (this.events.has(event)) {
+      this.events.get(event).forEach((cb) => cb(...args));
+    }
+  }
+}
+
+class Socket extends EventEmitter {
+  constructor(url) {
+    super();
+    this.url = url;
+    this.connect();
+  }
+
+  connect() {
+    console.log(`Connecting to ${this.url}...`);
+    this.emit("connect");
+  }
+
+  send(data) {
+    console.log(`Sending: ${data}`);
+    this.emit("send", data);
+  }
+}
+
+const socket = new Socket("ws://example.com");
+socket.on("connect", () => console.log("Connected!"));
+```
+
+### 实践心得
+
+- 推荐在新项目中使用 class 继承，语法更清晰，更容易维护
+- 注意 class 中的方法默认是严格模式
+- 善用 `super` 关键字调用父类方法
+- 使用 `static` 方法可以更好地组织工具函数
+
+## 总结
+
+在实际开发中，我们需要根据具体场景选择合适的继承方式：
+
+1. 如果是新项目，优先使用 ES6 的 class 继承
+2. 需要扩展第三方库时，考虑使用寄生式继承
+3. 处理简单对象时，可以使用 Object.create() 进行原型式继承
+4. 在需要维护的老项目中，可能会遇到组合继承或寄生组合继承
+
+最重要的是要记住：继承不是目的，而是手段。在实际开发中，我们应该更多地考虑组合优于继承的原则，避免过深的继承层次。合理的继承能让代码更优雅，过度使用反而会带来维护的困难。

@@ -1,0 +1,259 @@
+---
+title: "聊聊微前端之无界（Wujie）"
+date: "2024-06-02"
+description: "深入剖析微前端框架无界（Wujie）的原理、技术实现与最佳实践，带你走进微前端的极致世界。"
+keywords: "微前端, 无界, Wujie, Web Components, iframe, 前端开发, 沙箱隔离, 最佳实践"
+author: "晓龙"
+image: "/images/hero/wujie-microfrontend.jpg"
+tags: ["微前端", "前端架构", "JavaScript", "Wujie"]
+category: "前端技术"
+---
+
+嘿，前端的小伙伴们！今天我们要聊的是一个有点“无界限”的东西——微前端框架 **Wujie**（无界）。如果你还在为单体应用的臃肿发愁，或者被 qiankun 的适配成本搞得头晕脑胀，那就别走开，这篇文章可能会成为你 2025 年春天的救命稻草 🌾。Wujie 号称是“极致的微前端框架”，它用 Web Components 和 iframe 的组合拳，试图解决微前端领域的那些“老大难”问题。咱们不光聊聊它是什么，还会深入它的原理，带上代码实例，最后奉上一些实战中的最佳实践，保证让你读完既能“哇塞”又能“用得上”。
+
+## 什么是微前端？先热个身
+
+微前端的概念其实是从微服务那儿偷师来的，简单说就是把一个大而全的前端应用拆成多个小而美的子应用，每个子应用可以独立开发、独立部署，最后再拼装成一个完整的页面。就像乐高积木 🧱，你可以用不同颜色、不同形状的块块搭出属于自己的城堡。好处显而易见：团队解耦、技术栈自由、迭代速度加快。但问题也随之而来——样式冲突、性能瓶颈、通信复杂、路由同步……这些都让微前端的实现像是在走钢丝。
+
+Wujie 的出现，就像给这个钢丝表演加了个安全网。它基于 Web Components 和 iframe，试图用原生的隔离能力和灵活的架构，把微前端的体验推向极致。接下来，咱们就从它的核心原理开始拆解，看看它到底是怎么做到“极致”的。
+
+---
+
+## Wujie 的核心原理：Web Components + iframe 的双人舞
+
+Wujie 的核心设计可以用一句话概括：**用 Web Components 隔离 DOM，用 iframe 隔离 JS**。听起来简单，但背后藏着一堆巧妙的实现细节。咱们一步步来揭开它的面纱。
+
+### 1. Web Components：样式隔离的天然屏障
+
+Web Components 是浏览器原生支持的组件化技术，通过 Shadow DOM 提供了一个独立的 DOM 树，天然隔离了样式。Wujie 把子应用的 DOM 渲染到 Shadow DOM 里，这样主应用和子应用、子应用和子应用之间的 CSS 就不会打架了。想象一下，Shadow DOM 就像给每个子应用发了个“私人小房间”，你爱涂成粉色还是绿色，随你高兴，外面的世界完全看不到。
+
+**原理拆解：**
+- Wujie 会创建一个自定义元素（比如 `<wujie-app>`），然后通过 `attachShadow` 方法挂载一个 Shadow Root。
+- 子应用的 HTML 被塞进这个 Shadow Root，CSS 作用域被限制在里面。
+- 通过 Proxy，Wujie 把 iframe 的 DOM 操作代理到 Shadow DOM 上，保证子应用的 JS 逻辑依然能正常操作 DOM。
+
+**代码示例：**
+```javascript
+class WujieApp extends HTMLElement {
+  constructor() {
+    super();
+    this.shadow = this.attachShadow({ mode: "open" });
+    this.shadow.innerHTML = `<div>子应用内容</div>`;
+  }
+}
+customElements.define("wujie-app", WujieApp);
+```
+这就是一个简化的 Web Components 实现，Wujie 在此基础上加了很多魔法，比如动态加载子应用的 HTML 和 CSS。
+
+**Tips：**  
+如果你的子应用有全局样式（比如 `body { margin: 0; }`），记得在 Shadow DOM 里用 `:host` 重写，否则可能会失效。比如：
+```css
+:host {
+  display: block;
+  margin: 0;
+}
+```
+
+---
+
+### 2. iframe：JS 沙箱的硬核玩家
+
+如果说 Web Components 是给 DOM 盖了个小房子，那 iframe 就是给 JS 准备了个独立王国 👑。Wujie 把子应用的 JS 逻辑运行在一个 iframe 里，利用 iframe 的天然沙箱特性，隔离了 `window`、`document`、`location` 等全局对象。这样，子应用的副作用就被锁死在 iframe 内部，主应用完全不用担心被污染。
+
+**原理拆解：**
+- iframe 的 `src` 被设置为与主应用同域，但路径指向子应用（通过 URL 处理实现）。
+- 子应用的 JS 文件在 iframe 中执行，DOM 操作通过 Proxy 代理到 Shadow DOM。
+- iframe 和 Shadow DOM 通过消息机制和代理打通，形成一个“内外联动”的体系。
+
+**代码示例：**
+假设主应用域名是 `a.com`，子应用是 `b.com/app`，Wujie 会创建一个 iframe：
+```html
+<iframe src="https://a.com/proxy/b.com/app" style="display: none;"></iframe>
+```
+然后通过 Proxy 劫持 iframe 的 `document`：
+```javascript
+const iframe = document.querySelector("iframe").contentWindow;
+const proxyDocument = new Proxy(iframe.document, {
+  get(target, prop) {
+    if (prop === "body") return shadowRoot.querySelector("body");
+    return target[prop];
+  },
+});
+```
+
+**幽默插曲：**  
+iframe 这家伙有点像个“隐形人”，它默默干活，但你得小心别让它加载了主应用的 HTML（否则就尴尬了）。Wujie 通过在 iframe 加载前中断它（`stop()` 方法），确保它只跑子应用的代码。这招有点像在派对上拦住一个不速之客，够机智吧？
+
+**Tips：**  
+子应用的静态资源需要支持跨域（CORS），否则 iframe 同域加载会失败。配置时记得加个 `Access-Control-Allow-Origin`。
+
+---
+
+### 3. Proxy 的魔法：内外无缝衔接
+
+Wujie 的高明之处在于用 Proxy 把 iframe 和 Shadow DOM 连起来了。子应用在 iframe 里操作 `document.querySelector`，实际上是操作 Shadow DOM 里的元素。这种“偷梁换柱”的手法，让开发者几乎无感知地完成隔离和协作。
+
+**代码示例：**
+```javascript
+const shadowRoot = document.querySelector("wujie-app").shadowRoot;
+const iframeWindow = iframe.contentWindow;
+iframeWindow.document = new Proxy(iframeWindow.document, {
+  get(target, prop) {
+    if (prop === "querySelector") {
+      return selector => shadowRoot.querySelector(selector);
+    }
+    return target[prop];
+  },
+});
+```
+
+**Tips：**  
+如果子应用大量操作 DOM，建议用 `requestIdleCallback` 优化性能，Wujie 的 Fiber 模式就是这么干的。比如：
+```javascript
+requestIdleCallback(() => {
+  document.querySelector(".heavy-dom").innerHTML = "优化加载";
+});
+```
+
+---
+
+## Wujie 的功能亮点：从白屏到保活的全家桶
+
+Wujie 不仅仅是个技术框架，它还解决了很多微前端的痛点。咱们挑几个亮点聊聊，顺便带点代码和实践经验。
+
+### 1. 白屏问题？预加载来救场
+
+传统的微前端方案（比如 qiankun），子应用首次加载时容易白屏，因为 JS 和 DOM 都是实时拉取和渲染。Wujie 支持预加载（`preloadApp`），可以在主应用空闲时提前加载子应用资源，极大提升首屏速度。
+
+**代码示例：**
+```javascript
+import { preloadApp } from "wujie";
+preloadApp({
+  name: "app1",
+  url: "https://example.com/app1",
+});
+```
+
+**Tips：**  
+预加载别一股脑全开，挑用户最常用的几个子应用加载就好，不然主应用的内存会哭 😢。
+
+---
+
+### 2. 保活模式：状态不丢的魔法
+
+Wujie 的保活模式（`alive: true`）能在子应用切换时保留状态，像 Vue 的 `keep-alive` 一样。原理是保留 iframe 和 Shadow DOM，切换时只插拔 DOM，不销毁实例。
+
+**代码示例：**
+```javascript
+import { startApp } from "wujie";
+startApp({
+  name: "app2",
+  url: "https://example.com/app2",
+  el: "#container",
+  alive: true,
+});
+```
+
+**Tips：**  
+保活虽好，但内存占用会增加。如果子应用不复杂，考虑用非保活模式加状态持久化（比如 localStorage）替代。
+
+---
+
+### 3. 通信机制：去中心化的 EventBus
+
+Wujie 提供了三种通信方式：`props`、`window.parent` 和 `EventBus`。其中 `EventBus` 是最灵活的，支持主子、子子之间的去中心化通信。
+
+**代码示例：**
+```javascript
+import { bus } from "wujie";
+// 主应用发送
+bus.$emit("sayHello", "Hello from main!");
+// 子应用监听
+bus.$on("sayHello", msg => console.log(msg));
+```
+
+**Tips：**  
+`EventBus` 很香，但别滥用，事件名冲突会导致混乱。建议加个前缀，比如 `app1:sayHello`。
+
+---
+
+## 最佳实践：让 Wujie 更顺手
+
+理论讲完，咱们来点干货——如何在真实项目中用好 Wujie。以下是几条经过实战检验的最佳实践，带点个人理解和吐槽。
+
+### 1. 子应用接入：尽量少改动
+
+Wujie 的子应用适配成本很低，通常只需加几行生命周期代码。比如 Vue 子应用：
+```javascript
+if (window.__POWERED_BY_WUJIE__) {
+  let instance;
+  window.__WUJIE_MOUNT = () => {
+    instance = new Vue({ render: h => h(App) }).$mount("#app");
+  };
+  window.__WUJIE_UNMOUNT = () => {
+    instance.$destroy();
+  };
+} else {
+  new Vue({ render: h => h(App) }).$mount("#app");
+}
+```
+
+**Tips：**  
+如果子应用用 Vite 打包，记得主动调用 `window.__WUJIE.mount()`，因为 Vite 的异步加载可能让 Wujie 等不及。
+
+---
+
+### 2. 路由同步：别让用户迷路
+
+Wujie 支持路由同步（`sync: true`），子应用的路径会映射到主应用的 URL。实现上，它利用 iframe 和主应用的 `history` 在同一个顶级浏览上下文中协作。
+
+**代码示例：**
+```javascript
+startApp({
+  name: "app3",
+  url: "https://example.com/app3",
+  sync: true,
+});
+```
+
+**Tips：**  
+路由同步很方便，但如果子应用有复杂路由，建议用 `prefix` 参数区分，比如 `{ "app3": "/app3" }`，避免冲突。
+
+---
+
+### 3. 性能优化：Fiber 模式是个宝
+
+Wujie 的 Fiber 模式（`fiber: true`）借鉴了 React 的分片执行，能缓解 JS 执行阻塞主线程的问题。特别适合子应用 JS 文件较大的场景。
+
+**代码示例：**
+```javascript
+startApp({
+  name: "app4",
+  url: "https://example.com/app4",
+  fiber: true,
+});
+```
+
+**Tips：**  
+如果子应用单个 JS 文件太大，记得拆包，不然 Fiber 也救不了。可以用 Webpack 的 `splitChunks` 或 Vite 的 `manualChunks`。
+
+---
+
+## 一点碎碎念：Wujie 的优缺点
+
+Wujie 确实很强，但也不是完美无瑕。优点咱就不多说了，速度快、隔离好、功能全。缺点呢？比如对低版本浏览器的兼容需要 Polyfill（自己加 Babel 配置吧），还有 iframe 的跨域要求可能让后端小伙伴抓狂。不过瑕不掩瑜，它已经是我用过的微前端框架里最顺手的一个了。
+
+**幽默结尾：**  
+用 Wujie 就像请了个武林高手来家里做客，招式华丽、身手敏捷，但你得先把门锁（跨域）打开，不然它只能在门口干瞪眼 😂。
+
+---
+
+## 总结：Wujie，微前端的下一站
+
+Wujie 用 Web Components 和 iframe 的组合，打造了一个低成本、高性能、强隔离的微前端方案。从原理到实践，它都展现了对开发者友好的态度。无论是想解耦团队协作，还是尝试新技术栈，Wujie 都是个值得一试的选择。
+
+希望这篇博客能帮你在微前端的道路上少走弯路。如果你有啥疑问或者实践经验，欢迎留言，咱们一起聊聊。毕竟，前端的世界嘛，就是一群人在代码里找乐子 😎。
+
+Happy coding!
+
+---

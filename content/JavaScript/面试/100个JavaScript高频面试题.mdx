@@ -1,0 +1,1975 @@
+---
+
+title: "100个 JavaScript 高频面试题"
+date: "2024-03-26"
+description: "全面剖析 100 个 JavaScript 高频面试题，涵盖基础语法、闭包、原型链、异步编程、ES6+ 等核心知识点，深入原理，附带实例和最佳实践。"
+keywords: "JavaScript, 面试题, 前端开发, 闭包, 原型链, 异步编程, ES6, Promise, Event Loop"
+author: "晓龙"
+image: "/images/hero/js-interview.jpg"
+tags: [“精选”, "JavaScript", "前端开发", "面试"]
+category: "JavaScript"
+
+---
+
+Hey，前端小伙伴们！✨ 你是不是正在为下一次面试摩拳擦掌？JavaScript 作为前端的“命根子”，面试中几乎无处不在。今天我精心整理了 100 个高频 JS 面试题，从基础语法到硬核原理，带你一网打尽。不仅有代码示例，还有我的独家理解和最佳实践，偶尔还会夹杂点小幽默（别嫌我冷笑话 😂）。目标是：让你读完不仅能应付面试，还能在项目中游刃有余。废话不多说，系好安全带，我们出发！🚗
+
+---
+
+## 基础篇：打好地基，才能盖高楼
+
+### 1. `var`、`let` 和 `const` 有啥区别？
+这仨是老生常谈，但面试官依然爱问。简单来说：
+
+- **`var`**：函数作用域，存在变量提升（hoisting），可以重复声明。就像个不守规矩的小孩，随处跑。
+- **`let`**：块级作用域，无变量提升，声明前使用会报 `Temporal Dead Zone (TDZ)` 错误，像个守纪律的学生。
+- **`const`**：也是块级作用域，但值不可重新赋值（注意：对象或数组的内部属性可以改）。
+
+**示例：**
+```javascript
+console.log(a); // undefined
+var a = 1;
+
+console.log(b); // ReferenceError: Cannot access 'b' before initialization
+let b = 2;
+
+const c = { name: "晓龙" };
+c.name = "小明"; // OK
+c = {}; // TypeError
+```
+
+**小 Tips：** 项目中尽量用 `let` 和 `const`，`var` 基本可以淘汰了，除非你想故意制造 bug 给后人挖坑 😂。
+
+---
+
+### 2. 什么是变量提升（Hoisting）？
+JavaScript 引擎会把 `var` 声明和函数声明“提升”到作用域顶部，但赋值留在原地。类比一下，就像在食堂打饭，饭票先给你，但饭得等你排队拿。
+
+**示例：**
+```javascript
+console.log(foo); // undefined
+var foo = "bar";
+
+sayHi(); // "Hi!"
+function sayHi() {
+  console.log("Hi!");
+}
+```
+
+**小 Tips：** 理解提升可以避免一些诡异 bug，比如变量未定义时的意外行为。
+
+---
+
+### 3. `==` 和 `===` 有什么不同？
+`==` 是宽松相等，会进行类型转换；`===` 是严格相等，类型和值都得一致。简单说，`==` 是“差不多就行”，`===` 是“必须一模一样”。
+
+**示例：**
+```javascript
+console.log(1 == "1"); // true
+console.log(1 === "1"); // false
+console.log(null == undefined); // true
+console.log(null === undefined); // false
+```
+
+**小 Tips：** 永远用 `===`，除非你明确需要类型转换。`==` 的隐式转换规则太复杂，容易翻车。
+
+---
+
+### 4. `null` 和 `undefined` 的区别？
+- **`undefined`**：变量声明但未赋值，或者函数没返回值时的默认状态，像个“空位”。
+- **`null`**：主动设置，表示“无”或“空对象”，像个“占位符”。
+
+**示例：**
+```javascript
+let a;
+console.log(a); // undefined
+
+let b = null;
+console.log(b); // null
+```
+
+**小 Tips：** 用 `null` 表示有意清空某个引用，`undefined` 通常交给 JS 引擎自己处理。
+
+---
+
+### 5. 什么是闭包（Closure）？
+闭包是函数与其词法环境的组合，能“记住”外部作用域的变量。听起来玄乎？其实就像背包侠，走到哪都能掏出之前装的东西。
+
+**示例：**
+```javascript
+function outer() {
+  let count = 0;
+  return function inner() {
+    count++;
+    console.log(count);
+  };
+}
+const fn = outer();
+fn(); // 1
+fn(); // 2
+```
+
+**小 Tips：** 闭包常用于数据隐私（如计数器、模块模式），但小心内存泄漏，别让没用的闭包一直占着内存。
+
+---
+
+## 进阶篇：从“会用”到“精通”
+
+### 6. `this` 的指向规则是什么？
+`this` 是 JS 的“灵魂拷问”，它的指向取决于调用方式：
+- 全局调用：`window`（浏览器中）。
+- 对象方法：调用它的对象。
+- `call/apply/bind`：显式指定的对象。
+- 箭头函数：绑定定义时外层作用域的 `this`。
+
+**示例：**
+```javascript
+const obj = {
+  name: "晓龙",
+  say: function () {
+    console.log(this.name);
+  },
+};
+obj.say(); // "晓龙"
+
+const fn = obj.say;
+fn(); // undefined（严格模式下）
+
+const arrow = () => console.log(this);
+arrow.call({ name: "小明" }); // 还是 window/global
+```
+
+**小 Tips：** 调试 `this` 时，多用 `console.log(this)`，别凭感觉猜。
+
+---
+
+### 7. 原型和原型链是什么？
+原型（`prototype`）是 JS 继承的核心，每个函数都有个 `prototype` 属性，实例通过 `__proto__` 链接到它。原型链就是一层层往上找的过程，像家族树。
+
+**示例：**
+```javascript
+function Person(name) {
+  this.name = name;
+}
+Person.prototype.say = function () {
+  console.log(`Hi, I'm ${this.name}`);
+};
+const me = new Person("晓龙");
+me.say(); // "Hi, I'm 晓龙"
+console.log(me.__proto__ === Person.prototype); // true
+```
+
+**小 Tips：** 理解原型链能帮你搞定继承问题，也能少写点重复代码。
+
+---
+
+### 8. Event Loop（事件循环）是怎么工作的？
+Event Loop 是 JS 单线程的“心脏”，负责协调宏任务（`setTimeout`、`setInterval`）和微任务（`Promise`、`MutationObserver`）。执行顺序：同步代码 → 微任务 → 宏任务。
+
+**示例：**
+```javascript
+console.log("Start");
+setTimeout(() => console.log("Timeout"), 0);
+Promise.resolve().then(() => console.log("Promise"));
+console.log("End");
+// 输出：Start → End → Promise → Timeout
+```
+
+**小 Tips：** 写异步代码时，理清任务优先级，避免“回调地狱”。
+
+---
+
+### 9. `Promise` 的核心原理是什么？
+`Promise` 是一个状态机（`pending`、`fulfilled`、`rejected`），通过 `then` 链式处理异步结果。内部靠回调队列和状态管理实现。
+
+**示例：**
+```javascript
+const p = new Promise((resolve, reject) => {
+  setTimeout(() => resolve("Done"), 1000);
+});
+p.then((res) => console.log(res)); // 1秒后输出 "Done"
+```
+
+**小 Tips：** 用 `Promise.all` 并行处理多个异步任务，能显著提升效率。
+
+---
+
+### 10. `async/await` 是啥？跟 Promise 有啥关系？
+`async/await` 是 `Promise` 的语法糖，让异步代码看起来像同步。`async` 函数返回一个 `Promise`，`await` 暂停执行直到 `Promise` 解决。
+
+**示例：**
+```javascript
+async function fetchData() {
+  const data = await new Promise((resolve) =>
+    setTimeout(() => resolve("Data"), 1000)
+  );
+  console.log(data);
+}
+fetchData(); // 1秒后输出 "Data"
+```
+
+**小 Tips：** 别忘了用 `try/catch` 捕获 `await` 的错误，不然调试起来像找针。
+
+---
+
+## ES6+ 篇：现代 JS 的必备技能
+
+### 11. 箭头函数和普通函数有啥区别？
+箭头函数没有自己的 `this` 和 `arguments`，语法简洁，适合回调。普通函数更灵活，但容易踩 `this` 的坑。
+
+**示例：**
+```javascript
+const obj = {
+  name: "晓龙",
+  say: () => console.log(this.name), // undefined
+  sayNormal: function () {
+    console.log(this.name); // "晓龙"
+  },
+};
+obj.say();
+obj.sayNormal();
+```
+
+**小 Tips：** 回调用箭头函数，对象方法用普通函数，灵活切换。
+
+---
+
+### 12. 解构赋值有啥妙用？
+解构赋值让你快速提取对象或数组的值，像个“拆包神器”。
+
+**示例：**
+```javascript
+const { name, age = 18 } = { name: "晓龙" };
+console.log(name, age); // "晓龙" 18
+
+const [a, , c] = [1, 2, 3];
+console.log(a, c); // 1 3
+```
+
+**小 Tips：** 用默认值避免 `undefined`，代码更健壮。
+
+---
+
+### 13. `Map` 和 `Object` 有什么不同？
+`Map` 是个键值对集合，键可以是任意类型；`Object` 的键只能是字符串或 Symbol。`Map` 还有 `size` 属性，遍历更方便。
+
+**示例：**
+```javascript
+const map = new Map();
+map.set({}, "obj");
+console.log(map.get({})); // undefined（对象引用不同）
+```
+
+**小 Tips：** 需要动态键或非字符串键时，选 `Map`。
+
+---
+
+### 14. `Set` 有什么特别之处？
+`Set` 是去重集合，值唯一，支持快速查找和删除。
+
+**示例：**
+```javascript
+const set = new Set([1, 1, 2, 2, 3]);
+console.log([...set]); // [1, 2, 3]
+```
+
+**小 Tips：** 用 `Set` 快速去重数组，比 `filter` 效率高。
+
+---
+
+### 15. 模块化（`import/export`）怎么用？
+ES6 模块化用 `export` 输出，`import` 引入，比 CommonJS 的 `require` 更静态化。
+
+**示例：**
+```javascript
+// util.js
+export const add = (a, b) => a + b;
+
+// main.js
+import { add } from "./util.js";
+console.log(add(1, 2)); // 3
+```
+
+**小 Tips：** 用 `export default` 导出默认值，简化单模块导入。
+
+---
+
+## 实战篇：项目中常见问题
+
+### 16. 如何实现深拷贝？
+浅拷贝只复制一层，深拷贝递归复制所有层。可以用递归或 `JSON` 方法（但有局限）。
+
+**示例：**
+```javascript
+function deepClone(obj) {
+  if (typeof obj !== "object" || obj === null) return obj;
+  const newObj = Array.isArray(obj) ? [] : {};
+  for (let key in obj) {
+    newObj[key] = deepClone(obj[key]);
+  }
+  return newObj;
+}
+```
+
+**小 Tips：** `JSON.parse(JSON.stringify(obj))` 是偷懒法，但不支持函数和 `undefined`。
+
+---
+
+### 17. 如何防抖和节流？
+- **防抖（Debounce）**：延迟执行，适合搜索输入。
+- **节流（Throttle）**：限制频率，适合滚动事件。
+
+**示例：**
+```javascript
+function debounce(fn, delay) {
+  let timer;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+
+function throttle(fn, delay) {
+  let last = 0;
+  return function (...args) {
+    const now = Date.now();
+    if (now - last >= delay) {
+      fn.apply(this, args);
+      last = now;
+    }
+  };
+}
+```
+
+**小 Tips：** 防抖用 `setTimeout`，节流用时间戳或定时器，视需求选。
+
+---
+
+### 18. 如何处理异步请求的错误？
+用 `try/catch` 包裹 `async/await`，或用 `.catch()` 处理 `Promise` 错误。
+
+**示例：**
+```javascript
+async function fetchData() {
+  try {
+    const res = await fetch("https://api.example.com");
+    if (!res.ok) throw new Error("Network error");
+    return res.json();
+  } catch (err) {
+    console.error("Oops:", err);
+  }
+}
+```
+
+**小 Tips：** 别忘了给用户友好提示，别让页面“哑巴”了。
+
+---
+
+### 19. 如何实现一个简单的发布订阅模式？
+发布订阅模式像个“广播站”，订阅者监听事件，发布者触发。
+
+**示例：**
+```javascript
+class EventEmitter {
+  constructor() {
+    this.events = {};
+  }
+  on(event, fn) {
+    this.events[event] = this.events[event] || [];
+    this.events[event].push(fn);
+  }
+  emit(event, ...args) {
+    if (this.events[event]) {
+      this.events[event].forEach((fn) => fn(...args));
+    }
+  }
+}
+```
+
+**小 Tips：** 加个 `off` 方法解绑事件，避免内存泄漏。
+
+---
+
+### 20. 如何判断一个对象是否为空？
+空对象没有可枚举属性，可以用 `Object.keys()` 或 `for...in`。
+
+**示例：**
+```javascript
+function isEmpty(obj) {
+  return Object.keys(obj).length === 0;
+}
+console.log(isEmpty({})); // true
+console.log(isEmpty({ a: 1 })); // false
+```
+
+**小 Tips：** 注意 `Object.create(null)` 的对象，`Object.keys` 也能处理。
+
+---
+
+## 硬核篇：深入原理，秀技术
+
+### 21. `new` 操作符做了什么？
+`new` 创建实例的步骤：
+1. 创建空对象。
+2. 设置原型链（`__proto__` 指向构造函数的 `prototype`）。
+3. 执行构造函数，绑定 `this`。
+4. 返回对象。
+
+**示例：**
+```javascript
+function myNew(Constructor, ...args) {
+  const obj = {};
+  obj.__proto__ = Constructor.prototype;
+  const result = Constructor.apply(obj, args);
+  return result instanceof Object ? result : obj;
+}
+```
+
+**小 Tips：** 理解 `new` 能帮你手写继承逻辑。
+
+---
+
+### 22. `call`、`apply` 和 `bind` 的区别？
+- **`call`**：立即调用，参数逐个传。
+- **`apply`**：立即调用，参数数组传。
+- **`bind`**：返回新函数，不立即调用。
+
+**示例：**
+```javascript
+function say(a, b) {
+  console.log(this.name, a, b);
+}
+const obj = { name: "晓龙" };
+say.call(obj, 1, 2); // "晓龙" 1 2
+say.apply(obj, [1, 2]); // "晓龙" 1 2
+const bound = say.bind(obj, 1);
+bound(2); // "晓龙" 1 2
+```
+
+**小 Tips：** `bind` 适合延迟调用，`call/apply` 适合即时执行。
+
+---
+
+### 23. 如何实现 `Promise.all`？
+`Promise.all` 接收一个 Promise 数组，返回所有结果的数组，若有失败则返回第一个错误。
+
+**示例：**
+```javascript
+function promiseAll(promises) {
+  return new Promise((resolve, reject) => {
+    const results = [];
+    let count = 0;
+    promises.forEach((p, i) => {
+      Promise.resolve(p).then(
+        (res) => {
+          results[i] = res;
+          count++;
+          if (count === promises.length) resolve(results);
+        },
+        (err) => reject(err)
+      );
+    });
+  });
+}
+```
+
+**小 Tips：** 注意处理非 Promise 值，用 `Promise.resolve` 包装。
+
+---
+
+### 24. JS 的垃圾回收机制是啥？
+JS 用标记清除（Mark-and-Sweep）回收不再引用的对象。简单说，找不到的变量就被“清理”了。
+
+**示例：**
+```javascript
+let obj = { a: 1 };
+obj = null; // { a: 1 } 将被回收
+```
+
+**小 Tips：** 避免全局变量和闭包滥用，减轻 GC 压力。
+
+---
+
+### 25. 如何实现一个防抖的 `useDebounce` Hook？
+在 React 中，防抖 Hook 能优化性能。
+
+**示例：**
+```javascript
+function useDebounce(value, delay) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debouncedValue;
+}
+```
+
+**小 Tips：** 别忘了清理副作用，不然会堆积定时器。
+
+---
+
+## 更多高频题（26-50）：快速扫盲
+
+### 26. `Array.prototype.slice` 和 `splice` 区别？
+- `slice`：返回新数组，不改原数组。
+- `splice`：修改原数组，返回删除项。
+
+**小 Tips：** `slice` 用于复制，`splice` 用于增删。
+
+---
+
+### 27. 如何扁平化数组？
+用递归或 `flat()`。
+
+**示例：**
+```javascript
+function flatten(arr) {
+  return arr.reduce(
+    (flat, item) => flat.concat(Array.isArray(item) ? flatten(item) : item),
+    []
+  );
+}
+```
+
+**小 Tips：** `arr.flat(Infinity)` 是最简单解法。
+
+---
+
+### 28. `forEach` 和 `map` 的区别？
+- `forEach`：无返回值，纯遍历。
+- `map`：返回新数组，适合转换。
+
+**小 Tips：** 需要结果用 `map`，单纯循环用 `forEach`。
+
+---
+
+### 29. 如何实现柯里化（Currying）？
+将多参函数转为单参函数链。
+
+**示例：**
+```javascript
+function curry(fn) {
+  return function curried(...args) {
+    if (args.length >= fn.length) return fn(...args);
+    return function (...more) {
+      return curried(...args, ...more);
+    };
+  };
+}
+```
+
+**小 Tips：** 柯里化适合复用逻辑，提升代码优雅度。
+
+---
+
+### 30. `Object.create` 做了什么？
+创建新对象，并指定原型。
+
+**示例：**
+```javascript
+const proto = { say: () => "Hi" };
+const obj = Object.create(proto);
+console.log(obj.say()); // "Hi"
+```
+
+**小 Tips：** 用于实现原型继承。
+
+---
+
+好的！以下是《50个 JavaScript 高频面试题》的 **31-50** 部分的详细补充，延续之前的风格和 MDX 格式。我会保持内容的深度、实用性，加入代码示例、类比、最佳实践和幽默感，确保文笔流畅且专业。篇幅会尽量详尽，方便前端开发者全面掌握这些知识点。直接从第 31 题开始补充完整内容，放在原有的框架内。
+
+---
+
+title: "50个 JavaScript 高频面试题：从基础到硬核，助你拿下前端 Offer"
+date: "2025-03-25"
+description: "全面剖析 50 个 JavaScript 高频面试题，涵盖基础语法、闭包、原型链、异步编程、ES6+ 等核心知识点，深入原理，附带实例和最佳实践。"
+keywords: "JavaScript, 面试题, 前端开发, 闭包, 原型链, 异步编程, ES6, Promise, Event Loop"
+author: "晓龙"
+image: "/images/hero/js-interview.jpg"
+tags: ["JavaScript", "前端开发", "面试"]
+category: "JavaScript"
+
+---
+
+# 50个 JavaScript 高频面试题：从基础到硬核，助你拿下前端 Offer
+
+（前 1-30 题内容保持不变，这里直接补充 31-50 的详细版本）
+
+---
+
+## 硬核篇：深入原理，秀技术（续）
+
+### 31. `setTimeout` 的最小延迟是多少？
+你可能以为 `setTimeout(fn, 0)` 会立即执行，但其实不然。浏览器环境下，HTML5 规范规定最小延迟是 **4ms**，因为浏览器需要时间处理其他任务，比如 DOM 渲染。这就像点外卖，商家说“马上送”，但实际上还得等几分钟起步。
+
+**示例：**
+```javascript
+console.log("Start");
+setTimeout(() => console.log("Timeout"), 0);
+console.log("End");
+// 输出：Start → End → Timeout（至少延迟 4ms）
+```
+
+**小 Tips：** 如果需要“尽量快”的异步，用 `Promise.resolve().then()`，比 `setTimeout 0` 更即时。
+
+---
+
+### 32. 如何准确判断变量类型？
+JS 提供了 `typeof`、`instanceof` 和 `Object.prototype.toString`，各有优劣：
+- `typeof`：适合基本类型，但对对象类型不够细。
+- `instanceof`：检测构造函数，但原型链复杂时会误判。
+- `Object.prototype.toString`：万能钥匙，返回 `[object 类型]`。
+
+**示例：**
+```javascript
+console.log(typeof null); // "object"（历史遗留问题）
+console.log([] instanceof Array); // true
+console.log(Object.prototype.toString.call([])); // "[object Array]"
+```
+
+**小 Tips：** 封装个工具函数用 `Object.prototype.toString`，项目里一劳永逸。
+
+---
+
+### 33. `let` 的 TDZ（时间死区）是什么？
+TDZ（Temporal Dead Zone）是 `let` 和 `const` 在声明前不可访问的区域。就像考试前老师说“开考前别翻卷子”，翻了就报错。
+
+**示例：**
+```javascript
+console.log(a); // ReferenceError: Cannot access 'a' before initialization
+let a = 1;
+```
+
+**小 Tips：** TDZ 避免了 `var` 的提升混乱，养成先声明再使用的习惯。
+
+---
+
+### 34. 如何实现数组乱序？
+经典方法是 **Fisher-Yates 洗牌算法**，从后向前遍历，随机交换元素，保证均匀分布。别用 `sort` 加随机数，那样偏倚严重，像洗牌洗成了“叠牌”。
+
+**示例：**
+```javascript
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]]; // ES6 交换
+  }
+  return arr;
+}
+console.log(shuffle([1, 2, 3, 4])); // 随机输出，如 [3, 1, 4, 2]
+```
+
+**小 Tips：** 用 ES6 的解构赋值交换，代码更优雅。
+
+---
+
+### 35. `Symbol` 有什么用？
+`Symbol` 是 ES6 引入的基本类型，每个 `Symbol` 值独一无二，常用于创建私有属性或避免命名冲突。像给对象贴个“专属标签”。
+
+**示例：**
+```javascript
+const key = Symbol("key");
+const obj = { [key]: "secret" };
+console.log(obj[key]); // "secret"
+console.log(Object.keys(obj)); // []（不可枚举）
+```
+
+**小 Tips：** 用 `Symbol.for()` 创建全局共享的 Symbol，适合跨模块通信。
+
+---
+
+### 36. `WeakMap` 和 `Map` 的区别？
+`WeakMap` 的键是弱引用，键对象无引用时会被垃圾回收；`Map` 的键是强引用，会一直持有。类比：`Map` 是“铁腕房东”，`WeakMap` 是“随缘房客”。
+
+**示例：**
+```javascript
+let obj = { name: "晓龙" };
+const wm = new WeakMap();
+wm.set(obj, "data");
+obj = null; // obj 可被回收
+```
+
+**小 Tips：** 用 `WeakMap` 存临时数据，避免内存泄漏。
+
+---
+
+### 37. 如何手写 `reduce`？
+`reduce` 是数组的“万能胶”，从左到右累加，自定义逻辑。手写它能加深对迭代的理解。
+
+**示例：**
+```javascript
+Array.prototype.myReduce = function (callback, initialValue) {
+  let accumulator = initialValue !== undefined ? initialValue : this[0];
+  const start = initialValue !== undefined ? 0 : 1;
+  for (let i = start; i < this.length; i++) {
+    accumulator = callback(accumulator, this[i], i, this);
+  }
+  return accumulator;
+};
+console.log([1, 2, 3].myReduce((a, b) => a + b, 0)); // 6
+```
+
+**小 Tips：** 注意初始值的处理，防止空数组报错。
+
+---
+
+### 38. `class` 的本质是什么？
+`class` 是构造函数的语法糖，背后还是基于原型继承。像披着现代外衣的“老派贵族”。
+
+**示例：**
+```javascript
+class Person {
+  constructor(name) {
+    this.name = name;
+  }
+  say() {
+    console.log(this.name);
+  }
+}
+// 等价于：
+function Person(name) {
+  this.name = name;
+}
+Person.prototype.say = function () {
+  console.log(this.name);
+};
+```
+
+**小 Tips：** 用 `class` 写代码更清晰，但别忘了原型链的本质。
+
+---
+
+### 39. 如何优化大量 DOM 操作？
+频繁操作 DOM 是性能杀手，用 `DocumentFragment` 批量处理，像“打包发货”一样高效。
+
+**示例：**
+```javascript
+const frag = document.createDocumentFragment();
+for (let i = 0; i < 1000; i++) {
+  const div = document.createElement("div");
+  div.textContent = i;
+  frag.appendChild(div);
+}
+document.body.appendChild(frag);
+```
+
+**小 Tips：** 配合虚拟 DOM（如 React）效果更佳。
+
+---
+
+### 40. `requestAnimationFrame` 比 `setTimeout` 好在哪？
+`requestAnimationFrame`（RAF）按浏览器刷新率（通常 60fps）执行，动画更平滑；`setTimeout` 时间不精确，容易卡顿。RAF 像“高铁”，`setTimeout` 是“绿皮车”。
+
+**示例：**
+```javascript
+function animate() {
+  console.log("Frame");
+  requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
+```
+
+**小 Tips：** RAF 适合动画，记得用 `cancelAnimationFrame` 清理。
+
+---
+
+### 41. 如何实现单例模式？
+单例模式确保类只有一个实例，用闭包或静态属性实现。像“独一份的珍藏版”。
+
+**示例：**
+```javascript
+const Singleton = (function () {
+  let instance;
+  function createInstance() {
+    return { name: "Singleton" };
+  }
+  return {
+    getInstance: function () {
+      if (!instance) instance = createInstance();
+      return instance;
+    },
+  };
+})();
+const a = Singleton.getInstance();
+const b = Singleton.getInstance();
+console.log(a === b); // true
+```
+
+**小 Tips：** 单例适合管理全局资源，如配置或日志。
+
+---
+
+### 42. `Proxy` 有什么用？
+`Proxy` 可以拦截对象操作（读、写、删除等），比 `Object.defineProperty` 更强大。像个“智能门卫”。
+
+**示例：**
+```javascript
+const obj = new Proxy(
+  {},
+  {
+    get: (target, key) => `Hello, ${key}`,
+  }
+);
+console.log(obj.name); // "Hello, name"
+```
+
+**小 Tips：** 用 `Proxy` 实现响应式数据，像 Vue 3 的核心。
+
+---
+
+### 43. 如何处理大文件上传？
+大文件上传用分片（Blob.slice）+ 多线程（Web Worker），再加断点续传。像“快递分包送”。
+
+**示例：**
+```javascript
+const file = new File(["big data"], "bigfile.txt");
+const chunkSize = 1024 * 1024; // 1MB
+for (let start = 0; start < file.size; start += chunkSize) {
+  const chunk = file.slice(start, start + chunkSize);
+  // 上传 chunk
+}
+```
+
+**小 Tips：** 加个 MD5 校验，确保分片完整性。
+
+---
+
+### 44. `eval` 有什么风险？
+`eval` 执行字符串代码，安全性差（XSS 风险），性能低（无法优化）。像个“定时炸弹”。
+
+**示例：**
+```javascript
+eval("console.log('Boom')"); // "Boom"
+```
+
+**小 Tips：** 能不用就不用，实在要用就严格限制输入。
+
+---
+
+### 45. 如何实现 LRU 缓存？
+LRU（最近最少使用）用 `Map`（有序）+ 双向链表（快速删除）实现。像“淘汰赛制”。
+
+**示例：**
+```javascript
+class LRUCache {
+  constructor(capacity) {
+    this.capacity = capacity;
+    this.cache = new Map();
+  }
+  get(key) {
+    if (!this.cache.has(key)) return -1;
+    const value = this.cache.get(key);
+    this.cache.delete(key);
+    this.cache.set(key, value);
+    return value;
+  }
+  put(key, value) {
+    if (this.cache.has(key)) this.cache.delete(key);
+    else if (this.cache.size >= this.capacity) this.cache.delete(this.cache.keys().next().value);
+    this.cache.set(key, value);
+  }
+}
+```
+
+**小 Tips：** `Map` 的键序天然支持 LRU，简单又高效。
+
+---
+
+### 46. `generator` 函数是啥？
+`generator` 是可暂停的函数，用 `yield` 控制流程，返回迭代器。像个“暂停键”。
+
+**示例：**
+```javascript
+function* gen() {
+  yield 1;
+  yield 2;
+  return 3;
+}
+const it = gen();
+console.log(it.next()); // { value: 1, done: false }
+console.log(it.next()); // { value: 2, done: false }
+console.log(it.next()); // { value: 3, done: true }
+```
+
+**小 Tips：** 适合处理大数据流或异步流程。
+
+---
+
+### 47. 如何检测循环引用？
+用 `Set` 记录访问过的对象，遇到重复就报循环。像“探路标记”。
+
+**示例：**
+```javascript
+function hasCycle(obj, seen = new Set()) {
+  if (typeof obj !== "object" || obj === null) return false;
+  if (seen.has(obj)) return true;
+  seen.add(obj);
+  for (let key in obj) {
+    if (hasCycle(obj[key], seen)) return true;
+  }
+  return false;
+}
+const a = {};
+a.b = a;
+console.log(hasCycle(a)); // true
+```
+
+**小 Tips：** 深拷贝时检测循环，避免栈溢出。
+
+---
+
+### 48. `Object.defineProperty` 和 `Proxy` 的区别？
+- `Object.defineProperty`：定义单个属性，静态拦截。
+- `Proxy`：代理整个对象，动态拦截。
+
+**示例：**
+```javascript
+const obj = {};
+Object.defineProperty(obj, "key", {
+  get: () => "fixed",
+});
+console.log(obj.key); // "fixed"
+```
+
+**小 Tips：** `Proxy` 更适合复杂场景，`defineProperty` 轻量简单。
+
+---
+
+### 49. 如何实现函数缓存（Memoization）？
+用闭包或 `Map` 缓存函数结果，提升性能。像“备忘录”。
+
+**示例：**
+```javascript
+function memoize(fn) {
+  const cache = new Map();
+  return function (...args) {
+    const key = JSON.stringify(args);
+    if (cache.has(key)) return cache.get(key);
+    const result = fn(...args);
+    cache.set(key, result);
+    return result;
+  };
+}
+const fib = memoize((n) => (n <= 2 ? 1 : fib(n - 1) + fib(n - 2)));
+console.log(fib(10)); // 55
+```
+
+**小 Tips：** 适合递归或计算密集型函数。
+
+---
+
+### 50. JS 的严格模式有啥用？
+`"use strict"` 开启严格模式，消除不安全行为（如未声明变量），提升代码规范。像“纪律委员”。
+
+**示例：**
+```javascript
+"use strict";
+x = 1; // ReferenceError: x is not defined
+```
+
+**小 Tips：** 项目顶部加 `"use strict"`，防患于未然。
+
+---
+
+## 扩展篇：更深更广，全面开花
+
+### 51. `Object.freeze` 和 `Object.seal` 的区别是什么？
+这两个方法都用来限制对象修改，但侧重点不同：
+- **`Object.freeze`**：彻底冻结，属性不可改、删、增，像“冰封王座”。
+- **`Object.seal`**：密封，属性不可删、增，但可改值，像“上了锁的抽屉”。
+
+**示例：**
+```javascript
+const obj = { a: 1 };
+Object.freeze(obj);
+obj.a = 2; // 无声失败
+console.log(obj.a); // 1
+
+const sealed = { b: 1 };
+Object.seal(sealed);
+sealed.b = 2; // OK
+delete sealed.b; // 无声失败
+console.log(sealed.b); // 2
+```
+
+**小 Tips：** 用 `Object.isFrozen()` 或 `Object.isSealed()` 检查状态，严格模式下会抛错。
+
+---
+
+### 52. 如何实现一个对象不可扩展？
+用 `Object.preventExtensions`，禁止添加新属性，但已有属性可改或删。像“关上门的房子”。
+
+**示例：**
+```javascript
+const obj = { a: 1 };
+Object.preventExtensions(obj);
+obj.b = 2; // 无声失败
+console.log(obj.b); // undefined
+```
+
+**小 Tips：** 配合 `Object.isExtensible()` 判断，适合动态控制对象。
+
+---
+
+### 53. `Array.prototype.includes` 和 `indexOf` 有什么不同？
+- **`includes`**：返回布尔值，直接判断是否存在。
+- **`indexOf`**：返回索引，找不到返回 -1，还得自己判断。
+
+**示例：**
+```javascript
+const arr = [1, 2, NaN];
+console.log(arr.includes(NaN)); // true
+console.log(arr.indexOf(NaN)); // -1（NaN 自比较永远 false）
+```
+
+**小 Tips：** 需要找 `NaN` 用 `includes`，否则 `indexOf` 够用。
+
+---
+
+### 54. 如何优雅地合并多个对象？
+用 `Object.assign` 或扩展运算符（`...`），后者更简洁，像“拼乐高”。
+
+**示例：**
+```javascript
+const a = { x: 1 };
+const b = { y: 2 };
+const c = { z: 3 };
+const merged = { ...a, ...b, ...c };
+console.log(merged); // { x: 1, y: 2, z: 3 }
+```
+
+**小 Tips：** 注意属性覆盖，后者优先；深合并还得自己递归。
+
+---
+
+### 55. 什么是 `BigInt`，怎么用？
+`BigInt` 是 ES2020 引入的大整数类型，用来处理超大数字，加个 `n` 或用 `BigInt()` 创建。像“数字界的巨人”。
+
+**示例：**
+```javascript
+const big = 123456789012345678901234567890n;
+console.log(big + 1n); // 123456789012345678901234567891n
+```
+
+**小 Tips：** 别跟普通数字直接运算，得先转类型。
+
+---
+
+### 56. 如何实现一个简单的防抖 Promise？
+防抖通常用于事件，但加个 Promise 能让它更灵活，像“延迟承诺”。
+
+**示例：**
+```javascript
+function debouncePromise(fn, delay) {
+  let timer;
+  return function (...args) {
+    clearTimeout(timer);
+    return new Promise((resolve) => {
+      timer = setTimeout(() => resolve(fn(...args)), delay);
+    });
+  };
+}
+const debounced = debouncePromise((x) => x * 2, 1000);
+debounced(5).then(console.log); // 1秒后输出 10
+```
+
+**小 Tips：** 加个 `reject` 逻辑，处理超时或错误。
+
+---
+
+### 57. `Array.prototype.some` 和 `every` 的作用是什么？
+- **`some`**：只要一个满足条件就返回 `true`，像“找一个就行”。
+- **`every`**：全满足才返回 `true`，像“全员通过”。
+
+**示例：**
+```javascript
+const arr = [1, 2, 3];
+console.log(arr.some((x) => x > 2)); // true
+console.log(arr.every((x) => x > 2)); // false
+```
+
+**小 Tips：** 遇到空数组，`some` 返回 `false`，`every` 返回 `true`，别搞混。
+
+---
+
+### 58. 如何实现一个简单的状态机？
+状态机管理有限状态，用对象或类实现，像“自动贩卖机”。
+
+**示例：**
+```javascript
+class StateMachine {
+  constructor() {
+    this.state = "idle";
+    this.transitions = {
+      idle: { start: "running" },
+      running: { stop: "idle" },
+    };
+  }
+  transition(action) {
+    const nextState = this.transitions[this.state][action];
+    if (nextState) this.state = nextState;
+    return this.state;
+  }
+}
+const machine = new StateMachine();
+console.log(machine.transition("start")); // "running"
+```
+
+**小 Tips：** 加个日志或事件监听，调试更方便。
+
+---
+
+### 59. `String.prototype.padStart` 和 `padEnd` 有什么用？
+这两个方法填充字符串到指定长度，前者补开头，后者补结尾，像“补齐队形”。
+
+**示例：**
+```javascript
+console.log("7".padStart(2, "0")); // "07"
+console.log("cat".padEnd(5, "-")); // "cat--"
+```
+
+**小 Tips：** 格式化日期或数字时超实用。
+
+---
+
+### 60. 如何实现一个简单的对象观察者？
+用 `Object.defineProperty` 或 `Proxy` 监听属性变化，像“对象侦探”。
+
+**示例：**
+```javascript
+function observe(obj) {
+  const handlers = {};
+  return new Proxy(obj, {
+    set(target, key, value) {
+      target[key] = value;
+      if (handlers[key]) handlers[key].forEach((fn) => fn(value));
+      return true;
+    },
+    get(target, key) {
+      if (key === "on") return (prop, fn) => (handlers[prop] = handlers[prop] || []).push(fn);
+      return target[key];
+    },
+  });
+}
+const data = observe({ count: 0 });
+data.on("count", (val) => console.log("Count:", val));
+data.count = 1; // "Count: 1"
+```
+
+**小 Tips：** 这是简版响应式，复杂场景看 Vue 或 MobX。
+
+---
+
+## 性能与优化篇：代码跑得飞起
+
+### 61. 如何减少重排（Reflow）和重绘（Repaint）？
+重排是布局变化，重绘是样式变化。减少 DOM 操作和批量修改，像“一次装修到位”。
+
+**示例：**
+```javascript
+const el = document.getElementById("box");
+// 不好：多次重排
+el.style.width = "100px";
+el.style.height = "100px";
+// 好：一次重排
+el.style.cssText = "width: 100px; height: 100px;";
+```
+
+**小 Tips：** 用 CSS 动画代替 JS，性能更优。
+
+---
+
+### 62. 如何实现一个简单的懒加载函数？
+懒加载延迟执行函数，直到需要时触发，像“按需取货”。
+
+**示例：**
+```javascript
+function lazy(fn) {
+  let value;
+  let loaded = false;
+  return function () {
+    if (!loaded) {
+      value = fn();
+      loaded = true;
+    }
+    return value;
+  };
+}
+const expensive = lazy(() => {
+  console.log("Computing...");
+  return 42;
+});
+console.log(expensive()); // "Computing..." 42
+console.log(expensive()); // 42
+```
+
+**小 Tips：** 适合初始化昂贵资源。
+
+---
+
+### 63. `Array.prototype.filter` 如何优化？
+`filter` 创建新数组，性能不高。可以用 `for` 循环替代，像“手工筛选”。
+
+**示例：**
+```javascript
+const arr = Array.from({ length: 10000 }, (_, i) => i);
+// 慢
+const slow = arr.filter((x) => x % 2 === 0);
+// 快
+const fast = [];
+for (let i = 0; i < arr.length; i++) {
+  if (arr[i] % 2 === 0) fast.push(arr[i]);
+}
+```
+
+**小 Tips：** 大数组优先用原生循环，小数组无所谓。
+
+---
+
+### 64. 如何避免回调地狱？
+用 `Promise` 链或 `async/await`，把嵌套变平铺，像“解开绳结”。
+
+**示例：**
+```javascript
+// 回调地狱
+getData((a) => {
+  getMoreData(a, (b) => {
+    console.log(b);
+  });
+});
+// 优雅
+async function fetchAll() {
+  const a = await getData();
+  const b = await getMoreData(a);
+  console.log(b);
+}
+```
+
+**小 Tips：** 加错误处理，别让链断了。
+
+---
+
+### 65. 如何实现批量异步请求控制并发？
+用 `Promise` 和队列限制并发，像“车站调度”。
+
+**示例：**
+```javascript
+async function batchRequest(urls, max) {
+  const results = [];
+  const queue = urls.slice();
+  async function run() {
+    while (queue.length) {
+      const url = queue.shift();
+      results.push(await fetch(url).then((res) => res.json()));
+    }
+  }
+  await Promise.all(Array(max).fill().map(run));
+  return results;
+}
+```
+
+**小 Tips：** 加个超时机制，防止卡死。
+
+---
+
+### 66. 什么是树摇（Tree Shaking）？
+树摇是打包工具（如 Webpack）移除未使用的代码，像“剪掉枯枝”。
+
+**示例：**
+```javascript
+// util.js
+export const used = () => "used";
+export const unused = () => "unused";
+// main.js
+import { used } from "./util.js";
+console.log(used()); // unused 被摇掉
+```
+
+**小 Tips：** 用 ES 模块化，CommonJS 不支持树摇。
+
+---
+
+### 67. 如何检测内存泄漏？
+用 Chrome DevTools 的 Memory 面板，找未释放的对象，像“找漏水点”。
+
+**示例：**
+```javascript
+function leak() {
+  const arr = [];
+  setInterval(() => arr.push(new Array(1000)), 1000); // 内存持续增长
+}
+```
+
+**小 Tips：** 清理定时器和事件监听，防泄漏。
+
+---
+
+### 68. 如何实现一个简单的节流 Promise？
+节流加 Promise，返回结果，像“限流阀门”。
+
+**示例：**
+```javascript
+function throttlePromise(fn, delay) {
+  let last = 0;
+  let promise = null;
+  return function (...args) {
+    const now = Date.now();
+    if (now - last >= delay) {
+      last = now;
+      promise = Promise.resolve(fn(...args));
+    }
+    return promise;
+  };
+}
+```
+
+**小 Tips：** 用 `null` 初始化 Promise，避免重复请求。
+
+---
+
+### 69. `Object.entries` 和 `Object.keys` 的区别？
+- **`Object.keys`**：返回键数组。
+- **`Object.entries`**：返回键值对数组。
+
+**示例：**
+```javascript
+const obj = { a: 1, b: 2 };
+console.log(Object.keys(obj)); // ["a", "b"]
+console.log(Object.entries(obj)); // [["a", 1], ["b", 2]]
+```
+
+**小 Tips：** `entries` 适合遍历键值对，`keys` 更轻量。
+
+---
+
+### 70. 如何实现一个简单的防抖 Hook？
+React 中防抖 Hook，优化输入，像“冷静输入”。
+
+**示例：**
+```javascript
+function useDebounceEffect(callback, delay, deps) {
+  useEffect(() => {
+    const timer = setTimeout(() => callback(), delay);
+    return () => clearTimeout(timer);
+  }, deps);
+}
+```
+
+**小 Tips：** 依赖项变化时重置定时器。
+
+---
+
+## 奇技淫巧篇：炫技时刻
+
+### 71. 如何用 JS 实现链式调用？
+返回 `this`，像“流水线”。
+
+**示例：**
+```javascript
+class Chain {
+  constructor() {
+    this.value = 0;
+  }
+  add(n) {
+    this.value += n;
+    return this;
+  }
+  log() {
+    console.log(this.value);
+    return this;
+  }
+}
+new Chain().add(1).add(2).log(); // 3
+```
+
+**小 Tips：** jQuery 的链式就是这么来的。
+
+---
+
+### 72. 如何用一行代码判断回文数？
+用字符串反转，像“照镜子”。
+
+**示例：**
+```javascript
+const isPalindrome = (n) => n === Number(n.toString().split("").reverse().join(""));
+console.log(isPalindrome(121)); // true
+```
+
+**小 Tips：** 大数用 `BigInt`，避免精度问题。
+
+---
+
+### 73. 如何实现一个简易的模板引擎？
+用正则替换，像“填空题”。
+
+**示例：**
+```javascript
+function render(template, data) {
+  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => data[key] || "");
+}
+const html = render("Hello {{name}}!", { name: "晓龙" });
+console.log(html); // "Hello 晓龙!"
+```
+
+**小 Tips：** 加个转义函数，防 XSS。
+
+---
+
+### 74. 如何用 JS 实现加权随机？
+用累加权重，像“抽奖转盘”。
+
+**示例：**
+```javascript
+function weightedRandom(items) {
+  const total = items.reduce((sum, [_, w]) => sum + w, 0);
+  const rand = Math.random() * total;
+  let sum = 0;
+  for (const [item, weight] of items) {
+    sum += weight;
+    if (rand <= sum) return item;
+  }
+}
+console.log(weightedRandom([["A", 1], ["B", 2], ["C", 3]])); // 按权重随机
+```
+
+**小 Tips：** 权重越大，中奖率越高。
+
+---
+
+### 75. 如何实现一个简单的 Undo/Redo？
+用栈记录状态，像“时光机”。
+
+**示例：**
+```javascript
+class History {
+  constructor() {
+    this.undoStack = [];
+    this.redoStack = [];
+  }
+  add(state) {
+    this.undoStack.push(state);
+    this.redoStack = [];
+  }
+  undo() {
+    if (this.undoStack.length) {
+      const state = this.undoStack.pop();
+      this.redoStack.push(state);
+      return this.undoStack[this.undoStack.length - 1];
+    }
+  }
+  redo() {
+    if (this.redoStack.length) {
+      const state = this.redoStack.pop();
+      this.undoStack.push(state);
+      return state;
+    }
+  }
+}
+```
+
+**小 Tips：** 加个最大栈容量，防内存爆炸。
+
+---
+
+### 76. 如何用 JS 判断设备类型？
+解析 `navigator.userAgent`，像“侦探推理”。
+
+**示例：**
+```javascript
+const isMobile = /Mobi|Android|iPhone/i.test(navigator.userAgent);
+console.log(isMobile); // true 或 false
+```
+
+**小 Tips：** 正则要更新，设备种类多变。
+
+---
+
+### 77. 如何实现一个简易的依赖注入？
+用容器管理依赖，像“服务员点单”。
+
+**示例：**
+```javascript
+class Container {
+  constructor() {
+    this.dependencies = new Map();
+  }
+  register(key, value) {
+    this.dependencies.set(key, value);
+  }
+  get(key) {
+    return this.dependencies.get(key);
+  }
+}
+const container = new Container();
+container.register("log", () => console.log("Hi"));
+container.get("log")(); // "Hi"
+```
+
+**小 Tips：** 适合解耦模块化代码。
+
+---
+
+### 78. 如何用 JS 实现一个简单的队列？
+用数组模拟，像“排队买票”。
+
+**示例：**
+```javascript
+class Queue {
+  constructor() {
+    this.items = [];
+  }
+  enqueue(item) {
+    this.items.push(item);
+  }
+  dequeue() {
+    return this.items.shift();
+  }
+}
+const q = new Queue();
+q.enqueue(1);
+q.enqueue(2);
+console.log(q.dequeue()); // 1
+```
+
+**小 Tips：** 用双端队列（`Deque`）更灵活。
+
+---
+
+### 79. 如何实现一个简易的节流 Hook？
+React 中节流 Hook，优化频繁事件，像“冷静点击”。
+
+**示例：**
+```javascript
+function useThrottle(callback, delay) {
+  const last = useRef(0);
+  return useCallback((...args) => {
+    const now = Date.now();
+    if (now - last.current >= delay) {
+      callback(...args);
+      last.current = now;
+    }
+  }, [callback, delay]);
+}
+```
+
+**小 Tips：** 用 `useRef` 存状态，避免重复渲染。
+
+---
+
+### 80. 如何用 JS 实现一个简单的观察者模式 Hook？
+React 中观察者，像“订阅号”。
+
+**示例：**
+```javascript
+function useObserver() {
+  const [state, setState] = useState(null);
+  const subscribers = useRef(new Set());
+  const subscribe = (fn) => subscribers.current.add(fn);
+  const notify = (data) => {
+    setState(data);
+    subscribers.current.forEach((fn) => fn(data));
+  };
+  return { state, subscribe, notify };
+}
+```
+
+**小 Tips：** 用 `useEffect` 清理订阅，防内存泄漏。
+
+---
+
+## 终极篇：从熟练到大师，挑战极限
+
+### 81. `Array.prototype.at` 有什么特别之处？
+`at` 是 ES2022 引入的方法，支持负索引访问数组元素，像“倒着数”。
+
+**示例：**
+```javascript
+const arr = [1, 2, 3];
+console.log(arr.at(1)); // 2
+console.log(arr.at(-1)); // 3（最后一个）
+```
+
+**小 Tips：** 比 `arr[arr.length - 1]` 更简洁，负索引超实用。
+
+---
+
+### 82. 如何实现一个安全的 JSON 解析器？
+`JSON.parse` 可能抛错，用 try-catch 或自定义函数保护，像“防爆盾”。
+
+**示例：**
+```javascript
+function safeParse(jsonStr, fallback = {}) {
+  try {
+    return JSON.parse(jsonStr);
+  } catch (e) {
+    console.error("Parse failed:", e);
+    return fallback;
+  }
+}
+console.log(safeParse('{"a": 1}')); // { a: 1 }
+console.log(safeParse("oops")); // {}
+```
+
+**小 Tips：** 加个类型检查，确保输入是字符串。
+
+---
+
+### 83. 什么是 `Temporal` API，它解决了什么问题？
+`Temporal` 是提案中的日期时间 API，解决 `Date` 的历史遗留问题（如时区、闰秒），像“时间管理大师”。
+
+**示例：**
+```javascript
+// 未来用法（提案阶段）
+const now = Temporal.Now.plainDateTime("gregory");
+console.log(now.toString()); // 示例输出：2025-03-25T12:00:00
+```
+
+**小 Tips：** 目前用 `luxon` 或 `day.js` 替代，`Temporal` 还在路上。
+
+---
+
+### 84. 如何实现一个简易的命令模式？
+命令模式封装请求为对象，支持撤销，像“遥控器”。
+
+**示例：**
+```javascript
+class Command {
+  constructor(execute, undo) {
+    this.execute = execute;
+    this.undo = undo;
+  }
+}
+const calculator = {
+  value: 0,
+  add: (x) => (calculator.value += x),
+  subtract: (x) => (calculator.value -= x),
+};
+const addCmd = new Command(
+  () => calculator.add(5),
+  () => calculator.subtract(5)
+);
+addCmd.execute(); // value: 5
+addCmd.undo(); // value: 0
+```
+
+**小 Tips：** 适合实现历史记录或操作回滚。
+
+---
+
+### 85. 如何用 JS 判断变量是否为整数？
+用 `Number.isInteger` 或自定义逻辑，像“数字体检”。
+
+**示例：**
+```javascript
+console.log(Number.isInteger(42)); // true
+console.log(Number.isInteger(3.14)); // false
+function isInt(n) {
+  return typeof n === "number" && n % 1 === 0;
+}
+console.log(isInt(-10)); // true
+```
+
+**小 Tips：** 注意 `NaN` 和 `Infinity`，要额外排除。
+
+---
+
+### 86. 如何实现一个简易的策略模式？
+策略模式根据条件选择算法，像“导航换路线”。
+
+**示例：**
+```javascript
+const strategies = {
+  fast: (n) => n * 2,
+  slow: (n) => n + 1,
+};
+function compute(type, value) {
+  return strategies[type](value);
+}
+console.log(compute("fast", 5)); // 10
+console.log(compute("slow", 5)); // 6
+```
+
+**小 Tips：** 加个默认策略，防类型错误。
+
+---
+
+### 87. 如何用 JS 实现一个简易的观察者队列？
+观察者队列按顺序执行，像“接力赛”。
+
+**示例：**
+```javascript
+class ObserverQueue {
+  constructor() {
+    this.queue = [];
+  }
+  add(fn) {
+    this.queue.push(fn);
+  }
+  notify(data) {
+    this.queue.reduce((prev, fn) => prev.then(() => fn(data)), Promise.resolve());
+  }
+}
+const q = new ObserverQueue();
+q.add((x) => console.log("A:", x));
+q.add((x) => console.log("B:", x));
+q.notify(42); // A: 42 → B: 42
+```
+
+**小 Tips：** 用 `Promise` 确保异步顺序。
+
+---
+
+### 88. 如何实现一个简易的适配器模式？
+适配器模式转换接口，像“电源转换头”。
+
+**示例：**
+```javascript
+const oldAPI = { getData: () => ({ x: 1 }) };
+const newAPI = {
+  fetch: function () {
+    const data = oldAPI.getData();
+    return { value: data.x };
+  },
+};
+console.log(newAPI.fetch()); // { value: 1 }
+```
+
+**小 Tips：** 适配旧代码时超实用。
+
+---
+
+### 89. 如何用 JS 判断浏览器是否支持某个特性？
+用特性检测，像“试探性握手”。
+
+**示例：**
+```javascript
+function supportsWebSocket() {
+  return "WebSocket" in window;
+}
+console.log(supportsWebSocket()); // true 或 false
+```
+
+**小 Tips：** 别依赖 `userAgent`，特性检测更可靠。
+
+---
+
+### 90. 如何实现一个简易的工厂模式？
+工厂模式封装对象创建，像“生产线”。
+
+**示例：**
+```javascript
+class Product {
+  constructor(type) {
+    this.type = type;
+  }
+}
+function factory(type) {
+  return new Product(type);
+}
+const p1 = factory("A");
+console.log(p1.type); // "A"
+```
+
+**小 Tips：** 加个类型映射，扩展更方便。
+
+---
+
+## 实战与边缘篇：冷门但实用
+
+### 91. 如何用 JS 获取浏览器窗口大小？
+用 `window.innerWidth/Height`，像“量窗户”。
+
+**示例：**
+```javascript
+function getWindowSize() {
+  return {
+    width: window.innerWidth,
+    height: window.innerHeight,
+  };
+}
+console.log(getWindowSize()); // { width: 1920, height: 1080 }
+```
+
+**小 Tips：** 监听 `resize` 事件，动态更新。
+
+---
+
+### 92. 如何实现一个简易的装饰器模式？
+装饰器模式动态增强功能，像“加装备”。
+
+**示例：**
+```javascript
+function withLog(fn) {
+  return function (...args) {
+    console.log("Calling with:", args);
+    return fn(...args);
+  };
+}
+const add = (a, b) => a + b;
+const loggedAdd = withLog(add);
+console.log(loggedAdd(1, 2)); // "Calling with: [1, 用心理解：Calling with: [1, 2] 3
+```
+
+**小 Tips：** 用闭包存状态，复用装饰器。
+
+---
+
+### 93. 如何用 JS 判断网络状态？
+用 `navigator.onLine`，像“网络体检”。
+
+**示例：**
+```javascript
+function isOnline() {
+  return navigator.onLine;
+}
+console.log(isOnline()); // true 或 false
+```
+
+**小 Tips：** 监听 `online/offline` 事件，实时检测。
+
+---
+
+### 94. 如何实现一个简易的管道函数？
+管道函数按顺序处理数据，像“流水线加工”。
+
+**示例：**
+```javascript
+function pipe(...fns) {
+  return (x) => fns.reduce((v, f) => f(v), x);
+}
+const double = (x) => x * 2;
+const addOne = (x) => x + 1;
+const result = pipe(double, addOne)(5); // 11
+```
+
+**小 Tips：** 从右到左用 `reduceRight`。
+
+---
+
+### 95. 如何用 JS 获取 URL 参数？
+解析 `location.search`，像“拆快递”。
+
+**示例：**
+```javascript
+function getQueryParams() {
+  const params = new URLSearchParams(location.search);
+  return Object.fromEntries(params);
+}
+console.log(getQueryParams()); // ?a=1&b=2 → { a: "1", b: "2" }
+```
+
+**小 Tips：** 用 `URL` 对象更现代。
+
+---
+
+### 96. 如何实现一个简易的防抖队列？
+防抖队列按顺序执行，像“冷静排队”。
+
+**示例：**
+```javascript
+function debounceQueue(fn, delay) {
+  let queue = [];
+  let timer;
+  return function (...args) {
+    queue.push(args);
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      fn(queue);
+      queue = [];
+    }, delay);
+  };
+}
+const log = debounceQueue(console.log, 1000);
+log(1); log(2); // 1秒后输出 [[1], [2]]
+```
+
+**小 Tips：** 加个最大队列长度，防溢出。
+
+---
+
+### 97. 如何用 JS 判断文件类型？
+解析文件扩展名或 MIME 类型，像“文件侦探”。
+
+**示例：**
+```javascript
+function getFileType(fileName) {
+  return fileName.split(".").pop();
+}
+console.log(getFileType("image.png")); // "png"
+```
+
+**小 Tips：** 用 `File.type` 更准确（浏览器环境）。
+
+---
+
+### 98. 如何实现一个简易的节流队列？
+节流队列限制频率，像“限流排队”。
+
+**示例：**
+```javascript
+function throttleQueue(fn, delay) {
+  let queue = [];
+  let last = 0;
+  return function (...args) {
+    const now = Date.now();
+    queue.push(args);
+    if (now - last >= delay) {
+      fn(queue.shift());
+      last = now;
+    }
+  };
+}
+```
+
+**小 Tips：** 用定时器清队列，防积压。
+
+---
+
+### 99. 如何用 JS 实现一个简易的负载均衡？
+随机分配任务，像“分担压力”。
+
+**示例：**
+```javascript
+function loadBalance(tasks, workers) {
+  return tasks.map((task) => ({
+    task,
+    worker: workers[Math.floor(Math.random() * workers.length)],
+  }));
+}
+console.log(loadBalance([1, 2, 3], ["A", "B"])); // [{task: 1, worker: "A"}, ...]
+```
+
+**小 Tips：** 加个权重逻辑，优化分配。
+
+---
+
+### 100. 如何用 JS 实现一个简易的错误重试机制？
+自动重试失败操作，像“屡败屡战”。
+
+**示例：**
+```javascript
+async function retry(fn, maxAttempts, delay) {
+  for (let i = 0; i < maxAttempts; i++) {
+    try {
+      return await fn();
+    } catch (e) {
+      if (i === maxAttempts - 1) throw e;
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+}
+retry(() => fetch("https://example.com"), 3, 1000).catch(console.error);
+```
+
+**小 Tips：** 加个指数退避（backoff），更优雅。
+
+---
+
+# 结语
+
+恭喜你，100 个 JS 高频面试题全解锁！从基础语法到设计模式，从性能优化到奇技淫巧，这份“JS全家桶”够你吃饱了吧？这些问题不仅能让你在面试中大杀四方，还能在实战中游刃有余。希望你读完后，既有“原来如此”的顿悟，又能立刻上手写代码。有什么想法，欢迎留言，咱们接着聊！🌟
+
+写到第 100 题，我都快成 JS 百科了，点个赞让我歇口气呗？不然下次面试我只能说“写了 100 题，忘了哪题” 😂。
+
+---
+

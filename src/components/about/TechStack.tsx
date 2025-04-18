@@ -2,12 +2,15 @@
 
 import { motion } from "framer-motion";
 import { TechStackIcon } from "@/components/TechStackIcons";
+import { useThemeUtils } from "@/hooks/useThemeUtils";
+import { THEME_COLORS } from "@/hooks/themeConstants";
 
 interface TechStackProps {
   itemVariants: any;
 }
 
 export default function TechStack({ itemVariants }: TechStackProps) {
+  const { getThemeColor } = useThemeUtils();
   const techStacks = [
     {
       category: "前端基础",
@@ -62,21 +65,81 @@ export default function TechStack({ itemVariants }: TechStackProps) {
     },
   ];
 
+  // 根据主题获取标题渐变色
+  const titleGradient = getThemeColor(
+    "from-indigo-600 to-cyan-600",
+    "from-indigo-600 to-cyan-600",
+    {
+      green: "from-green-600 to-teal-600",
+      purple: "from-indigo-600 to-purple-600",
+      orange: "from-orange-600 to-amber-600",
+      blue: "from-blue-600 to-cyan-600",
+      pink: "from-pink-600 to-rose-600",
+      brown: "from-amber-700 to-yellow-700",
+    }
+  );
+
+  // 根据主题获取装饰线条渐变色
+  const decorLineGradient = getThemeColor(
+    "from-blue-600/50 to-transparent",
+    "from-blue-600/50 to-transparent",
+    {
+      green: "from-green-600/50 to-transparent",
+      purple: "from-purple-600/50 to-transparent",
+      orange: "from-orange-600/50 to-transparent",
+      blue: "from-blue-600/50 to-transparent",
+      pink: "from-pink-600/50 to-transparent",
+      brown: "from-amber-700/50 to-transparent",
+    }
+  );
+
   return (
     <motion.div variants={itemVariants}>
       <div className="flex items-center gap-4 mb-8">
-        <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-600 bg-clip-text text-transparent text-center lg:text-left">
+        <h3
+          className={`text-2xl sm:text-3xl font-bold bg-gradient-to-r ${titleGradient} bg-clip-text text-transparent text-center lg:text-left`}
+        >
           技术栈
         </h3>
-        <div className="hidden lg:block h-0.5 flex-grow bg-gradient-to-r from-blue-600/50 to-transparent" />
+        <div
+          className={`hidden lg:block h-0.5 flex-grow bg-gradient-to-r ${decorLineGradient}`}
+        />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {techStacks.map((stack, index) => {
+          // 根据主题获取卡片边框颜色
+          const borderColor = getThemeColor(
+            "border-gray-700/30",
+            "border-gray-200/30",
+            {
+              green: "border-green-200/30 dark:border-green-700/30",
+              purple: "border-purple-200/30 dark:border-purple-700/30",
+              orange: "border-orange-200/30 dark:border-orange-700/30",
+              blue: "border-blue-200/30 dark:border-blue-700/30",
+              pink: "border-pink-200/30 dark:border-pink-700/30",
+              brown: "border-amber-200/30 dark:border-amber-700/30",
+            }
+          );
+
           return (
             <motion.div
               key={index}
-              className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:shadow-lg transition-all duration-300"
-              whileHover={{ scale: 1.02, translateY: -5 }}
+              className={`p-4 sm:p-6 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:shadow-lg transition-all duration-300 border ${borderColor}`}
+              style={
+                {
+                  "--hover-border-color": getThemeColor(
+                    "#1a1b26",
+                    "#a9b1d6",
+                    THEME_COLORS
+                  ),
+                } as React.CSSProperties
+              }
+              whileHover={{
+                scale: 1.02,
+                translateY: -5,
+                boxShadow:
+                  "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+              }}
             >
               <div className="flex items-center gap-3 mb-3">
                 <TechStackIcon

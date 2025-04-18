@@ -1,0 +1,307 @@
+---
+title: "聊聊 Vue3 中 watch 和 watchEffect 区别和用法"
+date: "2023-04-18"
+description: "深入探讨 Vue3 中 watch 和 watchEffect 的区别、使用场景及源码实现，带你从原理到实践全面掌握这两个 API。"
+keywords: "Vue3, watch, watchEffect, 响应式, 源码解析, 前端开发, reactive, ref"
+author: "晓龙"
+image: "/images/hero/vue3-watch.jpg"
+tags: ["Vue.js", "Vue3", "前端开发", "响应式编程"]
+category: "Vue.js"
+---
+
+Vue3 的响应式系统是其核心亮点之一，而 `watch` 和 `watchEffect` 作为两个重要的 API，让开发者能够更灵活地处理数据变化的副作用。今天，我们就来聊聊这两个工具的区别、使用场景，以及它们背后的实现原理。不仅会从使用角度出发，还会深入源码层面剖析，帮助你彻底搞懂它们。
+
+## 先从基础聊起：watch 和 watchEffect 是什么？
+
+Vue3 的响应式系统基于 Proxy 和 Reflect，配合 `ref` 和 `reactive` 提供了强大的数据追踪能力。而 `watch` 和 `watchEffect` 是基于此构建的高级工具，用于监听数据变化并执行副作用。
+
+- **watch**：显式地监听某个特定数据源（可以是 `ref`、`reactive` 对象或 getter 函数），当数据变化时触发回调。你可以精确控制监听的对象和行为。
+- **watchEffect**：自动追踪回调函数中依赖的响应式数据，数据变化时立即运行。它的特点是“无须显式指定监听目标”，更像是一种“自动魔法”。
+
+听起来有点抽象？别急，下面我们通过例子一步步拆解。
+
+## 用法对比：从实例开始
+
+### watch 的用法
+
+`watch` 需要明确指定监听目标，适合需要精确控制的场景。来看个简单的例子：
+
+```javascript
+import { ref, watch } from 'vue';
+
+export default {
+  setup() {
+    const count = ref(0);
+
+    watch(count, (newValue, oldValue) => {
+      console.log(`count 从 ${oldValue} 变成了 ${newValue}`);
+    });
+
+    const increment = () => count.value++;
+    return { count, increment };
+  },
+};
+```
+
+在这个例子中，`watch` 只监听 `count` 这个 `ref`，当它变化时，回调会接收新值和旧值并执行逻辑。
+
+再来看一个复杂点的例子，监听 `reactive` 对象的某个属性：
+
+```javascript
+import { reactive, watch } from 'vue';
+
+export default {
+  setup() {
+    const state = reactive({ name: '小明', age: 20 });
+
+    watch(
+      () => state.age, // 用 getter 函数监听特定属性
+      (newAge, oldAge) => {
+        console.log(`年龄从 ${oldAge} 变成了 ${newAge}`);
+      }
+    );
+
+    const growUp = () => state.age++;
+    return { state, growUp };
+  },
+};
+```
+
+这里用了一个 getter 函数 `() => state.age` 来监听 `state.age`，而不是直接传 `state`，因为 `watch` 默认只监听传入值的“引用变化”，而 `reactive` 对象内部属性的变化需要通过 getter 显式指定。
+
+### watchEffect 的用法
+
+相比之下，`watchEffect` 更“懒散”一些，它不需要你告诉它监听什么，而是直接运行一个函数，并在其中自动收集依赖。来看看：
+
+```javascript
+import { ref, watchEffect } from 'vue';
+
+export default {
+  setup() {
+    const count = ref(0);
+
+    watchEffect(() => {
+      console.log(`count 现在是 ${count.value}`);
+    });
+
+    const increment = () => count.value++;
+    return { count, increment };
+  },
+};
+```
+
+点击 `increment` 后，`watchEffect` 会自动感知 `count` 的变化并重新运行。是不是简单粗暴？
+
+再来个多依赖的例子：
+
+```javascript
+import { reactive, watchEffect } from 'vue';
+
+export default {
+  setup() {
+    const state = reactive({ name: '小明', age: 20 });
+
+    watchEffect(() => {
+      console.log(`${state.name} 的年龄是 ${state.age}`);
+    });
+
+    const update = () => {
+      state.age++;
+      state.name = '小红';
+    };
+    return { state, update };
+  },
+};
+```
+
+这里 `watchEffect` 自动追踪了 `state.name` 和 `state.age`，只要其中一个变了，回调就会触发。
+
+## 核心区别：主动 vs 被动
+
+通过例子可以看出，`watch` 和 `watchEffect` 的最大区别在于**监听的主动性**：
+
+- **watch 是“主动监听”**：你得告诉它“嘿，我要监听这个东西”，它才会工作。适合需要明确目标、控制触发条件的场景。
+- **watchEffect 是“被动追踪”**：你写个函数，它自己去嗅探依赖，变化时自动跑起来。适合快速上手、不想手动指定依赖的场景。
+
+另外还有几点细节差异：
+
+1. **初始执行**：
+   - `watch` 默认不会立即执行，除非设置 `immediate: true`。
+   - `watchEffect` 默认立即执行一次，收集依赖。
+
+2. **新旧值**：
+   - `watch` 回调提供新值和旧值，适合需要对比变化的逻辑。
+   - `watchEffect` 只管跑，不提供新旧值。
+
+3. **依赖控制**：
+   - `watch` 可以精确指定监听对象，甚至可以用数组监听多个源。
+   - `watchEffect` 的依赖是动态收集的，可能包含不需要的副作用。
+
+## 深入源码：它们是怎么实现的？
+
+要真正理解 `watch` 和 `watchEffect`，我们得看看 Vue3 的源码（基于 `@vue/runtime-core`）。Vue 的响应式系统核心是 `effect`（副作用函数），而 `watch` 和 `watchEffect` 都是基于它封装的。
+
+### effect 的基础
+
+Vue3 的响应式核心依赖 `ReactiveEffect` 类：
+
+```javascript
+class ReactiveEffect {
+  constructor(fn) {
+    this.fn = fn; // 副作用函数
+    this.deps = []; // 依赖集合
+  }
+  run() {
+    activeEffect = this; // 当前激活的 effect
+    const res = this.fn();
+    activeEffect = null;
+    return res;
+  }
+}
+```
+
+当你访问 `ref.value` 或 `reactive` 的属性时，Proxy 的 `get` 拦截器会把当前的 `activeEffect` 加入依赖列表（`deps`）。数据变化时，触发 `trigger` 函数，重新运行这些 `effect`。
+
+### watchEffect 的实现
+
+`watchEffect` 直接基于 `effect`：
+
+```javascript
+export function watchEffect(effect, options = {}) {
+  const _effect = new ReactiveEffect(effect);
+  
+  if (!options.lazy) {
+    _effect.run(); // 立即执行，收集依赖
+  }
+
+  const runner = _effect.run.bind(_effect);
+  runner.effect = _effect;
+  return runner;
+}
+```
+
+- **过程**：传入的函数被包装成 `ReactiveEffect`，立即执行一次，收集依赖。之后每次依赖变化，`trigger` 都会重新调用 `run`。
+- **特点**：没有显式源，直接依赖函数内的访问操作。
+
+### watch 的实现
+
+`watch` 稍微复杂点，它需要处理源（source）和回调：
+
+```javascript
+export function watch(source, cb, options = {}) {
+  let getter;
+  if (isRef(source)) {
+    getter = () => source.value;
+  } else if (isReactive(source)) {
+    getter = () => source;
+  } else if (typeof source === 'function') {
+    getter = source;
+  }
+
+  const effect = new ReactiveEffect(getter, () => {
+    const newValue = effect.run();
+    const oldValue = oldValueRef.value;
+    oldValueRef.value = newValue;
+    cb(newValue, oldValue); // 触发回调
+  });
+
+  const oldValueRef = { value: undefined };
+  if (options.immediate) {
+    effect.run();
+  }
+
+  return () => effect.stop();
+}
+```
+
+- **过程**：
+  1. 将 `source` 转为 getter 函数（支持 `ref`、`reactive` 或自定义函数）。
+  2. 创建 `ReactiveEffect`，但它的调度函数（scheduler）会调用用户传入的 `cb`。
+  3. 数据变化时，`trigger` 调用 scheduler，执行回调并传递新旧值。
+- **特点**：显式监听源，支持新旧值对比，可控性更强。
+
+## 使用场景与选择建议
+
+### 什么时候用 watch？
+
+- 需要精确控制监听对象，比如只关心某个属性变化。
+- 需要新旧值做对比逻辑，比如表单校验。
+- 需要延迟执行或条件触发（通过 `immediate`、`flush` 等选项）。
+
+例子：监听用户输入并防抖：
+
+```javascript
+import { ref, watch } from 'vue';
+import { debounce } from 'lodash';
+
+export default {
+  setup() {
+    const search = ref('');
+    const searchAPI = debounce((val) => {
+      console.log(`搜索：${val}`);
+    }, 500);
+
+    watch(search, (newVal) => {
+      searchAPI(newVal);
+    });
+
+    return { search };
+  },
+};
+```
+
+### 什么时候用 watchEffect？
+
+- 依赖关系简单，不想手动指定。
+- 需要立即执行副作用，比如初始化时请求数据。
+- 逻辑更偏向“响应式联动”，而非精确控制。
+
+例子：动态更新标题：
+
+```javascript
+import { reactive, watchEffect } from 'vue';
+
+export default {
+  setup() {
+    const state = reactive({ title: 'Vue3', count: 0 });
+
+    watchEffect(() => {
+      document.title = `${state.title} - ${state.count}`;
+    });
+
+    const increment = () => state.count++;
+    return { state, increment };
+  },
+};
+```
+
+## 注意事项与陷阱
+
+1. **watch 的深层监听**：
+   默认情况下，`watch` 对 `reactive` 对象是浅监听，需设置 `deep: true`：
+   ```javascript
+   watch(state, (newState) => {
+     console.log(newState.list);
+   }, { deep: true });
+   ```
+
+2. **watchEffect 的清理**：
+   它支持 `onInvalidate` 清理副作用：
+   ```javascript
+   watchEffect((onInvalidate) => {
+     const timer = setTimeout(() => console.log('定时器'), 1000);
+     onInvalidate(() => clearTimeout(timer));
+   });
+   ```
+
+3. **性能考量**：
+   - `watchEffect` 可能因依赖过多导致不必要执行，尽量保持回调简单。
+   - `watch` 的精确控制可以避免冗余计算。
+
+## 总结
+
+`watch` 和 `watchEffect` 是 Vue3 响应式系统的两把利器。简单来说，`watch` 适合需要精确控制的场景，而 `watchEffect` 更适合快速响应式联动。从源码看，它们都基于 `ReactiveEffect`，但 `watch` 多了一层显式源管理和回调调度。
+
+希望这篇文章能帮你理清它们的区别和用法。无论是日常开发还是面试，搞懂这些细节都能让你更自信地驾驭 Vue3。有什么疑问或有趣的用法，欢迎留言交流！
+
+---

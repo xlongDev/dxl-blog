@@ -1,11 +1,11 @@
 "use client";
 
-import { useTheme } from "next-themes";
+import { useThemeUtils } from "@/hooks/useThemeUtils";
 import { useEffect, useRef } from "react";
 
 export default function Comments() {
   const ref = useRef<HTMLDivElement>(null);
-  const { theme } = useTheme();
+  const { theme } = useThemeUtils();
 
   useEffect(() => {
     if (!ref.current) return;

@@ -1,0 +1,266 @@
+---
+title: "一文彻底掌握前端文件上传"
+date: "2023-10-18"
+description: "从基础到高级，全面解析前端文件上传的原理、技术方案与实战案例，带你深入理解文件上传的每个环节。"
+keywords: "前端文件上传, File API, FormData, 分片上传, 断点续传, 文件预览, Blob, 前端开发"
+author: "晓龙"
+image: "/images/hero/file-upload.jpg"
+tags: ["前端开发", "JavaScript", "文件上传"]
+category: "前端技术"
+---
+
+文件上传是前端开发中常见却又充满挑战的功能。从简单的图片上传到大文件的分片传输，再到断点续传和进度展示，文件上传涉及的技术细节和用户体验优化远比表面看起来复杂。作为一名前端开发者，我曾在项目中踩过无数坑，也积累了不少经验。今天，我就带你从基础到高级，彻底搞懂前端文件上传的方方面面，聊聊它的原理、实现方式和一些实用技巧。
+
+## 文件上传的基础
+
+### 什么是文件上传？
+
+简单来说，文件上传就是将用户本地的文件通过浏览器发送到服务器的过程。通常，我们会借助 HTML 的 `<input type="file">` 标签让用户选择文件，然后通过 JavaScript 操作这些文件，最终通过 HTTP 请求发送到后端。
+
+### 最简单的实现：表单提交
+
+最原始的文件上传方式是通过 HTML 表单。假设你有一个上传头像的需求，代码可能长这样：
+
+```html
+<form action="/upload" method="POST" enctype="multipart/form-data">
+  <input type="file" name="avatar" />
+  <button type="submit">上传</button>
+</form>
+```
+
+这里的 `enctype="multipart/form-data"` 是关键，它告诉浏览器以多部分表单数据的格式发送请求，而不是普通的 `application/x-www-form-urlencoded`。后端接收到请求后，就能解析出文件内容。
+
+这种方式简单粗暴，但缺点也很明显：页面会刷新，用户体验不够友好。于是，我们需要引入 JavaScript 来优化。
+
+## 使用 JavaScript 实现异步上传
+
+现代前端开发中，文件上传通常通过 AJAX 实现。核心工具是 `FormData` 和 `XMLHttpRequest`（或更现代的 `fetch`）。
+
+### 示例：基本的 AJAX 文件上传
+
+```javascript
+const fileInput = document.querySelector('input[type="file"]');
+const file = fileInput.files[0]; // 获取用户选择的文件
+
+const formData = new FormData();
+formData.append("file", file); // 将文件添加到 FormData
+
+fetch("/upload", {
+  method: "POST",
+  body: formData,
+})
+  .then((response) => response.json())
+  .then((data) => console.log("上传成功:", data))
+  .catch((error) => console.error("上传失败:", error));
+```
+
+这里，`FormData` 是一个浏览器内置的对象，专门用来处理表单数据。它会自动设置正确的 `Content-Type` 头（`multipart/form-data`），非常方便。
+
+### 显示上传进度
+
+如果文件较大，用户需要知道上传进度。这时可以用 `XMLHttpRequest` 的 `upload.onprogress` 事件：
+
+```javascript
+const xhr = new XMLHttpRequest();
+xhr.open("POST", "/upload", true);
+
+xhr.upload.onprogress = (event) => {
+  if (event.lengthComputable) {
+    const percent = (event.loaded / event.total) * 100;
+    console.log(`上传进度: ${percent.toFixed(2)}%`);
+  }
+};
+
+xhr.onload = () => {
+  if (xhr.status === 200) {
+    console.log("上传成功");
+  }
+};
+
+const formData = new FormData();
+formData.append("file", fileInput.files[0]);
+xhr.send(formData);
+```
+
+`event.loaded` 是已上传的字节数，`event.total` 是文件总字节数，两者相除就能计算进度。可以用这个数据更新进度条，提升用户体验。
+
+## 深入 File API
+
+文件上传的核心是浏览器提供的 `File API`，它让我们能操作用户选择的文件。`<input type="file">` 的 `files` 属性返回一个 `FileList` 对象，每个 `File` 对象都包含文件的元信息（如名称、大小、类型）和内容。
+
+### 示例：文件预览
+
+假设用户上传了一张图片，我们可以在上传前预览：
+
+```javascript
+const fileInput = document.querySelector('input[type="file"]');
+const previewImg = document.querySelector("#preview");
+
+fileInput.addEventListener("change", () => {
+  const file = fileInput.files[0];
+  if (file && file.type.startsWith("image/")) {
+    const url = URL.createObjectURL(file);
+    previewImg.src = url;
+
+    // 释放内存
+    previewImg.onload = () => URL.revokeObjectURL(url);
+  }
+});
+```
+
+`URL.createObjectURL` 会生成一个临时的本地 URL，指向文件内容，非常适合用来预览图片或视频。
+
+### Blob 与 ArrayBuffer
+
+`File` 对象本质上是一个 `Blob`（Binary Large Object，二进制大对象）。如果你需要操作文件的内容，可以用 `FileReader` 将其转为不同的格式：
+
+- **转为 Base64**：
+
+```javascript
+const reader = new FileReader();
+reader.onload = () => {
+  console.log(reader.result); // "data:image/png;base64,..."
+};
+reader.readAsDataURL(file);
+```
+
+- **转为 ArrayBuffer**（用于二进制操作）：
+
+```javascript
+reader.readAsArrayBuffer(file);
+reader.onload = () => {
+  const arrayBuffer = reader.result;
+  const uint8Array = new Uint8Array(arrayBuffer);
+  console.log(uint8Array);
+};
+```
+
+这些方法在处理文件分片或自定义格式时特别有用。
+
+## 大文件上传：分片与断点续传
+
+上传几 KB 的小文件很简单，但如果是个几 GB 的视频呢？网络中断怎么办？用户体验如何保证？这时需要分片上传和断点续传。
+
+### 分片上传原理
+
+分片上传的核心是将大文件切割成小块，逐个上传。可以用 `Blob.slice` 方法切割文件：
+
+```javascript
+const file = fileInput.files[0];
+const chunkSize = 5 * 1024 * 1024; // 每片 5MB
+const chunks = Math.ceil(file.size / chunkSize);
+
+const uploadChunk = async (chunkIndex) => {
+  const start = chunkIndex * chunkSize;
+  const end = Math.min(start + chunkSize, file.size);
+  const chunk = file.slice(start, end);
+
+  const formData = new FormData();
+  formData.append("chunk", chunk);
+  formData.append("chunkIndex", chunkIndex);
+  formData.append("totalChunks", chunks);
+  formData.append("fileName", file.name);
+
+  await fetch("/upload-chunk", {
+    method: "POST",
+    body: formData,
+  });
+};
+
+// 依次上传每个分片
+for (let i = 0; i < chunks; i++) {
+  await uploadChunk(i);
+}
+```
+
+后端需要支持分片接收，并将所有分片合并成完整文件。
+
+### 断点续传
+
+如果上传中断，用户不希望从头开始。这时可以在前端记录已上传的分片，询问后端哪些分片已接收：
+
+```javascript
+async function resumeUpload(file) {
+  const chunkSize = 5 * 1024 * 1024;
+  const chunks = Math.ceil(file.size / chunkSize);
+
+  // 询问后端已上传的分片
+  const response = await fetch(`/check-upload?fileName=${file.name}`);
+  const { uploadedChunks } = await response.json();
+
+  for (let i = 0; i < chunks; i++) {
+    if (!uploadedChunks.includes(i)) {
+      await uploadChunk(i);
+    }
+  }
+}
+```
+
+后端需要维护一个分片记录（如用 Redis 或数据库），并在所有分片上传完成后合并文件。
+
+## 优化用户体验
+
+### 拖拽上传
+
+支持拖拽上传能让操作更自然：
+
+```html
+<div id="dropzone" style="border: 2px dashed #ccc; padding: 20px;">
+  将文件拖到这里
+</div>
+```
+
+```javascript
+const dropzone = document.getElementById("dropzone");
+
+dropzone.addEventListener("dragover", (e) => {
+  e.preventDefault();
+  dropzone.style.background = "#e0e0e0";
+});
+
+dropzone.addEventListener("dragleave", () => {
+  dropzone.style.background = "none";
+});
+
+dropzone.addEventListener("drop", (e) => {
+  e.preventDefault();
+  dropzone.style.background = "none";
+  const files = e.dataTransfer.files;
+  console.log("Dropped files:", files);
+});
+```
+
+### 多文件上传
+
+`<input type="file" multiple>` 允许用户一次选择多个文件，配合上面的分片逻辑即可实现批量上传。
+
+## 常见问题与解决方案
+
+1. **文件类型限制**：
+   用 `accept` 属性限制类型：`<input type="file" accept="image/*">`。
+
+2. **文件大小限制**：
+   在前端检查 `file.size`，提示用户：
+
+   ```javascript
+   if (file.size > 10 * 1024 * 1024) {
+     alert("文件不能超过 10MB");
+     return;
+   }
+   ```
+
+3. **网络超时**：
+   为 `fetch` 设置超时：
+   ```javascript
+   const controller = new AbortController();
+   setTimeout(() => controller.abort(), 10000); // 10秒超时
+   fetch("/upload", { signal: controller.signal });
+   ```
+
+## 总结
+
+文件上传看似简单，但要做到高效、稳定、用户友好，背后需要掌握不少技术细节。从基础的 `FormData` 到高级的分片上传和断点续传，每一步都有其适用场景。希望这篇文章能帮你建立完整的知识体系，下次遇到文件上传需求时，能胸有成竹地搞定！
+
+如果有任何疑问，欢迎留言讨论，我会尽力解答。文件上传的世界很大，等你去探索！
+
+---

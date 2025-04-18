@@ -79,12 +79,31 @@ export async function hasUserFavorited(
 
 // 更新文章浏览量
 export async function incrementViews(slug: string): Promise<void> {
-  await promisePool.query(
-    `INSERT INTO article_interactions (article_slug, views) 
-     VALUES (?, 1) 
-     ON DUPLICATE KEY UPDATE views = views + 1`,
-    [slug]
-  );
+  const conn = await promisePool.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    // 记录具体的访问记录
+    await conn.query(
+      "INSERT INTO article_views (article_slug) VALUES (?)",
+      [slug]
+    );
+
+    // 更新文章总访问量
+    await conn.query(
+      `INSERT INTO article_interactions (article_slug, views) 
+       VALUES (?, 1) 
+       ON DUPLICATE KEY UPDATE views = views + 1`,
+      [slug]
+    );
+
+    await conn.commit();
+  } catch (error) {
+    await conn.rollback();
+    throw error;
+  } finally {
+    conn.release();
+  }
 }
 
 // 更新文章点赞数

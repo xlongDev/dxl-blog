@@ -63,3 +63,25 @@ CREATE TABLE IF NOT EXISTS article_stats (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY unique_article_stats (article_slug)
 );
+
+-- 文章访问记录表
+CREATE TABLE IF NOT EXISTS article_visits (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    article_slug VARCHAR(255) NOT NULL,
+    user_id VARCHAR(36),
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    visit_duration INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+-- 用户活动记录表
+CREATE TABLE IF NOT EXISTS user_activities (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(36) NOT NULL,
+    activity_type ENUM('view', 'like', 'favorite', 'comment') NOT NULL,
+    article_slug VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);

@@ -1,0 +1,216 @@
+---
+
+title: "前端如何判空？"
+date: "2022-10-26"
+description: "从基础到进阶，深入探讨前端判空的各种场景、技巧与最佳实践，带你从‘空指针恐惧症’走向‘判空大师’。"
+keywords: "前端判空, JavaScript, TypeScript, 空值处理, null, undefined, 最佳实践, 前端开发"
+author: "晓龙"
+image: "/images/hero/check-empty.jpg"
+tags: ["JavaScript", "TypeScript", "前端开发"]
+category: "前端技术"
+
+---
+
+作为一个前端，你是如何判空的？这个问题看似简单，却藏着无数坑。判空不仅是日常编码的必修课，更是衡量你代码健壮性的试金石。从 `null` 到 `undefined`，从空数组到空对象，甚至是那些偷偷摸摸的 falsy 值，前端开发者每天都在和“空”打交道。今天，我就带你从基础到进阶，聊聊判空的那些门道，分享一些实用技巧和最佳实践，顺便夹杂点个人感悟和笑料，让你读完不仅能写出更稳的代码，还能少踩几个雷 ⚡。
+
+## 为什么判空这么重要？
+
+想象一下，你是一个快递员，客户给你一个地址，但地址栏写着“空”。你会不会崩溃？前端判空也是一样——数据可能是从后端来的、用户输入的，甚至是某个库返回的。如果不处理好“空”，你的页面可能会白屏、报错，或者更惨，直接让用户一脸懵逼地刷新浏览器。所以，判空不是小事，它是你代码的“安全带”。
+
+好了，废话不多说，咱们直接进入正题，从最基础的开始。
+
+## 1. 判空的基础姿势：null 和 undefined
+
+JavaScript 里的 `null` 和 `undefined` 是两个老朋友，但它们性格迥异。`null` 是你主动说“这里啥也没有”，而 `undefined` 是系统默认的“我也不知道这里该是啥”。判空时，这俩是绕不过去的坎。
+
+### 1.1 简单粗暴的 `== null`
+```javascript
+const value = null;
+if (value == null) {
+  console.log("我是空的！");
+}
+```
+这个方法简单到飞起，`== null` 会同时匹配 `null` 和 `undefined`，因为它用的是宽松相等（loose equality）。但问题来了：它不够精确。如果你只想检查 `null`，它可能会把 `undefined` 也算进去。
+
+**小 Tips**: 如果你只是想快速判断“有没有值”，`== null` 是偷懒的好选择。但别滥用，后面有更优雅的方案等着你。
+
+### 1.2 严格检查：`=== null` 和 `=== undefined`
+```javascript
+const value = undefined;
+if (value === null) {
+  console.log("我是 null");
+} else if (value === undefined) {
+  console.log("我是 undefined");
+}
+```
+严格相等（strict equality）是更硬核的做法，精确到类型和值。适合那种“我就是要分清楚你是哪种空”的场景，比如调试时排查问题。
+
+**小 Tips**: 如果你用 TypeScript，配合类型缩小（type narrowing），这种写法还能让编译器更开心：
+```typescript
+function handleValue(value: string | null | undefined) {
+  if (value === null) return "null 来了";
+  if (value === undefined) return "undefined 来了";
+  return value.toUpperCase(); // TS 知道这里一定是 string
+}
+```
+
+## 2. falsy 值的陷阱：0, "", false 怎么办？
+
+JavaScript 的 falsy 值（`0`, `""`, `false`, `null`, `undefined`, `NaN`）是个大坑。比如：
+```javascript
+if (!value) {
+  console.log("空的！");
+}
+```
+你以为这能完美判空？错了！如果 `value` 是 `0` 或者空字符串 `""`，它也会被认为是“空”。这在表单验证时尤其致命——用户输入了个 `0`，结果你告诉他“请填写内容”，这不尴尬吗？
+
+### 2.1 类比：判空就像查水表
+把判空想象成查水表。如果水表是 `0`，你不能直接说“没人用水”，可能是人家刚搬进来还没开始用。同理，`0` 和 `""` 在某些业务场景下是有意义的，不能一刀切。
+
+### 2.2 解决方案：具体问题具体分析
+```javascript
+const num = 0;
+if (num === null || num === undefined) {
+  console.log("真没值");
+} else {
+  console.log("有值，哪怕是 0");
+}
+```
+或者用可选链（Optional Chaining）和空值合并（Nullish Coalescing）：
+```javascript
+const result = num ?? "默认值"; // 仅对 null 和 undefined 生效
+```
+**小 Tips**: `??` 是 `||` 的升级版，`||` 会把所有 falsy 值替换，而 `??` 只管 `null` 和 `undefined`，更精准。
+
+## 3. 数组和对象的判空艺术
+
+数组和对象是前端的常客，判空的方式也五花八门。
+
+### 3.1 数组：length 是你的好朋友
+```javascript
+const arr = [];
+if (arr.length === 0) {
+  console.log("空数组，啥也没有");
+}
+```
+简单明了，`length` 为 `0` 就是空数组。但别忘了，`arr` 可能是 `null` 或 `undefined`，所以更稳的写法是：
+```javascript
+if (!arr || arr.length === 0) {
+  console.log("数组要么不存在，要么是空的");
+}
+```
+
+### 3.2 对象：Object.keys 的妙用
+```javascript
+const obj = {};
+if (Object.keys(obj).length === 0) {
+  console.log("空对象！");
+}
+```
+`Object.keys` 返回对象可枚举属性的数组，长度为 `0` 就是空对象。但同样要防着 `obj` 是 `null`：
+```javascript
+if (!obj || Object.keys(obj).length === 0) {
+  console.log("对象不存在或为空");
+}
+```
+
+**小 Tips**: 如果对象有不可枚举属性或者用 `Map`、`Set`，用 `Object.keys` 会漏掉东西。可以用 `for...in` 或者直接用 `Map.size`。
+
+### 3.3 幽默插曲
+有一次我忘了判空，直接调 `obj.name`，结果页面报了个 `Cannot read property 'name' of null`。我盯着屏幕，心想：“这代码咋比我还傲娇，非得让我哄着它才肯跑？”
+
+## 4. 现代 JS 的判空神器
+
+ES6 之后，JavaScript 给了我们几个新玩具，让判空变得更优雅。
+
+### 4.1 可选链 (?.)
+```javascript
+const user = { profile: null };
+const name = user?.profile?.name ?? "匿名用户";
+```
+可选链就像个温柔的管家，发现路径断了就默默返回 `undefined`，不会让你程序崩掉。搭配 `??`，简直无敌。
+
+### 4.2 空值合并 (??)
+```javascript
+const input = "";
+const value = input ?? "默认值"; // 结果是 ""，而不是 "默认值"
+```
+前面提过，`??` 只关心 `null` 和 `undefined`，不会误伤其他 falsy 值。
+
+**小 Tips**: 在 React 中，`props.value ?? "default"` 是处理默认值的利器，比 `||` 更安全。
+
+## 5. TypeScript 的判空加成
+
+用 TypeScript 的前端有福了，类型系统能帮你提前发现很多判空问题。
+
+### 5.1 非空断言 (!)
+```typescript
+const value = getValue()!; // 告诉 TS：我保证这不是 null/undefined
+```
+但别乱用，滥用非空断言就像跟 TS 说“我赌一把”，赌输了就炸 💥。
+
+### 5.2 类型守卫
+```typescript
+function isNotEmpty<T>(value: T | null | undefined): value is T {
+  return value !== null && value !== undefined;
+}
+
+const data = null;
+if (isNotEmpty(data)) {
+  data; // TS 知道这里是 never
+} else {
+  console.log("空的");
+}
+```
+自定义类型守卫能让代码更清晰，TS 也能更精准地推断类型。
+
+**小 Tips**: 把常用判空逻辑封装成工具函数，既复用又减少出错。
+
+## 6. 最佳实践：判空的“晓龙流”心得
+
+经过无数次踩坑，我总结了一些判空的最佳实践，分享给你：
+
+### 6.1 提前约定默认值
+```javascript
+const fetchData = (options = {}) => {
+  const { limit = 10, page = 1 } = options;
+  // ...
+};
+```
+用解构赋值和默认值，防患于未然。
+
+### 6.2 封装工具函数
+```javascript
+const isEmpty = (value) => {
+  if (value === null || value === undefined) return true;
+  if (Array.isArray(value)) return value.length === 0;
+  if (typeof value === "object") return Object.keys(value).length === 0;
+  return false;
+};
+```
+一个函数搞定常见场景，复用性拉满。
+
+### 6.3 日志打点救命
+```javascript
+function processData(data) {
+  if (!data) {
+    console.warn("数据为空，请检查上游逻辑", data);
+    return;
+  }
+  // ...
+}
+```
+加点日志，线上问题一查就明白。
+
+### 6.4 测试覆盖判空场景
+写单元测试时，专门测 `null`、`undefined`、空对象等边界情况，别等用户帮你发现 bug。
+
+**小 Tips**: 每次写完判空逻辑，想象自己是后端开发，丢个 `null` 过来，看看能不能接住。
+
+## 7. 总结：判空是一种态度
+
+判空不是单纯的技术活，更是一种态度。它体现你对代码的掌控、对用户的尊重、对异常的预判。从最简单的 `if (!value)` 到复杂的类型守卫，每一种方式都有它的舞台。关键是搞清楚场景，选对工具，别让“空”成为你的噩梦。
+
+下次写代码时，记得问自己：这个值会空吗？空了我咋办？用上本文的技巧，你会发现，判空也可以很酷 😎。
+
+---

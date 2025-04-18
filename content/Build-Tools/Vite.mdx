@@ -57,35 +57,74 @@ Vite 是一种新型的前端构建工具，旨在解决传统构建工具（如
    - 提供强大的 Vite 特有插件 API
    - 丰富的官方插件和社区生态
 
-## Vite 的工作原理
+## Vite vs Webpack：为什么 Vite 更快？
 
-Vite 的运行过程可以分为开发阶段和构建阶段：
+### 开发环境的差异
 
-### 开发阶段
+1. **启动方式**：
 
-1. **基于 ES 模块的开发服务器**：
+   - Webpack 需要先构建依赖图谱，打包所有模块后才能启动开发服务器
+   - Vite 利用浏览器原生 ESM 能力，无需打包即可启动，显著提升冷启动速度
 
-   - 利用浏览器原生 ESM 支持
-   - 按需编译和加载模块
-   - 智能的模块依赖分析
+2. **模块加载**：
 
-2. **按需转换模块**：
-   - 仅在请求时编译所需模块
-   - 高效的缓存策略
-   - 并行处理提升性能
+   - Webpack 使用自定义模块系统，需要将所有模块打包成 bundle
+   - Vite 让浏览器接管模块加载，实现真正的按需加载
 
-### 构建阶段
+3. **热更新性能**：
+   - Webpack 需要重新构建整个模块依赖树
+   - Vite 精确定位变更模块，仅让浏览器重新请求变更文件
 
-1. **基于 Rollup 的打包**：
+### Vite 的工作原理
 
-   - 智能的代码分割
-   - Tree-shaking 优化
-   - 资源压缩和优化
+#### 开发阶段
 
-2. **预构建优化**：
-   - 使用 esbuild 预构建依赖
-   - 缓存优化提升性能
-   - 自动 Polyfill 处理
+1. **预构建优化**：
+
+   ```javascript
+   // 示例：node_modules 中的依赖
+   import { createApp } from "vue";
+   // 转换为
+   import { createApp } from "./node_modules/.vite/vue.js";
+   ```
+
+   - 使用 esbuild 将 CommonJS/UMD 转换为 ESM 格式
+   - 将多个内部模块合并，减少请求数量
+   - 将非 ESM 依赖转换为 ESM，兼容浏览器原生支持
+
+2. **按需编译**：
+
+   ```javascript
+   // 浏览器请求
+   GET / src / components / Header.vue;
+
+   // Vite 服务器按需编译
+   compile("/src/components/Header.vue");
+   // 返回编译后的 JavaScript 模块
+   ```
+
+   - 仅在浏览器请求时编译对应模块
+   - 支持热更新，精确定位更新范围
+   - 利用 HTTP 缓存优化重复请求
+
+#### 生产构建
+
+1. **基于 Rollup 的优化打包**：
+
+   - 自动代码分割，提取公共模块
+   - 支持动态导入和 Tree-shaking
+   - CSS 代码分割和压缩优化
+
+2. **多重优化策略**：
+   ```javascript
+   // 示例：异步组件的代码分割
+   const Home = () => import("./views/Home.vue");
+   // 构建后生成独立的 chunk
+   // dist/assets/Home.8a9b4e2f.js
+   ```
+   - 使用 esbuild 进行依赖预构建和代码压缩
+   - 智能的静态资源处理策略
+   - 高效的缓存控制机制
 
 ## 性能优化最佳实践
 

@@ -3,10 +3,12 @@
 import { useState, useEffect } from "react";
 
 interface ArticleStats {
-  slug: string;
   views: number;
   likes: number;
-  likedBy?: string[];
+  favorites: number;
+  totalComments?: number;
+  avgReadTime?: number;
+  score?: number;
 }
 
 export function useArticleStats(slug: string) {
@@ -40,9 +42,19 @@ export function useArticleStats(slug: string) {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch(`/api/article-stats?slug=${slug}`);
+      const response = await fetch(`/api/article-stats?slug=${slug}`, {
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache",
+        },
+      });
       if (!response.ok) throw new Error("获取数据失败");
       const data = await response.json();
+      // 计算文章热度分数
+      data.score =
+        (data.views || 0) * 1 +
+        (data.likes || 0) * 2 +
+        (data.favorites || 0) * 3;
       setStats(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "未知错误");

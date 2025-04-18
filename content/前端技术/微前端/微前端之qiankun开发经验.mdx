@@ -1,0 +1,417 @@
+---
+title: "微前端之 qiankun 开发经验"
+date: "2024-04-06"
+description: "深入剖析 qiankun 微前端框架的开发经验，从原理到实践，带你玩转微前端的奇妙世界，包含进阶技巧与实战案例。"
+keywords: "微前端, qiankun, 前端架构, JavaScript, 单页应用, 微服务, Web 开发, 沙箱, 样式隔离"
+author: "晓龙"
+image: "/images/hero/qiankun-microfrontend.jpg"
+tags: ["微前端", "qiankun", "前端开发", "JavaScript"]
+category: "前端技术"
+---
+
+嗨，各位前端老铁们！今天咱们聊聊微前端界的“扛把子”——**qiankun**。如果你还没听说过它，简单来说，它是一个基于 **single-spa** 的微前端框架，号称能让你的项目“化整为零”，像搭积木一样把多个独立的前端应用拼在一起。听起来是不是有点像前端界的“变形金刚”？🔧
+
+作为一个在微前端战场摸爬滚打过的“老兵”，我用 qiankun 踩过坑，也挖过宝。这篇博客，我会从原理到实践，再到进阶技巧，带你全面解锁 qiankun 的玩法。内容有点长，建议泡杯咖啡☕，咱们慢慢聊——毕竟，微前端的世界可不是三言两语能讲完的！
+
+## 什么是微前端？先搞懂“为什么”
+
+在聊 qiankun 之前，咱们得先搞清楚微前端是啥，以及为啥要用它。微前端（Micro-Frontends）本质上是把后端微服务的思想搬到前端来。想象一下：一个巨无霸单页应用（SPA），代码量爆炸，团队协作像打群架，构建时间长到可以去吃顿饭——这时候，微前端就像一把“分身术”，把大项目拆成小块，每个团队负责一块，独立开发、独立部署，最后再拼起来。
+
+**类比时间**：如果把传统 SPA 比作一个大杂烩火锅，微前端就是自助餐——每盘菜独立端上来，想吃啥拿啥，互不干扰。qiankun 就是这个“自助餐”的服务员，帮你把这些“菜”端到主应用里，还保证它们不会打架。
+
+它的核心基于 single-spa，但加了更多开箱即用的功能，比如 JS 沙箱、样式隔离、预加载等。相比 single-spa 的“毛坯房”，qiankun 更像“精装修”，省心不少。
+
+---
+
+## qiankun 的核心原理：拆解“魔法”
+
+要用好 qiankun，得先搞懂它是怎么玩的。别被“微前端”这个高大上的词唬住，其实它的核心就三板斧：**注册**、**加载**、**隔离**。咱们一步步拆开看看。
+
+### 1. 注册微应用：大脑指挥中心
+
+qiankun 的主应用就像一个“指挥官”，通过 `registerMicroApps` 方法告诉系统有哪些微应用。比如：
+
+```javascript
+import { registerMicroApps, start } from 'qiankun';
+
+registerMicroApps([
+  {
+    name: 'app1', // 微应用名称，唯一标识
+    entry: '//localhost:3001', // 微应用入口，可以是 HTML 或 JS
+    container: '#subapp-container', // 挂载的 DOM 容器
+    activeRule: '/app1', // 激活路由规则
+  },
+  {
+    name: 'app2',
+    entry: '//localhost:3002',
+    container: '#subapp-container',
+    activeRule: '/app2',
+  },
+]);
+
+start(); // 启动 qiankun
+```
+
+**原理深入**：`registerMicroApps` 其实是把微应用的配置塞进一个全局注册表，然后 qiankun 会监听路由变化（基于 `history` 或 `hash`）。当 URL 匹配到 `activeRule`，它就触发加载流程。`activeRule` 支持字符串、数组甚至函数，灵活得很。
+
+**细节补充**：`entry` 不一定是远程 URL，也可以是本地路径（比如开发环境用 `/static/app1`），但线上建议用 CDN 加速。
+
+**Tips**：如果你的路由有动态参数（比如 `/app1/:id`），可以用函数写法：
+
+```javascript
+activeRule: (location) => location.pathname.startsWith('/app1'),
+```
+
+### 2. 加载微应用：从“外卖”到“上桌”
+
+加载过程是 qiankun 的“魔法时刻”。当路由触发后，qiankun 会：
+
+1. 通过 `fetch` 请求 `entry` 地址，拉取微应用的 HTML。
+2. 用正则解析 HTML，提取 `<script>`（JS 逻辑）、`<style>`（样式）和 `<link>`（外部资源）。
+3. 执行 JS，渲染到指定 `container`。
+
+**类比**：这就像你在网上订了个外卖，qiankun 是外卖员，负责把“菜”（微应用）送到你家（主应用容器），还帮你摆好盘。
+
+**细节补充**：加载时，qiankun 会把微应用的 `<script>` 包装成 `eval` 或动态 `script` 标签执行。如果你的微应用是单 JS 文件（比如 UMD 格式），它会直接加载并调用暴露的生命周期函数。
+
+**Tips**：微应用的 `entry` 建议用 HTML 文件，因为它更直观，调试时直接打开浏览器就能看。JS 入口虽然轻量，但出错时定位问题像“盲盒”。
+
+### 3. 隔离机制：避免“邻居纠纷”
+
+微前端最头疼的问题是“打架”：多个应用的 JS 全局变量冲突，CSS 样式互相覆盖。qiankun 提供了两种隔离方案：
+
+- **JS 沙箱**：默认用 `ProxySandbox`（基于 `Proxy`），老项目用 `SnapshotSandbox`（快照模式）。
+- **样式隔离**：支持 Shadow DOM 或动态添加 scoped 前缀。
+
+**深入原理**：`ProxySandbox` 通过代理 `window` 对象，拦截所有全局变量的读写。比如：
+
+```javascript
+const sandbox = new Proxy(window, {
+  get(target, key) {
+    if (key === 'myVar') return sandbox.local[key]; // 隔离变量
+    return target[key];
+  },
+  set(target, key, value) {
+    sandbox.local[key] = value; // 存到沙箱本地
+    return true;
+  },
+});
+```
+
+`SnapshotSandbox` 则是在微应用切换时保存和恢复 `window` 的状态，像“存档读档”，但性能开销大。
+
+**细节补充**：样式隔离默认是动态加前缀（比如 `data-qiankun-app1`），但对 CSS-in-JS（像 styled-components）支持不好，可能需要手动处理。
+
+**Tips**：如果微应用用的是 jQuery 或老版 AngularJS，`ProxySandbox` 可能会挂，切换到 `SnapshotSandbox` 试试。
+
+---
+
+## 开发实践：从零到一
+
+原理讲完了，咱们动手干！假设我们要搭一个主应用 + 两个微应用（React 和 Vue）的项目。
+
+### 主应用搭建：轻量“空壳”
+
+主应用是个“空壳”，只负责加载微应用。用 React 举例：
+
+```javascript
+// main/src/App.js
+import { useEffect } from 'react';
+import { registerMicroApps, start } from 'qiankun';
+
+const App = () => {
+  useEffect(() => {
+    registerMicroApps([
+      {
+        name: 'reactApp',
+        entry: '//localhost:3001',
+        container: '#container',
+        activeRule: '/react',
+        props: { userId: '123' }, // 传点数据
+      },
+      {
+        name: 'vueApp',
+        entry: '//localhost:3002',
+        container: '#container',
+        activeRule: '/vue',
+      },
+    ]);
+    start({ prefetch: 'all' }); // 预加载所有微应用
+  }, []);
+
+  return (
+    <div>
+      <nav>
+        <a href="/react">React App</a>
+        <a href="/vue">Vue App</a>
+      </nav>
+      <div id="container"></div>
+    </div>
+  );
+};
+
+export default App;
+```
+
+**Tips**：主应用别塞太多业务逻辑，不然就成了“伪微前端”。导航可以用 React Router，但记得和 `activeRule` 保持一致。
+
+### 微应用改造：暴露“身份证”
+
+微应用需要暴露三个生命周期函数：`bootstrap`（初始化）、`mount`（挂载）、`unmount`（卸载）。以 React 微应用为例：
+
+```javascript
+// react-app/src/main.js
+import ReactDOM from 'react-dom';
+import App from './App';
+
+function render({ container }) {
+  const dom = container ? container.querySelector('#root') : document.getElementById('root');
+  ReactDOM.render(<App />, dom);
+}
+
+if (!window.__POWERED_BY_QIANKUN__) {
+  render({}); // 独立运行
+}
+
+export async function bootstrap() {
+  console.log('React 微应用启动啦！');
+}
+
+export async function mount(props) {
+  console.log('挂载啦，收到 props:', props);
+  render(props);
+}
+
+export async function unmount(props) {
+  const dom = props.container ? props.container.querySelector('#root') : document.getElementById('root');
+  ReactDOM.unmountComponentAtNode(dom);
+}
+```
+
+**细节补充**：`props` 里除了自定义数据，还包含 qiankun 注入的 `name`、`container` 等信息，可以用来做动态配置。
+
+**Tips**：加个 `window.__POWERED_BY_QIANKUN__` 判断，微应用就能既独立跑，又能被 qiankun 接管，开发调试两不误。
+
+### 配置微应用打包：UMD 是标配
+
+用 Webpack 配置微应用的 `output`：
+
+```javascript
+// webpack.config.js
+module.exports = {
+  output: {
+    library: 'reactApp', // 微应用名称
+    libraryTarget: 'umd', // UMD 格式
+    jsonpFunction: 'webpackJsonp_reactApp', // 避免冲突
+    publicPath: '//localhost:3001/', // 静态资源路径
+  },
+  devServer: {
+    headers: {
+      'Access-Control-Allow-Origin': '*', // 跨域支持
+    },
+  },
+};
+```
+
+**细节补充**：`publicPath` 一定要配对，不然微应用的图片、CSS 会 404。开发时加 CORS 头，线上用 CDN 就没这问题。
+
+**Tips**：`jsonpFunction` 每个微应用要不同，不然 Webpack 的 chunk 加载会冲突。
+
+---
+
+## 最佳实践：避坑指南
+
+用 qiankun 踩坑是家常便饭，我总结了几个实用技巧，助你少走弯路。
+
+### 1. 通信：别乱用全局变量
+
+微应用之间通信是个大问题。qiankun 提供了 `props` 传递数据：
+
+```javascript
+// 主应用
+registerMicroApps([
+  {
+    name: 'app1',
+    entry: '//localhost:3001',
+    container: '#container',
+    activeRule: '/app1',
+    props: { token: '12345', onEvent: (data) => console.log(data) },
+  },
+]);
+
+// 微应用
+export function mount(props) {
+  console.log(props.token); // 拿到 token
+  props.onEvent('Hello from app1'); // 回调主应用
+}
+```
+
+**进阶玩法**：用 `initGlobalState` 创建全局状态：
+
+```javascript
+// 主应用
+import { initGlobalState } from 'qiankun';
+const state = { user: 'xiaolong' };
+const actions = initGlobalState(state);
+actions.onGlobalStateChange((newState) => console.log(newState));
+
+// 微应用
+props.setGlobalState({ user: 'newUser' });
+```
+
+**Tips**：`props` 适合简单传值，全局状态适合复杂场景，但别滥用，不然又回到“全局变量地狱”。
+
+### 2. 样式隔离：别指望万能
+
+默认的样式隔离不一定靠谱，尤其是用 CSS-in-JS 的项目。建议：
+
+- 用 CSS Modules 或 BEM。
+- 手动加前缀，比如 `.app1 .button {}`。
+- 开启 Shadow DOM：`start({ experimentalStyleIsolation: true })`。
+
+**细节补充**：Shadow DOM 对老浏览器（IE11）不友好，慎用。CSS-in-JS 可以用 `styled-components` 的 `StyleSheetManager` 指定容器。
+
+**Tips**：测试时多切几个微应用，看看样式有没有“串门”。
+
+### 3. 性能优化：预加载救命
+
+微应用加载慢会卡页面，用 `start({ prefetch: true })` 预加载：
+
+```javascript
+start({ prefetch: 'all' }); // 全部预加载
+```
+
+**进阶玩法**：动态加载，用 `loadMicroApp`：
+
+```javascript
+import { loadMicroApp } from 'qiankun';
+
+const microApp = loadMicroApp({
+  name: 'app1',
+  entry: '//localhost:3001',
+  container: '#container',
+});
+microApp.mount(); // 手动挂载
+```
+
+**Tips**：`prefetch: 'all'` 适合小项目，大项目用路由钩子按需加载，不然首屏像“乌龟赛跑”。
+
+### 4. 调试技巧：别抓瞎
+
+微应用挂了不好定位？试试：
+
+- 主应用加 `devtools: true`，开启 qiankun 调试。
+- 微应用独立跑一遍，排除问题。
+- Chrome 开发者工具搜 `qiankun`，看沙箱日志。
+
+**细节补充**：可以用 `window.__QIANKUN_DEVELOPMENT__` 判断环境，打印更多日志。
+
+**Tips**：微应用报错时，先检查生命周期函数有没有漏写。
+
+### 5. 路由同步：别让用户迷路
+
+主应用和微应用的路由要同步。比如用 React Router：
+
+```javascript
+// 主应用
+import { BrowserRouter, Route } from 'react-router-dom';
+
+const App = () => (
+  <BrowserRouter>
+    <Route path="/react" component={() => <div id="container" />} />
+  </BrowserRouter>
+);
+```
+
+**Tips**：微应用里也用同样的路由库，避免跳转时“两边不认账”。
+
+---
+
+## 真实案例：从“乱炖”到“有序”
+
+我之前接手过一个电商项目，SPA 代码量超 50 万行，构建 10 分钟起步。后来用 qiankun 拆成 4 个微应用：
+
+- 主应用：导航 + 路由管理（React）。
+- 微应用 1：商品列表（React）。
+- 微应用 2：购物车（Vue）。
+- 微应用 3：用户中心（Angular）。
+
+**细节补充**：拆分时按业务域划分，商品列表和购物车独立部署，用户中心因为历史包袱用了老版 Angular。结果构建时间砍到 2 分钟，团队并行开发效率翻倍。
+
+**血泪教训**：Angular 微应用的沙箱兼容性问题让我抓狂，最后改用 `SnapshotSandbox` 才搞定。还有一次忘了配 `publicPath`，线上图片全 404，差点被老板“请喝茶”。
+
+**幽默插曲**：有次忘了关预加载，页面加载像蜗牛爬，同事调侃我：“这微前端是微了，速度也微了！”😂
+
+---
+
+## 进阶技巧：玩出花样
+
+### 1. 动态注册微应用
+
+项目大了，微应用可能动态增减，用 `loadMicroApp` 实现：
+
+```javascript
+fetch('/api/micro-apps')
+  .then((res) => res.json())
+  .then((apps) => {
+    apps.forEach((app) => loadMicroApp(app));
+  });
+```
+
+**Tips**：配合后端接口，微应用可以热插拔，像“乐高积木”。
+
+### 2. 自定义沙箱
+
+默认沙箱不够用？自己写一个：
+
+```javascript
+class CustomSandbox {
+  constructor() {
+    this.local = {};
+  }
+  active() {
+    // 激活沙箱
+  }
+  inactive() {
+    // 销毁沙箱
+  }
+}
+
+start({ sandbox: { custom: CustomSandbox } });
+```
+
+**Tips**：适合特殊场景，比如微应用需要共享某些全局变量。
+
+### 3. SSR 支持
+
+qiankun 默认不支持服务端渲染（SSR），但可以 hack：
+
+1. 主应用用 SSR 框架（Next.js）。
+2. 微应用用 `loadMicroApp` 客户端加载。
+
+**Tips**：SSR + 微前端是“硬骨头”，先跑通 CSR 再考虑。
+
+---
+
+## 常见问题 FAQ
+
+**Q：微应用加载失败怎么办？**  
+A：检查 `entry` 地址是否可访问，CORS 是否配置，生命周期函数是否正确暴露。
+
+**Q：样式冲突咋整？**  
+A：优先用 CSS Modules，手动加前缀，或试试 Shadow DOM。
+
+**Q：qiankun 支持 Vite 吗？**  
+A：支持，但需要调整打包配置，输出 UMD 格式。
+
+---
+
+## 总结：qiankun 值得一试吗？
+
+qiankun 不是银弹，但它确实能解决大项目协作和维护的痛点。它的学习曲线不算陡，文档也算友好（虽然偶尔得翻源码）。如果你团队人多、项目复杂，不妨试试——毕竟，谁不想把“巨无霸”变成“自助餐”呢？🍽️
+
+用了 qiankun，你会发现前端开发也可以像微服务一样“高大上”。当然，踩坑在所难免，但踩多了你就成“坑王”了！😎
+
+好了，写了这么多，手都酸了。希望这篇博客能帮到你！有啥问题，欢迎留言，咱们一起探讨。✌️
+
+---

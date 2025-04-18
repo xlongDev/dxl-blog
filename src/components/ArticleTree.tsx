@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Post } from "contentlayer/generated";
 import { ChevronRight, ChevronDown, FileText } from "lucide-react";
+import { useThemeUtils } from "@/hooks/useThemeUtils";
+import Link from "next/link";
 
 interface TreeNode {
   name: string;
@@ -17,6 +19,82 @@ interface ArticleTreeProps {
 
 const ArticleTree = ({ posts }: ArticleTreeProps) => {
   const [treeData, setTreeData] = useState(() => buildTree(posts));
+  const { theme } = useThemeUtils();
+
+  // 根据主题获取颜色
+  const getAccentColor = () => {
+    const themeColors = {
+      light: "text-blue-500",
+      dark: "text-blue-500",
+      green: "text-green-500",
+      purple: "text-purple-500",
+      orange: "text-orange-500",
+      blue: "text-blue-500",
+      pink: "text-pink-500",
+      brown: "text-amber-500",
+    };
+
+    return themeColors[theme as keyof typeof themeColors] || themeColors.light;
+  };
+
+  // 获取悬停时的文本颜色
+  const getHoverTextClass = () => {
+    const themeColors = {
+      light: "hover:text-blue-600",
+      dark: "hover:text-blue-600",
+      green: "hover:text-green-600",
+      purple: "hover:text-purple-600",
+      orange: "hover:text-orange-600",
+      blue: "hover:text-blue-600",
+      pink: "hover:text-pink-600",
+      brown: "hover:text-amber-600",
+    };
+
+    return themeColors[theme as keyof typeof themeColors] || themeColors.light;
+  };
+
+  const getBgClass = () => {
+    const themeColors = {
+      light: "bg-white/80 dark:bg-gray-800/80",
+      dark: "bg-gray-800/80",
+      green:
+        "bg-green-50/80 dark:bg-green-900/20 hover:bg-green-50/90 dark:hover:bg-green-900/30",
+      purple:
+        "bg-purple-50/80 dark:bg-purple-900/20 hover:bg-purple-50/90 dark:hover:bg-purple-900/30",
+      orange:
+        "bg-orange-50/80 dark:bg-orange-900/20 hover:bg-orange-50/90 dark:hover:bg-orange-900/30",
+      blue: "bg-blue-50/80 dark:bg-blue-900/20 hover:bg-blue-50/90 dark:hover:bg-blue-900/30",
+      pink: "bg-pink-50/80 dark:bg-pink-900/20 hover:bg-pink-50/90 dark:hover:bg-pink-900/30",
+      brown:
+        "bg-amber-50/80 dark:bg-amber-900/20 hover:bg-amber-50/90 dark:hover:bg-amber-900/30",
+    };
+
+    return themeColors[theme as keyof typeof themeColors] || themeColors.light;
+  };
+
+  const getBorderClass = () => {
+    const themeColors = {
+      light: "border-gray-200/50 dark:border-gray-700/50",
+      dark: "border-gray-700/50",
+      green:
+        "border-green-200/50 dark:border-green-700/50 hover:border-green-300/70 dark:hover:border-green-600/70",
+      purple:
+        "border-purple-200/50 dark:border-purple-700/50 hover:border-purple-300/70 dark:hover:border-purple-600/70",
+      orange:
+        "border-orange-200/50 dark:border-orange-700/50 hover:border-orange-300/70 dark:hover:border-orange-600/70",
+      blue: "border-blue-200/50 dark:border-blue-700/50 hover:border-blue-300/70 dark:hover:border-blue-600/70",
+      pink: "border-pink-200/50 dark:border-pink-700/50 hover:border-pink-300/70 dark:hover:border-pink-600/70",
+      brown:
+        "border-amber-200/50 dark:border-amber-700/50 hover:border-amber-300/70 dark:hover:border-amber-600/70",
+    };
+
+    return themeColors[theme as keyof typeof themeColors] || themeColors.light;
+  };
+
+  const accentColor = getAccentColor();
+  const bgClass = getBgClass();
+  const borderClass = getBorderClass();
+  const hoverTextClass = getHoverTextClass();
 
   function buildTree(posts: Post[]): TreeNode[] {
     const tree: { [key: string]: TreeNode } = {};
@@ -54,42 +132,65 @@ const ArticleTree = ({ posts }: ArticleTreeProps) => {
     return (
       <div key={node.name} className="pl-4">
         <div
-          className="flex items-center gap-2 py-2 cursor-pointer hover:text-blue-500"
+          className={`flex items-center gap-2 py-2 cursor-pointer ${hoverTextClass} transition-all duration-300`}
           onClick={() => toggleNode(node)}
         >
           {node.posts && node.posts.length > 0 ? (
             node.isExpanded ? (
-              <ChevronDown size={16} />
+              <ChevronDown
+                size={16}
+                className="transform transition-transform duration-300"
+              />
             ) : (
-              <ChevronRight size={16} />
+              <ChevronRight
+                size={16}
+                className="transform transition-transform duration-300"
+              />
             )
           ) : null}
           <span>{node.name}</span>
           {node.posts && (
-            <span className="text-sm text-gray-500">({node.posts.length})</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              ({node.posts.length})
+            </span>
           )}
         </div>
-        {node.isExpanded && node.posts && (
-          <div className="pl-6">
-            {node.posts.map((post) => (
-              <a
-                key={post.url}
-                href={post.url}
-                className="flex items-center gap-2 py-1 text-sm hover:text-blue-500"
-              >
-                <FileText size={14} />
-                <span>{post.title}</span>
-              </a>
-            ))}
-          </div>
-        )}
+        <div
+          className={`overflow-hidden transition-all duration-300 ease-in-out ${
+            node.isExpanded
+              ? "max-h-[1000px] opacity-100 scale-y-100 origin-top"
+              : "max-h-0 opacity-0 scale-y-0 origin-top"
+          }`}
+        >
+          {node.posts && (
+            <div className="pl-6 pt-1">
+              {node.posts.map((post) => (
+                <Link
+                  key={post.url}
+                  href={post.url}
+                  className={`flex items-center gap-2 py-1 text-sm ${hoverTextClass} transition-all duration-300`}
+                >
+                  <FileText size={14} className={accentColor} />
+                  <span
+                    className="block"
+                    title={post.description || post.title}
+                  >
+                    {post.title}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     );
   };
 
   return (
-    <div className="w-full max-w-xs bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
-      <h3 className="text-lg font-semibold mb-4">文章目录</h3>
+    <div
+      className={`w-full max-w-sm ${bgClass} rounded-lg shadow-lg p-4 transition-all duration-300 hover:shadow-xl border ${borderClass} backdrop-blur-sm`}
+    >
+      <h3 className={`text-lg font-semibold mb-4 ${accentColor}`}>文章目录</h3>
       <div className="overflow-y-auto max-h-[600px]">
         {treeData.map((node) => renderNode(node))}
       </div>

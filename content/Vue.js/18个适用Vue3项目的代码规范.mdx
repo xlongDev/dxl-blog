@@ -1,0 +1,560 @@
+---
+title: "18个适用Vue3项目的代码规范"
+date: "2024-05-22"
+description: "一份全面且实用的 Vue3 项目代码规范，涵盖命名、组件设计、状态管理、性能优化等，带你从原理到实践打造高质量代码。"
+keywords: "Vue3, 代码规范, 前端开发, 组件化, 状态管理, 性能优化, TypeScript, Composition API"
+author: "晓龙"
+image: "/images/hero/vue3-code-spec.jpg"
+tags: ["Vue3", "前端开发", "JavaScript", "TypeScript"]
+category: "Vue.js"
+---
+
+嗨，各位前端老铁！👋 作为一名在 Vue3 项目里摸爬滚打多年的开发者，我深知一个项目如果没有清晰的代码规范，就像一盘没有调料的麻辣烫——看着热闹，吃起来却没滋味。今天，我就带你从零到一梳理 **18个适用于 Vue3 项目的代码规范**，不仅有干货，还会聊聊背后的原理、踩过的坑，甚至加点幽默调味，让你读完既能学到东西，又不会觉得像在啃教科书。准备好了吗？让我们直接起飞！🚀
+
+---
+
+## 1. 文件命名：清晰是王道，别让队友猜谜
+
+Vue 文件命名是个老生常谈的话题，但却是团队协作的第一道门面。推荐使用 **kebab-case（短横线命名）**，比如 `my-component.vue`，而不是 `MyComponent.vue` 或 `myComponent.vue`。
+
+**为什么？**  
+- 短横线命名在文件系统和 URL 中更友好（毕竟 HTML 属性都不区分大小写）。  
+- 统一风格能避免“今天用驼峰，明天用蛇形”的混乱局面。
+
+**最佳实践：**  
+- 单文件组件用短横线：`user-profile.vue`  
+- 工具函数或 hooks 文件可以用驼峰：`useFetch.ts`  
+- 目录名也尽量用短横线：`components/user-info`
+
+**举例：**  
+```vue
+<!-- 👍 推荐 -->
+<user-profile />
+
+<!-- 👎 不推荐 -->
+<UserProfile />
+<userProfile />
+```
+
+---
+
+## 2. 组件命名：语义化第一，别整些“神仙”名字
+
+组件名要让人一眼看出它的用途，别取像 `Comp1` 这种“抽象派艺术”名字。Vue3 推荐组件名用 **PascalCase**（大驼峰），因为它在模板中更直观，且与 JS 类名风格一致。
+
+**为什么？**  
+- `<UserCard>` 比 `<usercard>` 或 `<uc>` 可读性强多了。  
+- 大驼峰还能避免与 HTML 原生标签冲突。
+
+**最佳实践：**  
+- 用具体名词或名词短语：`UserCard`、`OrderList`  
+- 避免缩写，除非是团队公认的：`Btn`（按钮）可以，但 `Uc`（啥意思？）不行。
+
+**举例：**  
+```vue
+<!-- 👍 推荐 -->
+<UserCard :user="currentUser" />
+
+<!-- 👎 不推荐 -->
+<Uc :u="currentUser" />
+```
+
+---
+
+## 3. Props 定义：TypeScript 加持，告别“猜类型”时代
+
+Vue3 的 Composition API 和 TypeScript 是绝配，定义 props 时尽量用 `defineProps` 配合类型声明，别再用老式的 `props: { name: String }` 了。
+
+**为什么？**  
+- 类型推导更强，IDE 提示更智能。  
+- 减少运行时错误，比如传了个 `undefined` 还浑然不觉。
+
+**最佳实践：**  
+- 用接口定义 props 类型。  
+- 添加默认值和必填校验。
+
+**举例：**  
+```vue
+<script setup lang="ts">
+interface Props {
+  name: string
+  age?: number // 可选
+}
+
+const props = defineProps<Props>()
+
+defineOptions({
+  default: () => ({
+    age: 18
+  })
+})
+</script>
+
+<template>
+  <div>{{ name }} is {{ age }} years old</div>
+</template>
+```
+
+**幽默彩蛋：**  
+以前没 TS，我传 props 就像盲盒抽奖，抽到啥全凭运气。现在？类型安全，妈妈再也不用担心我传错参数了！😂
+
+---
+
+## 4. 事件命名：动词开头，意图明确
+
+自定义事件名用 **kebab-case**，以动词开头，比如 `update-value` 或 `fetch-data`。
+
+**为什么？**  
+- 动词开头能表达“发生了什么”，符合事件语义。  
+- 短横线与 HTML 事件（如 `on-click`）保持一致。
+
+**最佳实践：**  
+- 用 `emit` 发射事件时，类型声明别忘了。  
+- 事件名尽量具体，避免 `change` 这种万金油。
+
+**举例：**  
+```vue
+<script setup lang="ts">
+const emit = defineEmits<{
+  'update-value': [value: string]
+}>()
+
+function handleInput(e: Event) {
+  emit('update-value', (e.target as HTMLInputElement).value)
+}
+</script>
+
+<template>
+  <input @input="handleInput" />
+</template>
+```
+
+---
+
+## 5. 状态管理：Pinia 是标配，别再纠结 Vuex
+
+Vue3 项目里，状态管理首选 **Pinia**。它轻量、直观，还支持 Composition API。
+
+**为什么？**  
+- Vuex 的 `mutations` 和 `actions` 分离太繁琐，Pinia 直接用 `ref` 和函数搞定。  
+- TS 支持更好，类型推导丝滑。
+
+**最佳实践：**  
+- Store 文件放在 `stores/` 目录，按模块命名：`stores/user.ts`  
+- 用 `use` 前缀命名：`useUserStore`  
+- 尽量用 `ref` 而不是 `reactive`，更易于解构。
+
+**举例：**  
+```ts
+// stores/user.ts
+import { defineStore } from 'pinia'
+
+export const useUserStore = defineStore('user', () => {
+  const name = ref('晓龙')
+  const age = ref(25)
+
+  function growUp() {
+    age.value++
+  }
+
+  return { name, age, growUp }
+})
+```
+
+**类比：**  
+Pinia 就像个轻装上阵的旅行者，Vuex 则是背着满满一书包旧装备的老兵。选择 Pinia，少点负担多点快乐！🌟
+
+---
+
+## 6. 组件拆分：小而美，别造“巨无霸”
+
+一个组件如果超过 200 行代码，就该考虑拆分了。Vue3 的组件化设计鼓励 **单一职责原则**。
+
+**为什么？**  
+- 小组件复用性强，维护成本低。  
+- “巨无霸”组件改一行代码，动辄影响全局，心态容易崩。
+
+**最佳实践：**  
+- UI 组件和逻辑组件分开：`UserAvatar.vue`（纯展示）、`UserProfile.vue`（带逻辑）。  
+- 提取公共逻辑到 `composables/`，用 hooks 复用。
+
+**举例：**  
+```vue
+<!-- UserAvatar.vue -->
+<script setup lang="ts">
+defineProps<{ avatar: string }>()
+</script>
+
+<template>
+  <img :src="avatar" alt="User Avatar" />
+</template>
+```
+
+```vue
+<!-- UserProfile.vue -->
+<script setup lang="ts">
+import UserAvatar from './UserAvatar.vue'
+import { useUserStore } from '@/stores/user'
+
+const userStore = useUserStore()
+</script>
+
+<template>
+  <div>
+    <UserAvatar :avatar="userStore.avatar" />
+    <p>{{ userStore.name }}</p>
+  </div>
+</template>
+```
+
+---
+
+## 7. Composition API：拥抱函数式，别恋战 Options API
+
+Vue3 的灵魂是 Composition API，尽量用 `<script setup>` 替代传统的 Options API。
+
+**为什么？**  
+- 逻辑复用更灵活，不用再写一堆 mixin。  
+- 代码组织更清晰，按功能分组而不是按选项散乱分布。
+
+**最佳实践：**  
+- 把相关逻辑抽成 `useXxx` hooks。  
+- 保持 setup 内代码简洁，复杂逻辑外移。
+
+**举例：**  
+```vue
+<script setup lang="ts">
+import { ref } from 'vue'
+import { useFetch } from '@/composables/useFetch'
+
+const { data, loading } = useFetch('/api/user')
+const count = ref(0)
+
+function increment() {
+  count.value++
+}
+</script>
+```
+
+**幽默彩蛋：**  
+Options API 就像老式收音机，调台麻烦还老掉线；Composition API 则是蓝牙音箱，连接简单音质还棒！🎶
+
+---
+
+## 8. 样式管理：Scoped 是底线，CSS 模块化是趋势
+
+Vue 的 `<style scoped>` 是默认选择，但别忘了探索 **CSS Modules** 或 **UnoCSS**。
+
+**为什么？**  
+- `scoped` 避免样式污染，但生成的 `[data-v-xxx]` 属性有时会增加调试难度。  
+- CSS 模块化更灵活，适合大型项目。
+
+**最佳实践：**  
+- 小项目用 `scoped`，中大型项目试试 `css modules` 或 `tailwind`。  
+- 避免全局样式，除非是主题变量。
+
+**举例：**  
+```vue
+<style scoped>
+.user-card {
+  padding: 16px;
+  border-radius: 8px;
+}
+</style>
+```
+
+```vue
+<style module>
+.userCard {
+  padding: 16px;
+  border-radius: 8px;
+}
+</style>
+
+<template>
+  <div :class="$style.userCard">...</div>
+</template>
+```
+
+---
+
+## 9. 性能优化：懒加载和按需加载是标配
+
+Vue3 项目大了，性能优化不能忽视。路由懒加载和组件按需加载是基本功。
+
+**为什么？**  
+- 首屏加载快，用户体验好。  
+- 按需加载能显著减少打包体积。
+
+**最佳实践：**  
+- 用 `defineAsyncComponent` 动态加载组件。  
+- 路由用 `() => import()` 实现懒加载。
+
+**举例：**  
+```ts
+// router/index.ts
+const routes = [
+  {
+    path: '/about',
+    component: () => import('../views/About.vue')
+  }
+]
+```
+
+```vue
+<script setup lang="ts">
+import { defineAsyncComponent } from 'vue'
+
+const HeavyComponent = defineAsyncComponent(() => import('./HeavyComponent.vue'))
+</script>
+```
+
+---
+
+## 10. 错误处理：try-catch 不能少，优雅提示是加分项
+
+网络请求或复杂逻辑里，记得加错误处理，别让用户面对白屏一脸懵。
+
+**为什么？**  
+- 未处理的错误会导致程序崩溃。  
+- 友好的提示能提升用户信任。
+
+**最佳实践：**  
+- 用 `try-catch` 包裹异步操作。  
+- 用 Toast 或 Modal 提示错误。
+
+**举例：**  
+```vue
+<script setup lang="ts">
+import { ref } from 'vue'
+import { useToast } from '@/composables/useToast'
+
+const toast = useToast()
+const loading = ref(false)
+
+async function fetchData() {
+  try {
+    loading.value = true
+    const res = await fetch('/api/data')
+    if (!res.ok) throw new Error('Network error')
+  } catch (error) {
+    toast.error('Oops，出错了！' + error.message)
+  } finally {
+    loading.value = false
+  }
+}
+</script>
+```
+
+---
+
+## 11. TypeScript：类型安全是信仰，别偷懒
+
+Vue3 和 TS 是天作之合，尽量给所有变量、函数加类型。
+
+**为什么？**  
+- 类型错误在编译时就能发现，省去运行时 debug 的痛苦。  
+- 团队协作时，类型是最好的文档。
+
+**最佳实践：**  
+- 用 `interface` 定义复杂对象，`type` 定义联合类型。  
+- 避免滥用 `any`，那是“投降宣言”。
+
+**举例：**  
+```ts
+interface User {
+  id: number
+  name: string
+}
+
+function greet(user: User): string {
+  return `Hello, ${user.name}!`
+}
+```
+
+---
+
+## 12. 注释：写给人看，别写给自己看
+
+代码注释不是越多越好，而是要写得有意义。
+
+**为什么？**  
+- 好的注释能帮队友快速上手。  
+- 没用的注释（如 `// 循环`）纯属浪费时间。
+
+**最佳实践：**  
+- 解释“为什么”，而不是“做什么”。  
+- 用 JSDoc 格式写复杂函数的注释。
+
+**举例：**  
+```ts
+/**
+ * 计算用户积分，考虑活动加成和基础分
+ * @param user 用户对象
+ * @param bonus 活动加成系数
+ * @returns 总积分
+ */
+function calcPoints(user: User, bonus: number): number {
+  return user.basePoints * bonus
+}
+```
+
+---
+
+## 13. 测试：单元测试不是摆设，TDD 是未来
+
+Vue3 项目建议用 **Vitest** 写单元测试，别觉得测试是“浪费时间”。
+
+**为什么？**  
+- 测试能保证代码改动后的稳定性。  
+- Vitest 轻量又快，集成 TS 无缝。
+
+**最佳实践：**  
+- 测试组件渲染和逻辑函数。  
+- 用 `describe` 和 `it` 组织测试用例。
+
+**举例：**  
+```ts
+import { describe, it, expect } from 'vitest'
+import { calcPoints } from './utils'
+
+describe('calcPoints', () => {
+  it('should calculate points with bonus', () => {
+    const user = { basePoints: 100 }
+    expect(calcPoints(user, 1.5)).toBe(150)
+  })
+})
+```
+
+---
+
+## 14. Git 提交：规范 Commit，历史清晰如流水账
+
+Git 提交信息要写得像故事，别用“fix bug”这种敷衍话。
+
+**为什么？**  
+- 清晰的提交历史方便回溯和 review。  
+- 规范的格式还能生成 Changelog。
+
+**最佳实践：**  
+- 用 `<type>(<scope>): <description>` 格式，如 `feat(user): add login form`。  
+- 描述具体改动，别太泛泛。
+
+**举例：**  
+```
+feat(profile): add avatar upload component
+fix(api): handle fetch error gracefully
+docs(readme): update installation guide
+```
+
+---
+
+## 15. 工具函数：复用是美德，别重复造轮子
+
+通用的逻辑抽成工具函数，放在 `utils/` 或 `composables/` 里。
+
+**为什么？**  
+- 减少代码重复，维护更省心。  
+- 抽离后还能加测试保证质量。
+
+**举例：**  
+```ts
+// utils/format.ts
+export function formatDate(date: Date): string {
+  return date.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
+}
+```
+
+---
+
+## 16. 代码格式化：Prettier + ESLint，双剑合璧
+
+代码风格靠工具统一，别靠人肉对齐。
+
+**为什么？**  
+- Prettier 管格式，ESLint 管规则，省去争吵时间。  
+- 统一的风格让代码库像一个作者写的。
+
+**最佳实践：**  
+- 配置 `.prettierrc` 和 `.eslintrc`。  
+- 用 VSCode 的“保存时格式化”功能。
+
+**举例：**  
+```json
+// .prettierrc
+{
+  "semi": true,
+  "singleQuote": true,
+  "tabWidth": 2
+}
+```
+
+---
+
+## 17. 国际化：i18n 从一开始就考虑，别临时抱佛脚
+
+Vue3 项目用 **vue-i18n** 支持多语言，别等到上线才加。
+
+**为什么？**  
+- 国际化是产品扩展的必经之路。  
+- 提前设计能避免后期大改。
+
+**最佳实践：**  
+- 用 `t()` 函数包裹所有文本。  
+- 语言文件按模块拆分。
+
+**举例：**  
+```vue
+<script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+</script>
+
+<template>
+  <h1>{{ t('welcome') }}</h1>
+</template>
+```
+
+```json
+// locales/en.json
+{
+  "welcome": "Welcome to Vue3!"
+}
+```
+
+---
+
+## 18. 项目结构：分层清晰，别搞“大杂烩”
+
+Vue3 项目目录要规划好，别一股脑塞进 `src/`。
+
+**为什么？**  
+- 清晰的结构方便扩展和维护。  
+- 模块化是现代开发的基础。
+
+**最佳实践：**  
+- 按功能分层：`components/`、`views/`、`stores/`、`composables/`、`utils/`  
+- 大项目可以用 monorepo 拆包。
+
+**举例：**  
+```
+src/
+├── assets/          # 静态资源
+├── components/      # 公共组件
+├── composables/     # hooks
+├── stores/          # Pinia store
+├── utils/           # 工具函数
+├── views/           # 页面
+└── router/          # 路由
+```
+
+---
+
+## 结语：规范是起点，实践出真知
+
+以上 18 个规范是我在 Vue3 项目中踩坑、反思、总结出来的精华。它们不是教条，而是为你铺好一条平坦的路。代码规范就像炒菜的调料——用对了，味道自然好；用错了，可能连自己都吃不下去。😂
+
+希望这篇文章能给你带来启发，也欢迎在评论区分享你的经验和吐槽！让我们一起用 Vue3 写出优雅、高效、可维护的代码吧！✌️
+
+---

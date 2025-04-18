@@ -1,0 +1,83 @@
+/* 代码高亮样式 */
+pre {
+  @apply font-mono text-sm overflow-x-auto; /* 使用等宽字体、小字号、水平滚动 */
+  background-color: var(--code-bg) !important; /* 设置代码块背景颜色 */
+}
+
+/* 代码文字样式 */
+code {
+  @apply font-mono text-sm font-medium; /* 使用等宽字体、小字号、中等粗细 */
+  color: var(--code-text); /* 设置代码文字颜色 */
+  background-color: var(--code-inline-bg); /* 使用主题相关的背景高亮效果 */
+  padding: 0.2em 0.4em; /* 添加内边距使高亮效果更明显 */
+  border-radius: 0.25rem; /* 圆角效果 */
+  border: 1px solid rgba(125, 125, 125, 0.2); /* 添加细边框增强立体感 */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); /* 添加轻微阴影 */
+}
+
+/* 代码块容器样式 */
+.code-block {
+  @apply relative my-6 rounded-lg overflow-hidden; /* 相对定位、外边距、圆角、溢出隐藏 */
+  background-color: var(--code-bg); /* 设置代码块背景颜色 */
+}
+
+/* 高亮行样式 */
+.line--highlighted {
+  @apply bg-blue-500/10 border-l-2 border-blue-500; /* 背景颜色、左边框 */
+  margin-left: -1rem; /* 左边距 */
+  padding-left: calc(1rem - 2px); /* 左内边距 */
+}
+
+/* 高亮词样式 */
+.word--highlighted {
+  @apply bg-blue-500/10 rounded px-1; /* 背景颜色、圆角、内边距 */
+}
+
+/* 行号样式 */
+.line-number {
+  @apply text-gray-500 mr-4 select-none; /* 文字颜色、右边距、禁止选择 */
+  user-select: none; /* 禁止用户选择 */
+}
+
+/* 代码注释样式 */
+.comment {
+  @apply text-gray-500; /* 文字颜色 */
+}
+
+/* 字符串样式 */
+.string {
+  @apply text-green-400; /* 文字颜色 */
+}
+
+/* 关键字样式 */
+.keyword {
+  @apply text-purple-400; /* 文字颜色 */
+}
+
+/* 特定语法高亮样式 */
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: #7ec699 !important; /* 设置特定语法元素的颜色 */
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+  color: #67cdcc !important; /* 设置特定语法元素的颜色 */
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: #cc99cd !important; /* 设置特定语法元素的颜色 */
+}
+
+.token.function,
+.token.class-name {
+  color: #dd4a68 !important; /* 设置特定语法元素的颜色 */
+}

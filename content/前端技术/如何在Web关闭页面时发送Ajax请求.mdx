@@ -1,0 +1,173 @@
+---
+
+title: "如何在 Web 关闭页面时发送 Ajax 请求？"
+date: "2023-02-19"
+description: "深入探讨如何在用户关闭页面时优雅地发送 Ajax 请求，涵盖原理、实现方案、最佳实践与注意事项，助力前端开发者应对复杂场景。"
+keywords: "Ajax, Web 关闭页面, beforeunload, sendBeacon, 前端开发, JavaScript, 网络请求, 事件监听"
+author: "晓龙"
+image: "/images/hero/ajax-on-close.jpg"
+tags: ["JavaScript", "Web 开发", "前端优化"]
+category: "前端开发"
+
+---
+
+作为前端开发者，你是否遇到过这样的需求：用户关闭页面时，需要悄悄地发送一个请求到服务器，记录点什么，比如“用户跑路了”或者“会话结束了”？听起来简单，但实际操作起来却像是在和浏览器玩一场“猫捉老鼠”的游戏 🐱🐭。今天，我们就来彻底拆解这个场景，聊聊如何优雅地实现这个功能，深入原理，带上代码示例，再附赠一些实战小 tips，让你下次面对这种需求时胸有成竹。
+
+## 为什么这事儿不简单？
+
+在 Web 开发中，发送 Ajax 请求通常是家常便饭，用 `fetch` 或者 `XMLHttpRequest` 随便一写就搞定。但当页面关闭时，事情就变得棘手了。浏览器可不是你的好兄弟，它不会乖乖等着你的请求发完再关门走人。相反，它更像个急性子的快递员：包裹（页面）一扔，立马跑路，根本不管你的请求还在半路上晃荡。
+
+这背后的原因是，浏览器在页面卸载（unload）时会迅速终止所有未完成的任务，包括网络请求。这种行为是为了保证关闭页面的速度和用户体验，但对我们开发者来说，却是个不小的坑。那么，如何在这短暂的“告别时刻”里塞进一个 Ajax 请求呢？让我们一步步揭开答案。
+
+## 方案一：监听 `beforeunload` 事件 + 传统 Ajax
+
+最直观的思路是利用 `beforeunload` 事件。这个事件会在页面即将卸载时触发，给我们一个“临终遗言”的机会。来看看怎么实现：
+
+```javascript
+window.addEventListener('beforeunload', () => {
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', '/api/log-exit', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.send(JSON.stringify({ message: '用户跑路啦！' }));
+});
+```
+
+### 原理剖析
+`beforeunload` 是浏览器提供的一个生命周期事件，通常用于提醒用户“你有未保存的内容哦，确定要走吗？”。它的触发时机在页面关闭或刷新之前，理论上是个发送请求的好地方。但问题来了：浏览器并不会保证你的 Ajax 请求能发出去。为什么？因为 `XMLHttpRequest` 是异步的，而页面卸载是个“赶时间”的过程，浏览器可能在请求发出后立刻关闭页面，导致请求被取消。
+
+### 测试一下
+试试上面的代码，你会发现结果很随机。有时候请求能发出去，有时候就像扔进黑洞的信，连个回音都没有。这是因为浏览器实现的不一致性（是的，Chrome、Safari、Firefox 又双叒叕不统一了 🤦‍♂️）。
+
+### 小 Tips
+- **同步请求行不行？** 可以试试把 `xhr.open` 的第三个参数设为 `false`，强制同步请求。但现代浏览器对同步请求的支持越来越差，甚至会抛警告，性能也不友好，慎用！
+- **加个保险**：在 `beforeunload` 中返回一个字符串（比如 `return "确定要走吗？"`），会弹确认框，给请求争取点时间。不过，用户体验会变差，慎重考虑。
+
+## 方案二：`navigator.sendBeacon` —— 浏览器的小礼物 🎁
+
+既然传统 Ajax 不靠谱，浏览器老大哥给我们准备了一个专门的工具：`navigator.sendBeacon`。这玩意儿简直是为“临终请求”量身打造的。
+
+```javascript
+window.addEventListener('beforeunload', () => {
+  const data = new Blob([JSON.stringify({ message: '再见，我走啦！' })], {
+    type: 'application/json',
+  });
+  navigator.sendBeacon('/api/log-exit', data);
+});
+```
+
+### 为什么它更牛？
+`sendBeacon` 的核心优势在于，它将请求交给浏览器的原生队列处理。即使页面已经关闭，浏览器也会在后台默默完成发送，不会被粗暴打断。比喻一下，传统 Ajax 像是你在火车站台上喊话，车门一关就没戏了；而 `sendBeacon` 像是你提前把信塞进了邮筒，火车开走后邮差照样送。
+
+### 深入原理
+- **异步但可靠**：`sendBeacon` 是异步的，但它不会阻塞页面关闭，而是交给浏览器内核的网络层去处理。
+- **限制少**：不像 `XMLHttpRequest`，它不需要保持页面活跃，天然适合“关门请求”。
+- **数据格式**：支持 `Blob`、`FormData` 等格式，灵活性拉满。
+
+### 示例扩展：记录用户停留时间
+假设你想在用户离开时记录页面停留时间：
+
+```javascript
+const startTime = Date.now();
+window.addEventListener('beforeunload', () => {
+  const stayTime = Date.now() - startTime;
+  const formData = new FormData();
+  formData.append('stayTime', stayTime);
+  formData.append('page', window.location.pathname);
+  navigator.sendBeacon('/api/track', formData);
+});
+```
+
+服务器收到后，就能分析用户行为，简直不要太香！
+
+### 小 Tips
+- **检查兼容性**：`sendBeacon` 在现代浏览器（Chrome 39+、Firefox 31+、Safari 11.1+）都支持，但老古董（如 IE）不行。可以用 `if ('sendBeacon' in navigator)` 判断。
+- **数据大小限制**：请求 payload 一般建议控制在 64KB 内，超过可能被截断。
+- **调试技巧**：因为它是后台发送，开发者工具里可能看不到请求。可以在服务器日志里验证。
+
+## 方案三：结合 `visibilitychange` 做个双保险
+
+光靠 `beforeunload` 和 `sendBeacon` 还不够稳？那我们再加一层防护网：`visibilitychange` 事件。它会在页面可见性变化时触发，比如用户切换标签页或最小化窗口。
+
+```javascript
+let hasSent = false;
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden' && !hasSent) {
+    navigator.sendBeacon('/api/log-exit', JSON.stringify({ event: 'hidden' }));
+    hasSent = true; // 避免重复发送
+  }
+});
+
+window.addEventListener('beforeunload', () => {
+  if (!hasSent) {
+    navigator.sendBeacon('/api/log-exit', JSON.stringify({ event: 'unload' }));
+  }
+});
+```
+
+### 为什么这样做？
+用户不一定会直接关闭页面，可能先切换标签页再回来。`visibilitychange` 能提前捕获这种“半离场”状态，结合 `beforeunload`，形成双重保障。就像打游戏开双BUFF，稳中求胜！
+
+### 小 Tips
+- **去重逻辑**：用 `hasSent` 标志位防止重复发送，不然服务器可能会被你的“热情”淹没。
+- **场景适配**：如果只是记录“彻底离开”，可以只用 `beforeunload`；如果关心“临时离开”，加 `visibilitychange` 更全面。
+
+## 最佳实践：打造一个健壮的退出日志系统
+
+光会发请求还不够，咱们得把活干漂亮！以下是一些实战建议：
+
+1. **优雅降级**
+   ```javascript
+   window.addEventListener('beforeunload', () => {
+     const data = JSON.stringify({ message: '再见啦' });
+     if ('sendBeacon' in navigator) {
+       navigator.sendBeacon('/api/log-exit', data);
+     } else {
+       fetch('/api/log-exit', { method: 'POST', body: data, keepalive: true });
+     }
+   });
+   ```
+   - **解析**：用 `sendBeacon` 优先，fallback 到 `fetch` 的 `keepalive` 模式（Chrome 66+ 支持），双保险。
+   - **Tips**：`keepalive: true` 能让请求在页面关闭后继续存活，但数据量限制更严格（通常 64KB）。
+
+2. **批量发送**
+   如果需要发送多条数据，别一条条发，攒一波一起送：
+   ```javascript
+   const logs = [];
+   function logEvent(event) {
+     logs.push(event);
+   }
+   window.addEventListener('beforeunload', () => {
+     navigator.sendBeacon('/api/batch-log', JSON.stringify(logs));
+   });
+   ```
+
+3. **错误处理**
+   因为 `sendBeacon` 不返回 Promise，没法直接捕获失败。但可以在发送前做校验：
+   ```javascript
+   window.addEventListener('beforeunload', () => {
+     try {
+       const data = JSON.stringify({ message: 'bye' });
+       if (data.length > 60000) throw new Error('数据太大啦！');
+       navigator.sendBeacon('/api/log-exit', data);
+     } catch (e) {
+       console.error('发送失败：', e);
+     }
+   });
+   ```
+
+4. **用户体验优化**
+   别在 `beforeunload` 里干太多杂活，保持轻量。用户关页面时最讨厌卡顿，像极了超市结账时收银员磨蹭的感觉。
+
+## 注意事项：别踩这些坑！
+
+- **不要指望返回值**：`sendBeacon` 是单向的，别想着服务器回个“收到”，它压根不care。
+- **避免复杂计算**：页面关闭前的代码要快，别在这时候算什么斐波那契数列。
+- **测试环境差异**：开发时用 `localhost` 测试可能没问题，但线上 HTTPS 环境可能有跨域限制，提前配好 CORS。
+
+## 幽默结尾：浏览器不是你妈，但也能帮你送信
+
+实现“关闭页面发送 Ajax”这事儿，就像跟浏览器谈条件：你得快、准、狠，还要懂它的脾气。`beforeunload` 是老派做法，偶尔靠谱；`sendBeacon` 是新宠，稳如老狗；加上 `visibilitychange`，简直是三剑客齐上阵。希望这篇博客能帮你在下次需求里大展身手，别让产品经理抓着你问：“为啥数据没记下来？” 😜
+
+有什么疑问或者更骚的操作，欢迎留言，咱们一起探讨！毕竟，前端的世界里，坑多乐趣也多，对吧？
+
+--- 

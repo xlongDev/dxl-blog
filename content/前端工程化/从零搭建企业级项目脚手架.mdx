@@ -1,0 +1,511 @@
+---
+
+title: "Vite + Vue3 + TS 从零搭建企业级项目脚手架"
+date: "2024-05-04"
+description: "手把手教你用 Vite、Vue3 和 TypeScript 从零搭建一个企业级项目脚手架，深入原理，附带最佳实践和幽默吐槽，适合中高级前端开发者。"
+keywords: "Vite, Vue3, TypeScript, 企业级项目, 脚手架, 前端开发, 构建工具, 最佳实践"
+author: "晓龙"
+image: "/images/hero/vite-vue3-ts.jpg"
+tags: ["Vue3", "Vite", "TypeScript", "前端工程化"]
+category: "前端工程化"
+
+---
+
+嗨，各位前端老铁们！今天我们来聊点硬核的：如何用 **Vite + Vue3 + TypeScript** 从零打造一个企业级项目脚手架。不是那种“npm create vue 然后完事”的敷衍教程，而是深入原理、带点个人风格、还能让你边学边笑的那种。目标是打造一个既高效又优雅的开发环境，适合中大型项目，应对各种“产品经理的奇思妙想”。
+
+这篇文章会很长（毕竟要榨干我的 token），我会尽量把每个环节讲透，配上代码示例、最佳实践，甚至还有点类比和 emoji ✨。准备好了吗？让我们开始这场“基建之旅”吧！
+
+## 为什么选择 Vite + Vue3 + TS？
+
+在动手之前，先聊聊为啥选这三剑客：
+
+- **Vite**：新一代构建工具，基于 ES Modules，启动快得像吃了火箭燃料 🚀，热更新秒级响应，比 Webpack 爽太多。
+- **Vue3**：Composition API 带来的灵活性 + 性能优化，简直是“组件化开发”的新标杆。
+- **TypeScript**：类型安全是企业项目的命根子，少踩坑，多安心。
+
+类比一下：Vite 是跑车引擎，Vue3 是流线型车身，TS 是安全带，三者合一，跑得快还不翻车。好了，废话不多说，进入正题！
+
+## 第一步：初始化项目
+
+我们从一个干净的文件夹开始，假设你已经装好了 Node.js（建议用 LTS 版本，比如 20.x）。
+
+```bash
+mkdir vite-vue3-ts-scaffold && cd vite-vue3-ts-scaffold
+npm init -y
+```
+
+然后安装 Vite 和 Vue：
+
+```bash
+npm install vite vue @vitejs/plugin-vue -D
+```
+
+### 配置 Vite
+
+新建 `vite.config.ts`，这是 Vite 的心脏：
+
+```typescript
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+
+export default defineConfig({
+  plugins: [vue()],
+  resolve: {
+    alias: {
+      '@': '/src', // 路径别名，省得写一堆 ../../
+    },
+  },
+});
+```
+
+**Tips**: 别忘了加 `@` 别名，开发时少敲几下键盘，手腕会感谢你 🙌。
+
+### 创建入口文件
+
+新建 `index.html`：
+
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Vite + Vue3 + TS</title>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
+```
+
+然后是 `src/main.ts`：
+
+```typescript
+import { createApp } from 'vue';
+import App from './App.vue';
+
+createApp(App).mount('#app');
+```
+
+再来个 `src/App.vue`：
+
+```vue
+<template>
+  <h1>Hello, Vite + Vue3 + TS!</h1>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue';
+
+export default defineComponent({
+  name: 'App',
+});
+</script>
+```
+
+跑起来试试：
+
+```bash
+npx vite
+```
+
+浏览器打开 `http://localhost:5173`，看到标题就说明成功了！🎉
+
+## 第二步：引入 TypeScript
+
+Vite 默认支持 TS，但我们得手动调整几处。把 `src/main.ts` 改成这样：
+
+```typescript
+import { createApp } from 'vue';
+import App from './App.vue';
+
+const app = createApp(App);
+app.mount('#app');
+```
+
+然后给 `App.vue` 加点 TS 味儿：
+
+```vue
+<template>
+  <h1>{{ message }}</h1>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue';
+
+export default defineComponent({
+  name: 'App',
+  data: () => ({
+    message: 'Hello, TypeScript!' as string,
+  }),
+});
+</script>
+```
+
+新建 `tsconfig.json`：
+
+```json
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "strict": true,
+    "jsx": "preserve",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
+}
+```
+
+**Tips**: `"strict": true` 是硬核玩家的选择，能揪出潜在 bug，但新手可能会被类型报错搞得头秃，酌情关闭部分选项。
+
+## 第三步：企业级配置
+
+光跑起来可不行，企业项目得有“排面”。我们来加点料：路由、状态管理、代码规范、环境变量等。
+
+### 1. 集成 Vue Router
+
+安装：
+
+```bash
+npm install vue-router@4
+```
+
+新建 `src/router/index.ts`：
+
+```typescript
+import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
+
+const routes: RouteRecordRaw[] = [
+  {
+    path: '/',
+    name: 'Home',
+    component: () => import('../views/Home.vue'),
+  },
+  {
+    path: '/about',
+    name: 'About',
+    component: () => import('../views/About.vue'),
+  },
+];
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes,
+});
+
+export default router;
+```
+
+更新 `main.ts`：
+
+```typescript
+import { createApp } from 'vue';
+import App from './App.vue';
+import router from './router';
+
+const app = createApp(App);
+app.use(router);
+app.mount('#app');
+```
+
+新建 `src/views/Home.vue` 和 `About.vue`，随便写点内容测试。路由懒加载用 `import()`，能显著提升首屏速度。
+
+**Tips**: 路由懒加载是性能优化的“低挂果实”，别忘了用，不然老板问你为啥首屏慢，你只能摸头傻笑 😅。
+
+### 2. 状态管理：Pinia
+
+Pinia 是 Vue3 的官方推荐，安装：
+
+```bash
+npm install pinia
+```
+
+新建 `src/store/index.ts`：
+
+```typescript
+import { defineStore } from 'pinia';
+
+export const useMainStore = defineStore('main', {
+  state: () => ({
+    count: 0,
+  }),
+  actions: {
+    increment() {
+      this.count++;
+    },
+  },
+});
+```
+
+在 `main.ts` 引入：
+
+```typescript
+import { createApp } from 'vue';
+import { createPinia } from 'pinia';
+import App from './App.vue';
+import router from './router';
+
+const app = createApp(App);
+app.use(createPinia());
+app.use(router);
+app.mount('#app');
+```
+
+在组件里用：
+
+```vue
+<template>
+  <h1>Count: {{ store.count }}</h1>
+  <button @click="store.increment">加一</button>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue';
+import { useMainStore } from '@/store';
+
+export default defineComponent({
+  setup() {
+    const store = useMainStore();
+    return { store };
+  },
+});
+</script>
+```
+
+**Tips**: Pinia 的 `setup` 语法比 Vuex 简洁多了，少写一堆 `mapState`，幸福感直接拉满。
+
+### 3. ESLint + Prettier 代码规范
+
+代码乱了，团队开发就是灾难。安装：
+
+```bash
+npm install eslint prettier eslint-plugin-vue eslint-config-prettier -D
+```
+
+新建 `.eslintrc.js`：
+
+```javascript
+module.exports = {
+  env: {
+    browser: true,
+    es2021: true,
+    node: true,
+  },
+  extends: [
+    'eslint:recommended',
+    'plugin:vue/vue3-recommended',
+    'prettier',
+  ],
+  parserOptions: {
+    ecmaVersion: 12,
+    sourceType: 'module',
+  },
+  plugins: ['vue'],
+  rules: {
+    'vue/multi-word-component-names': 'off', // 组件名可以单词
+  },
+};
+```
+
+`.prettierrc`：
+
+```json
+{
+  "semi": false,
+  "singleQuote": true,
+  "trailingComma": "es5"
+}
+```
+
+**Tips**: 团队里总有人不爱格式化代码，配个 `husky` + `lint-staged`，提交时自动格式化，省得吵架。
+
+### 4. 环境变量
+
+新建 `.env.development` 和 `.env.production`：
+
+```
+# .env.development
+VITE_API_URL = "http://dev.api.com"
+```
+
+```
+# .env.production
+VITE_API_URL = "http://prod.api.com"
+```
+
+在 `vite.config.ts` 中启用：
+
+```typescript
+import { defineConfig, loadEnv } from 'vite';
+import vue from '@vitejs/plugin-vue';
+
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  return {
+    plugins: [vue()],
+    resolve: {
+      alias: {
+        '@': '/src',
+      },
+    },
+    define: {
+      'process.env': env,
+    },
+  };
+});
+```
+
+使用时：
+
+```typescript
+console.log(process.env.VITE_API_URL);
+```
+
+**Tips**: 环境变量名前加 `VITE_` 是 Vite 的约定，不然访问不到，踩坑一次就记住了。
+
+## 第四步：优化与扩展
+
+### 1. CSS 方案：Tailwind CSS
+
+安装：
+
+```bash
+npm install tailwindcss postcss autoprefixer -D
+npx tailwindcss init -p
+```
+
+`tailwind.config.js`：
+
+```javascript
+module.exports = {
+  content: ['./index.html', './src/**/*.{vue,js,ts}'],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+```
+
+新建 `src/style.css`：
+
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
+在 `main.ts` 引入：
+
+```typescript
+import './style.css';
+```
+
+**Tips**: Tailwind 是“原子化 CSS”的代表，写多了会有“class 名爆炸”的感觉，但熟练后效率飞起。
+
+### 2. 自动导入
+
+装个插件省心：
+
+```bash
+npm install unplugin-auto-import unplugin-vue-components -D
+```
+
+更新 `vite.config.ts`：
+
+```typescript
+import AutoImport from 'unplugin-auto-import/vite';
+import Components from 'unplugin-vue-components/vite';
+
+export default defineConfig({
+  plugins: [
+    vue(),
+    AutoImport({
+      imports: ['vue', 'vue-router'],
+      dts: 'src/auto-imports.d.ts',
+    }),
+    Components({
+      dts: 'src/components.d.ts',
+    }),
+  ],
+});
+```
+
+现在 `ref`、`reactive` 都不用手动导入了，爽！
+
+### 3. 打包优化
+
+Vite 默认打包已经很强，但企业项目可以加点料：
+
+```typescript
+export default defineConfig({
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['vue', 'vue-router', 'pinia'],
+        },
+      },
+    },
+    minify: 'esbuild',
+    sourcemap: true, // 调试用
+  },
+});
+```
+
+**Tips**: `manualChunks` 分包能让首屏更快，`sourcemap` 在生产关掉，免得泄露源码。
+
+## 第五步：深入原理
+
+### Vite 的快从何来？
+
+Vite 利用浏览器原生 ES Modules，开发时不打包，直接交给浏览器解析。生产时用 Rollup 打包，效率高到离谱。Webpack 则是“全家桶式”打包，启动慢得像老牛拉车。
+
+### Vue3 的 Composition API
+
+相比 Options API，Composition API 更灵活，逻辑复用靠 `setup` 和自定义 hooks。比如：
+
+```typescript
+// src/hooks/useCounter.ts
+import { ref } from 'vue';
+
+export function useCounter() {
+  const count = ref(0);
+  const increment = () => count.value++;
+  return { count, increment };
+}
+```
+
+使用：
+
+```vue
+<script lang="ts">
+import { useCounter } from '@/hooks/useCounter';
+
+export default {
+  setup() {
+    const { count, increment } = useCounter();
+    return { count, increment };
+  },
+};
+</script>
+```
+
+**Tips**: 自定义 hooks 是“逻辑复用”的神器，比 mixin 优雅太多。
+
+## 总结与彩蛋
+
+到这儿，一个企业级脚手架就成型了！从初始化到优化，我们覆盖了路由、状态管理、代码规范、环境变量、CSS 方案等方方面面。实际项目中，你可能还得加请求库（axios）、UI 框架（Element Plus）、单元测试（Vitest）等，但这套基础已经够扎实了。
+
+彩蛋时间：如果你觉得配置麻烦，我偷偷写了个 CLI 工具，跑一句 `npx create-vite-ts-scaffold` 就能生成这套模板（开玩笑啦，我没写，但你要是感兴趣可以自己搞一个）。
+
+有什么问题欢迎留言，咱们一起探讨！前端路漫漫，愿你我都能写出优雅的代码，少加点班 😜。
+
+--- 

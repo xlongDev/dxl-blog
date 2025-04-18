@@ -1,0 +1,273 @@
+---
+
+title: "聊聊 Vue computed 的实现原理"  
+date: "2023-10-18"  
+description: "从源码角度深入解析 Vue computed 的实现原理，带你理解其响应式核心、依赖收集与计算逻辑，结合实例让你轻松掌握其精髓。"  
+keywords: "Vue, computed, 响应式, 源码解析, 前端开发, 依赖收集, Reactive"  
+author: "晓龙"  
+image: "/images/hero/vue-computed.jpg"  
+tags: ["Vue", "JavaScript", "前端开发", "响应式编程"]  
+category: "Vue.js"  
+
+---
+
+Vue 作为一款广受欢迎的前端框架，其简洁的 API 和强大的响应式系统让无数开发者爱不释手。在 Vue 的众多特性中，`computed`（计算属性）是一个非常核心且实用的功能。它既能优化性能，又能让代码逻辑更清晰。今天，我们就来聊聊 `computed` 的实现原理，从源码层面深度剖析它的魔法，带你走进 Vue 响应式系统的核心。
+
+## 计算属性是什么？
+
+在聊实现原理之前，先简单回顾一下 `computed` 的基本概念。计算属性本质上是基于响应式数据的“衍生数据”，它的值会根据依赖的响应式数据自动更新。比如下面这个例子：
+
+```javascript
+const app = Vue.createApp({
+  data() {
+    return {
+      firstName: '张',
+      lastName: '三'
+    }
+  },
+  computed: {
+    fullName() {
+      return this.firstName + this.lastName
+    }
+  }
+})
+```
+
+在这个例子中，`fullName` 是一个计算属性，它依赖 `firstName` 和 `lastName`。当这两个值变化时，`fullName` 会自动重新计算。这看似简单，但背后却有一套精密的机制在支撑。接下来，我们就从 Vue 3 的源码入手，逐步拆解它的实现。
+
+## Vue 3 中 computed 的源码入口
+
+Vue 3 的源码基于 Composition API 重构，`computed` 的实现主要位于 `packages/reactivity/src/computed.ts` 文件中。我们先看看它的基本定义：
+
+```typescript
+export function computed<T>(
+  getterOrOptions: ComputedGetter<T> | ComputedOptions<T>
+): ComputedRef<T> {
+  let getter: ComputedGetter<T>
+  let setter: ComputedSetter<T> | undefined
+
+  // 判断传入的是 getter 函数还是对象（带 get 和 set）
+  const onlyGetter = isFunction(getterOrOptions)
+  if (onlyGetter) {
+    getter = getterOrOptions
+    setter = __DEV__ ? () => {
+      console.warn('Write operation failed: computed value is readonly')
+    } : NOOP
+  } else {
+    getter = getterOrOptions.get
+    setter = getterOrOptions.set
+  }
+
+  // 创建 computed ref 对象
+  return createComputedRef(getter, setter)
+}
+```
+
+从这段代码可以看出，`computed` 函数支持两种用法：
+1. 传入一个 getter 函数，返回只读的计算属性。
+2. 传入一个带有 `get` 和 `set` 的对象，返回可写的计算属性。
+
+最终，`computed` 会返回一个 `ComputedRef` 对象。那么这个 `ComputedRef` 是怎么实现的呢？我们继续深入。
+
+## ComputedRef 的核心实现
+
+`ComputedRef` 的创建依赖于 `createComputedRef` 函数，我们看看它的实现：
+
+```typescript
+function createComputedRef<T>(getter: ComputedGetter<T>, setter: ComputedSetter<T>) {
+  let value: T
+  let dirty = true // 标记是否需要重新计算
+  const effect = new ReactiveEffect(getter, () => {
+    if (!dirty) {
+      dirty = true
+      triggerRef(ref)
+    }
+  })
+
+  const ref: any = {
+    __v_isRef: true,
+    get value() {
+      if (dirty) {
+        value = effect.run()
+        dirty = false
+      }
+      trackRefValue(ref)
+      return value
+    },
+    set value(newValue) {
+      setter(newValue)
+    }
+  }
+
+  return ref as ComputedRef<T>
+}
+```
+
+这段代码是 `computed` 的核心逻辑，我们可以从中提炼出几个关键点：
+
+1. **ReactiveEffect**：计算属性本质上是一个 `ReactiveEffect` 实例，用于管理 getter 函数的执行和依赖收集。
+2. **dirty 标志**：通过 `dirty` 来控制缓存，只有当依赖变化时才重新计算。
+3. **getter 与 setter**：`value` 的 getter 会检查 `dirty`，决定是否需要重新运行 getter 函数；setter 则直接调用传入的 setter。
+4. **依赖追踪**：`trackRefValue` 用于收集依赖，确保计算属性与响应式数据关联起来。
+
+接下来，我们逐一拆解这些关键点。
+
+## 依赖收集与响应式核心
+
+Vue 的响应式系统依赖于 `ReactiveEffect` 和 `track`/`trigger` 机制。计算属性的 getter 函数运行时，会触发响应式数据的 `get` 操作，从而被 `track` 记录为依赖。例如：
+
+```javascript
+const app = Vue.createApp({
+  data() {
+    return {
+      price: 10,
+      quantity: 2
+    }
+  },
+  computed: {
+    total() {
+      return this.price * this.quantity
+    }
+  }
+})
+```
+
+当访问 `total` 时，getter 函数 `this.price * this.quantity` 会触发 `price` 和 `quantity` 的 `get` 操作。这时候，Vue 会通过 `track` 将当前的 `ReactiveEffect`（即计算属性的 effect）与这两个响应式属性关联起来。
+
+源码中的 `track` 逻辑大致如下（简化版）：
+
+```typescript
+function track(target: object, key: string | symbol) {
+  if (activeEffect) {
+    let depsMap = targetMap.get(target)
+    if (!depsMap) {
+      targetMap.set(target, (depsMap = new Map()))
+    }
+    let dep = depsMap.get(key)
+    if (!dep) {
+      depsMap.set(key, (dep = new Set()))
+    }
+    dep.add(activeEffect)
+  }
+}
+```
+
+- `targetMap` 是一个全局 WeakMap，存储所有响应式对象的依赖关系。
+- 当 `price` 被访问时，`track` 会将当前的 `effect` 添加到 `price` 的依赖集合中。
+
+## 缓存与 dirty 机制
+
+计算属性的一个重要特性是缓存。Vue 通过 `dirty` 标志来实现这一点。初始时，`dirty` 为 `true`，表示需要计算。当第一次访问 `total.value` 时，getter 运行并缓存结果，同时将 `dirty` 置为 `false`。
+
+如果依赖未发生变化，再次访问 `total.value` 时，直接返回缓存的 `value`，不会重新计算。这大大提高了性能，尤其是在复杂计算场景下。
+
+当依赖变化时（比如 `price.value = 20`），Vue 会通过 `trigger` 通知所有相关 effect：
+
+```typescript
+function trigger(target: object, key: string | symbol) {
+  const depsMap = targetMap.get(target)
+  if (!depsMap) return
+  const dep = depsMap.get(key)
+  if (dep) {
+    const effects = new Set(dep)
+    effects.forEach(effect => {
+      if (effect.scheduler) {
+        effect.scheduler()
+      } else {
+        effect.run()
+      }
+    })
+  }
+}
+```
+
+在计算属性的场景中，`effect.scheduler` 被触发，将 `dirty` 置为 `true`，下次访问时会重新计算。
+
+## 可写计算属性的实现
+
+除了只读计算属性，Vue 还支持可写的计算属性。例如：
+
+```javascript
+const app = Vue.createApp({
+  data() {
+    return {
+      name: '张三'
+    }
+  },
+  computed: {
+    upperName: {
+      get() {
+        return this.name.toUpperCase()
+      },
+      set(newValue) {
+        this.name = newValue
+      }
+    }
+  }
+})
+```
+
+在这种情况下，`computed` 会接收一个对象，包含 `get` 和 `set` 方法。源码中，`setter` 直接绑定到 `ref` 的 `set value` 上，当你执行 `upperName.value = 'LI SI'` 时，`set` 函数会被调用，更新底层的 `name`。
+
+## 实例解析：从简单到复杂
+
+### 简单示例：动态标题
+
+```javascript
+const app = Vue.createApp({
+  data() {
+    return {
+      count: 0
+    }
+  },
+  computed: {
+    title() {
+      return `点击次数: ${this.count}`
+    }
+  }
+})
+```
+
+- **依赖收集**：访问 `title` 时，`count` 被 `track`。
+- **触发更新**：`count++` 时，`trigger` 将 `dirty` 置为 `true`，下次访问 `title` 时重新计算。
+
+### 复杂示例：过滤列表
+
+```javascript
+const app = Vue.createApp({
+  data() {
+    return {
+      items: [{ name: '苹果', price: 5 }, { name: '香蕉', price: 3 }],
+      minPrice: 4
+    }
+  },
+  computed: {
+    filteredItems() {
+      return this.items.filter(item => item.price >= this.minPrice)
+    }
+  }
+})
+```
+
+- **依赖嵌套**：`filteredItems` 依赖 `items` 和 `minPrice`，甚至可能涉及 `items` 内部对象的属性。
+- **缓存优化**：如果 `minPrice` 不变，即使 `items` 是同一个引用，计算结果会被缓存。
+
+## 与 watch 的区别
+
+很多初学者会混淆 `computed` 和 `watch`，其实它们的实现和用途有很大不同：
+- **computed**：基于依赖自动计算返回值，适合生成衍生数据，具有缓存。
+- **watch**：手动监听数据变化并执行副作用，适合处理异步操作或复杂逻辑。
+
+从源码看，`watch` 也是基于 `ReactiveEffect`，但它没有 `dirty` 和缓存机制，而是直接运行回调。
+
+## 总结与思考
+
+通过源码解析，我们可以看到 `computed` 的实现并不复杂，却非常优雅。它利用 Vue 的响应式系统，通过 `ReactiveEffect` 实现依赖收集，通过 `dirty` 实现缓存优化。这种设计既保证了性能，又提供了灵活性。
+
+如果你是 Vue 的开发者，不妨多思考：
+- 如何利用 `computed` 优化复杂组件的性能？
+- 在大型项目中，计算属性的依赖管理有哪些最佳实践？
+
+希望这篇博客能让你对 `computed` 的实现原理有更深的理解。如果你有任何疑问，欢迎留言讨论！
+
+---

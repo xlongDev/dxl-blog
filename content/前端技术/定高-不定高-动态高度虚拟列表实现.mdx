@@ -1,0 +1,316 @@
+---
+title: "定高、不定高、动态高度虚拟列表实现"
+date: "2023-06-27"
+description: "从原理到实践，带你深入理解定高、不定高和动态高度虚拟列表的实现方式，附带代码示例和最佳实践。"
+keywords: "虚拟列表, 前端性能优化, 定高列表, 不定高列表, 动态高度, React, JavaScript, DOM 优化"
+author: "晓龙"
+image: "/images/hero/virtual-list.jpg"
+tags: ["前端开发", "性能优化", "React", "JavaScript"]
+category: "前端技术"
+---
+
+嗨，前端小伙伴们！👋 今天咱们聊点硬核但超实用的东西——虚拟列表（Virtual List）。如果你曾经被几千条数据撑爆过浏览器，或者在长列表滚动时感受到“丝般顺滑”变成“卡顿地狱”，那这篇文章就是为你量身定制的。
+
+虚拟列表的核心思想很简单：**只渲染用户能看到的那一小块内容**，而不是一股脑把所有 DOM 塞进页面。听起来是不是有点像“偷懒的艺术”？但这偷懒可不简单，尤其当列表高度从“固定”变成“不固定”，再到“动态变化”，实现难度就像从骑自行车升级到开火箭🚀。别慌，我会带你一步步拆解，从原理到代码，再到最佳实践，保你看完能直接上手。
+
+## 什么是虚拟列表？从一个“懒人比喻”开始
+
+想象你是个图书管理员，管理着一排排书架，上面摆满了成千上万本书。如果有人让你把所有书都搬到桌子上给他看，你肯定翻白眼🙄：“我疯了才这么干！” 你会怎么做？当然是只拿他面前那几本，其他的等他翻完了再说。
+
+虚拟列表就是这个逻辑。浏览器窗口就像那个桌子，用户能看到的区域（视口）是有限的，成千上万的列表项（数据）没必要全渲染出来。我们只渲染视口内的“几本书”，剩下的用滚动条“假装”它们在后台等着。这不仅节省了 DOM 节点的开销，还能让页面性能起飞。
+
+好了，比喻到此为止，接下来进入正题，分三种情况聊聊：**定高列表**、**不定高列表**和**动态高度列表**。
+
+---
+
+## 1. 定高虚拟列表：基础中的基础
+
+### 原理：用数学算出“该渲染啥”
+
+定高列表是最简单的虚拟列表实现，因为每个列表项的高度是固定的（比如都 50px）。这意味着我们可以用简单的数学公式算出视口里应该显示哪些项。
+
+- **核心变量**：
+  - `itemHeight`：每个项的高度（固定值，比如 50px）
+  - `containerHeight`：容器（视口）的高度
+  - `scrollTop`：当前滚动距离
+  - `totalItems`：总列表项数
+
+- **计算逻辑**：
+  - 起始索引：`startIndex = Math.floor(scrollTop / itemHeight)`
+  - 结束索引：`endIndex = Math.min(totalItems - 1, Math.ceil((scrollTop + containerHeight) / itemHeight))`
+  - 渲染数量：`visibleCount = endIndex - startIndex + 1`
+
+- **偏移量**：为了让列表看起来是连续的，我们用 CSS 的 `transform` 或 `padding` 把渲染区域“撑”到正确位置。
+
+### 代码实现（React 版）
+
+```jsx
+import { useState, useRef } from "react";
+
+const VirtualList = ({ data, itemHeight = 50, containerHeight = 400 }) => {
+  const [scrollTop, setScrollTop] = useState(0);
+  const containerRef = useRef(null);
+
+  const totalHeight = data.length * itemHeight;
+  const visibleCount = Math.ceil(containerHeight / itemHeight) + 1; // 多渲染一个缓冲
+  const startIndex = Math.floor(scrollTop / itemHeight);
+  const endIndex = Math.min(data.length, startIndex + visibleCount);
+  const visibleItems = data.slice(startIndex, endIndex);
+
+  const handleScroll = () => {
+    setScrollTop(containerRef.current.scrollTop);
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      style={{ height: containerHeight, overflow: "auto" }}
+      onScroll={handleScroll}
+    >
+      <div style={{ height: totalHeight, position: "relative" }}>
+        <div
+          style={{
+            position: "absolute",
+            top: startIndex * itemHeight,
+            width: "100%",
+          }}
+        >
+          {visibleItems.map((item, index) => (
+            <div
+              key={startIndex + index}
+              style={{ height: itemHeight, borderBottom: "1px solid #ddd" }}
+            >
+              {item}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default VirtualList;
+```
+
+### 小 Tips
+- **缓冲区**：`visibleCount` 多加 1 或 2，确保滚动时不会出现空白。
+- **性能优化**：用 `requestAnimationFrame` 节流 `handleScroll`，避免频繁触发。
+- **调试神器**：在开发时给列表项加个随机背景色，方便观察渲染范围。
+
+### 幽默插曲
+定高列表就像是程序员的“完美世界”——一切都规规矩矩，高度统一，连计算都简单到让人想笑。但现实呢？客户总会扔给你一堆“不定高”的需求，然后一脸无辜地说：“这不难吧？”😅
+
+---
+
+## 2. 不定高虚拟列表：从简单到“有点麻烦”
+
+### 原理：预估高度 + 动态调整
+
+不定高列表的每个项高度都不一样，比如评论列表里，有人写“赞”，有人写了一篇小作文。固定高度的公式用不了了，怎么办？答案是：**预估 + 修正**。
+
+- **步骤**：
+  1. **预估高度**：给每个项一个初始高度（比如平均值）。
+  2. **记录真实高度**：渲染后测量实际高度，存起来。
+  3. **动态计算**：根据滚动位置和真实高度，决定渲染哪些项。
+
+- **核心挑战**：
+  - 滚动时如何快速找到 `scrollTop` 对应的起始项？
+  - 如何避免频繁测量 DOM？
+
+### 实现思路
+
+我们可以用一个数组 `heights` 存每个项的真实高度，累加计算每个项的“顶部偏移量”（offsetTop）。然后通过二分查找快速定位 `startIndex`。
+
+### 代码实现（React 版）
+
+```jsx
+import { useState, useRef, useEffect } from "react";
+
+const VariableHeightVirtualList = ({ data, containerHeight = 400 }) => {
+  const [scrollTop, setScrollTop] = useState(0);
+  const [heights, setHeights] = useState(data.map(() => 50)); // 初始预估高度
+  const containerRef = useRef(null);
+  const itemsRef = useRef([]);
+
+  // 更新真实高度
+  useEffect(() => {
+    const newHeights = itemsRef.current.map((el) =>
+      el ? el.getBoundingClientRect().height : 50
+    );
+    setHeights(newHeights);
+  }, [scrollTop, data]);
+
+  const totalHeight = heights.reduce((sum, h) => sum + h, 0);
+  const visibleCount = 10; // 固定渲染数量，视口自适应
+  const startIndex = findStartIndex(heights, scrollTop);
+  const endIndex = Math.min(data.length, startIndex + visibleCount);
+  const visibleItems = data.slice(startIndex, endIndex);
+
+  // 二分查找起始索引
+  function findStartIndex(heights, scrollTop) {
+    let low = 0, high = heights.length - 1;
+    while (low <= high) {
+      const mid = Math.floor((low + high) / 2);
+      const offset = heights.slice(0, mid).reduce((sum, h) => sum + h, 0);
+      if (offset <= scrollTop && offset + heights[mid] > scrollTop) return mid;
+      if (offset > scrollTop) high = mid - 1;
+      else low = mid + 1;
+    }
+    return low;
+  }
+
+  const handleScroll = () => {
+    setScrollTop(containerRef.current.scrollTop);
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      style={{ height: containerHeight, overflow: "auto" }}
+      onScroll={handleScroll}
+    >
+      <div style={{ height: totalHeight, position: "relative" }}>
+        <div
+          style={{
+            position: "absolute",
+            top: heights.slice(0, startIndex).reduce((sum, h) => sum + h, 0),
+          }}
+        >
+          {visibleItems.map((item, index) => (
+            <div
+              key={startIndex + index}
+              ref={(el) => (itemsRef.current[startIndex + index] = el)}
+              style={{ borderBottom: "1px solid #ddd" }}
+            >
+              {item}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default VariableHeightVirtualList;
+```
+
+### 小 Tips
+- **缓存高度**：用 `Map` 或对象缓存已测量的项高度，避免重复计算。
+- **懒测量**：只在首次渲染或高度变化时测量，减少 `getBoundingClientRect` 调用。
+- **预加载**：提前渲染视口上下各 100px 的内容，避免快速滚动时白屏。
+
+### 吐槽时间
+不定高列表就像谈恋爱——开始以为很简单，结果发现每个“项”都有自己的脾气，调和起来真费劲。不过搞定了之后，那成就感，啧啧，绝了！😎
+
+---
+
+## 3. 动态高度虚拟列表：终极挑战
+
+### 原理：实时监听 + 滚动修正
+
+动态高度是指列表项高度会随时变化，比如用户展开/收起评论，或者编辑内容后高度变了。这时候，预估和缓存都不够用了，我们需要**实时更新高度**并调整滚动位置。
+
+- **关键点**：
+  - 用 `ResizeObserver` 监听高度变化。
+  - 滚动时根据最新高度重新计算偏移。
+
+### 代码实现（React 版）
+
+```jsx
+import { useState, useRef, useEffect } from "react";
+
+const DynamicHeightVirtualList = ({ data, containerHeight = 400 }) => {
+  const [scrollTop, setScrollTop] = useState(0);
+  const [heights, setHeights] = useState(data.map(() => 50));
+  const containerRef = useRef(null);
+  const itemsRef = useRef([]);
+
+  useEffect(() => {
+    const observer = new ResizeObserver((entries) => {
+      const newHeights = [...heights];
+      entries.forEach((entry) => {
+        const index = itemsRef.current.indexOf(entry.target);
+        newHeights[index] = entry.contentRect.height;
+      });
+      setHeights(newHeights);
+    });
+
+    itemsRef.current.forEach((el) => el && observer.observe(el));
+    return () => observer.disconnect();
+  }, [data]);
+
+  const totalHeight = heights.reduce((sum, h) => sum + h, 0);
+  const startIndex = findStartIndex(heights, scrollTop);
+  const visibleCount = 10;
+  const endIndex = Math.min(data.length, startIndex + visibleCount);
+  const visibleItems = data.slice(startIndex, endIndex);
+
+  const handleScroll = () => {
+    setScrollTop(containerRef.current.scrollTop);
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      style={{ height: containerHeight, overflow: "auto" }}
+      onScroll={handleScroll}
+    >
+      <div style={{ height: totalHeight, position: "relative" }}>
+        <div
+          style={{
+            position: "absolute",
+            top: heights.slice(0, startIndex).reduce((sum, h) => sum + h, 0),
+          }}
+        >
+          {visibleItems.map((item, index) => (
+            <div
+              key={startIndex + index}
+              ref={(el) => (itemsRef.current[startIndex + index] = el)}
+              style={{ borderBottom: "1px solid #ddd" }}
+            >
+              {/* 模拟动态内容 */}
+              <details>
+                <summary>{item.title}</summary>
+                <p>{item.content}</p>
+              </details>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DynamicHeightVirtualList;
+```
+
+### 小 Tips
+- **防抖更新**：高度变化时用防抖减少 `setHeights` 调用。
+- **滚动锚点**：高度变化后，调整 `scrollTop` 保持用户视角不变。
+- **兼容性**：检查浏览器是否支持 `ResizeObserver`，不支持时降级处理。
+
+### 彩蛋
+动态高度列表就像养宠物——你得随时盯着它变胖变瘦，还得哄着它别乱跑。累是累了点，但用得好，页面体验直接拉满！
+
+---
+
+## 最佳实践：让虚拟列表更“丝滑”
+
+1. **节流滚动事件**：用 `lodash.throttle` 或自定义节流，控制更新频率。
+   - *Tip*: 频率设为 16ms（60fps），既流畅又不卡。
+2. **分片渲染**：数据量超大时，分批计算高度，避免首次渲染卡顿。
+   - *Tip*: 用 `setTimeout` 分片，每批处理 100 条。
+3. **边界处理**：确保 `startIndex` 和 `endIndex` 不越界。
+   - *Tip*: 加个 `Math.max(0, ...)` 和 `Math.min(totalItems, ...)`。
+4. **SSR 兼容**：服务端渲染时跳过高度计算，交给客户端。
+   - *Tip*: 用 `useEffect` 包裹动态逻辑。
+
+---
+
+## 总结：从“偷懒”到“艺术”
+
+虚拟列表的实现，从定高到不定高，再到动态高度，就像一场前端性能优化的进阶之旅。定高简单直接，不定高需要点脑筋，动态高度则是技术和耐心的双重考验。但无论哪种，只要掌握了核心原理（视口渲染 + 滚动计算），再加上合适的优化手段，你都能轻松应对各种场景。
+
+下次老板再甩给你一个 10 万条数据的列表需求，别慌，祭出虚拟列表，笑着说：“小意思！”😏 希望这篇文章能帮到你，欢迎留言讨论你的实现思路或者踩过的坑，咱们一起进步！
+
+---

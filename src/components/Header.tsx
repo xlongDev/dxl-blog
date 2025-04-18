@@ -15,7 +15,7 @@ export default function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-gray-200/50 dark:border-gray-700/50 shadow-lg transition-all duration-300 hover:shadow-xl">
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-gray-200/50 dark:border-gray-700/50 shadow-lg transition-all duration-300 hover:shadow-xl">
         <nav className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <Logo />
@@ -45,7 +45,7 @@ export default function Header() {
 
       {/* 移动端菜单 */}
       <div
-        className={`md:hidden fixed top-0 right-0 w-85 h-screen z-40 bg-white/70 dark:bg-gray-900/90 backdrop-blur-sm transform transition-all duration-300 ease-in-out shadow-xl border-l border-gray-200/50 dark:border-gray-700/50 ${
+        className={`md:hidden fixed top-0 right-0 w-85 h-screen z-40 bg-background/70 backdrop-blur-sm transform transition-all duration-300 ease-in-out shadow-xl border-l border-gray-200/50 dark:border-gray-700/50 ${
           isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >

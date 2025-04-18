@@ -1,0 +1,287 @@
+---
+
+title: "聊聊 call、apply、bind 之区别"
+date: "2022-04-12"
+description: "深入探讨 JavaScript 中 call、apply 和 bind 的区别，剖析底层原理，结合实用案例帮你彻底搞懂这三个方法。"
+keywords: "JavaScript, call, apply, bind, this 指向, 函数绑定, 前端开发"
+author: "晓龙"
+image: "/images/hero/call-apply-bind.jpg"
+tags: ["JavaScript", "前端开发", "函数式编程"]
+category: "JavaScript"
+---
+
+JavaScript 中的 `call`、`apply` 和 `bind` 是三个与函数调用和 `this` 绑定密切相关的方法。相信很多前端开发者都用过它们，但你是否真正理解它们的区别和底层原理？今天我们就来聊聊这三兄弟，带你从使用场景到实现机制彻底搞清楚它们。
+
+## 先从一个问题开始
+
+假设你有一个对象和一个函数：
+
+```javascript
+const person = {
+  name: "小明",
+};
+
+function sayHello(greeting) {
+  console.log(`${greeting}，我是 ${this.name}`);
+}
+```
+
+如果直接调用 `sayHello("你好")`，结果会是什么？答案是 `你好，我是 undefined`，因为 `this` 默认指向全局对象（浏览器中是 `window`，Node 中是 `global`），而全局对象没有 `name` 属性。
+
+那如果我想让 `this` 指向 `person`，怎么办？这时候，`call`、`apply` 和 `bind` 就派上用场了。接下来，我们逐一拆解它们的用法和区别。
+
+## 一、基本概念与用法
+
+### 1. `call`：灵活指定 `this` 并立即调用
+
+`call` 的语法是：
+
+```javascript
+func.call(thisArg, arg1, arg2, ...);
+```
+
+- `thisArg`：指定函数执行时的 `this` 指向。
+- `arg1, arg2, ...`：函数的参数，逐个传递。
+
+用 `call` 重写上面的例子：
+
+```javascript
+sayHello.call(person, "你好"); // 输出：你好，我是 小明
+```
+
+`call` 的特点是**立即执行函数**，并且可以显式地指定 `this` 和参数。它的灵活性在于，你可以临时“借用”其他对象的方法。
+
+#### 示例：借用数组方法
+
+```javascript
+const arrayLike = { 0: "a", 1: "b", length: 2 };
+Array.prototype.push.call(arrayLike, "c");
+console.log(arrayLike); // { 0: "a", 1: "b", 2: "c", length: 3 }
+```
+
+这里，`arrayLike` 不是数组，但通过 `call`，我们借用了 `Array.prototype.push`，成功修改了它。
+
+### 2. `apply`：与 `call` 类似，但参数是数组
+
+`apply` 的语法是：
+
+```javascript
+func.apply(thisArg, [args]);
+```
+
+- `thisArg`：指定 `this` 指向。
+- `[args]`：参数以数组形式传递。
+
+用 `apply` 调用上面的函数：
+
+```javascript
+sayHello.apply(person, ["你好"]); // 输出：你好，我是 小明
+```
+
+`apply` 和 `call` 的区别主要在**参数传递方式**上。`apply` 适合处理参数是数组的场景。
+
+#### 示例：求数组最大值
+
+```javascript
+const numbers = [5, 2, 9, 1, 7];
+const max = Math.max.apply(null, numbers);
+console.log(max); // 输出：9
+```
+
+`Math.max` 通常接受多个参数，但通过 `apply`，我们可以直接传入一个数组，方便又优雅。
+
+### 3. `bind`：绑定 `this` 但不立即执行
+
+`bind` 的语法是：
+
+```javascript
+const newFunc = func.bind(thisArg, arg1, arg2, ...);
+```
+
+- `thisArg`：指定 `this` 指向。
+- `arg1, arg2, ...`：预设参数。
+- 返回值：一个新函数，`this` 已绑定。
+
+用 `bind` 修改例子：
+
+```javascript
+const boundSayHello = sayHello.bind(person, "你好");
+boundSayHello(); // 输出：你好，我是 小明
+```
+
+`bind` 和前两者最大的区别是**它不会立即调用函数**，而是返回一个新函数，供后续调用。这让它特别适合事件绑定或延迟执行的场景。
+
+#### 示例：事件监听
+
+```javascript
+const button = {
+  name: "提交按钮",
+  handleClick: function () {
+    console.log(`${this.name} 被点击了`);
+  },
+};
+
+const boundClick = button.handleClick.bind(button);
+document.querySelector("button").addEventListener("click", boundClick);
+```
+
+如果不使用 `bind`，`this` 会指向按钮元素，而不是 `button` 对象。
+
+## 二、深入区别与原理
+
+### 1. 执行时机
+
+- `call` 和 `apply`：立即执行函数。
+- `bind`：返回新函数，需手动调用。
+
+这决定了它们的使用场景：需要立刻执行用 `call` 或 `apply`，需要延迟执行或复用用 `bind`。
+
+### 2. 参数传递
+
+- `call`：参数逐个列出，适合参数明确的情况。
+- `apply`：参数以数组形式，适合动态参数或数组处理。
+- `bind`：支持预设部分参数，后续调用时还能追加参数。
+
+看个综合例子：
+
+```javascript
+function introduce(job, city) {
+  console.log(`我是 ${this.name}，职业是 ${job}，住在 ${city}`);
+}
+
+const person = { name: "小明" };
+
+// call
+introduce.call(person, "程序员", "上海");
+
+// apply
+introduce.apply(person, ["程序员", "上海"]);
+
+// bind
+const boundIntroduce = introduce.bind(person, "程序员");
+boundIntroduce("上海"); // 我是 小明，职业是 程序员，住在 上海
+```
+
+### 3. `this` 的绑定机制
+
+这三个方法的核心是操作函数的 `this`。在 JavaScript 中，`this` 的指向取决于函数的调用方式（隐式绑定、显式绑定等）。`call`、`apply` 和 `bind` 属于**显式绑定**，优先级高于隐式绑定。
+
+底层上，它们通过引擎内部的上下文切换实现。例如，`call` 可以看作：
+
+1. 将函数的 `this` 临时绑定到指定对象。
+2. 执行函数。
+3. 恢复原始上下文。
+
+`bind` 则更复杂，它创建一个新函数，永久绑定 `this`，并支持参数柯里化。
+
+### 4. 手写实现
+
+为了更深入理解，我们来模拟实现这三个方法。
+
+#### 模拟 `call`
+
+```javascript
+Function.prototype.myCall = function (context, ...args) {
+  context = context || window; // 默认指向全局
+  const fnSymbol = Symbol(); // 避免属性冲突
+  context[fnSymbol] = this; // this 是调用 myCall 的函数
+  const result = context[fnSymbol](...args);
+  delete context[fnSymbol];
+  return result;
+};
+
+// 测试
+sayHello.myCall(person, "你好"); // 你好，我是 小明
+```
+
+原理：将函数挂到目标对象上，执行后删除。
+
+#### 模拟 `apply`
+
+```javascript
+Function.prototype.myApply = function (context, args) {
+  context = context || window;
+  const fnSymbol = Symbol();
+  context[fnSymbol] = this;
+  const result = context[fnSymbol](...args);
+  delete context[fnSymbol];
+  return result;
+};
+
+// 测试
+sayHello.myApply(person, ["你好"]); // 你好，我是 小明
+```
+
+与 `call` 类似，只是参数处理不同。
+
+#### 模拟 `bind`
+
+```javascript
+Function.prototype.myBind = function (context, ...boundArgs) {
+  const self = this;
+  return function (...args) {
+    return self.apply(context, boundArgs.concat(args));
+  };
+};
+
+// 测试
+const boundFn = sayHello.myBind(person, "你好");
+boundFn(); // 你好，我是 小明
+```
+
+`bind` 返回一个函数，利用闭包保存 `this` 和预设参数。
+
+## 三、实际应用场景
+
+### 1. 对象方法借用
+
+```javascript
+const obj1 = { value: 42, getValue: function () { return this.value; } };
+const obj2 = { value: 99 };
+console.log(obj1.getValue.call(obj2)); // 99
+```
+
+### 2. 处理函数式编程
+
+```javascript
+const log = console.log.bind(console, "[DEBUG]");
+log("测试"); // [DEBUG] 测试
+```
+
+### 3. 兼容旧代码
+
+```javascript
+function oldFunc(a, b, c) {
+  console.log(this.x, a, b, c);
+}
+const newFunc = oldFunc.bind({ x: 1 }, 2);
+newFunc(3, 4); // 1, 2, 3, 4
+```
+
+## 四、注意事项
+
+1. **非函数调用会报错**：
+   ```javascript
+   const obj = {};
+   obj.call(); // TypeError: obj.call is not a function
+   ```
+
+2. **`thisArg` 为 `null` 或 `undefined`**：
+   - 默认指向全局对象（非严格模式）。
+   - 严格模式下，`this` 保持为 `null` 或 `undefined`。
+
+3. **`bind` 的不可变性**：
+   ```javascript
+   const fn = sayHello.bind(person);
+   fn.call({ name: "小红" }); // 仍是 小明，因为 bind 绑定不可更改
+   ```
+
+## 五、总结
+
+- **`call`**：立即调用，参数逐个传递，适合临时借用方法。
+- **`apply`**：立即调用，参数数组传递，适合动态参数场景。
+- **`bind`**：返回新函数，延迟调用，支持参数预绑定，适合事件或复用。
+
+这三个方法各有千秋，理解它们的区别不仅能帮你写出更优雅的代码，还能让你更深刻地掌握 JavaScript 的 `this` 机制。希望这篇博客能让你对它们了如指掌，下次遇到类似问题时，信手拈来！
+
+--- 

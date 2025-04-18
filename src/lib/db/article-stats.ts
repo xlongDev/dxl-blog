@@ -32,9 +32,9 @@ export class ArticleStatsService {
       };
     }
 
-    // 如果文章不存在，创建新记录
+    // 如果文章不存在，创建新记录或更新现有记录
     await promisePool.query(
-      "INSERT INTO article_interactions (article_slug, views, likes) VALUES (?, 0, 0)",
+      "INSERT INTO article_interactions (article_slug, views, likes) VALUES (?, 0, 0) ON DUPLICATE KEY UPDATE views = views, likes = likes",
       [slug]
     );
 

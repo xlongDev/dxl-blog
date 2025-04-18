@@ -47,7 +47,7 @@ export default function TypewriterQuote({
           setIsDeleting(true);
         }, 3500);
       }
-    }, 140);
+    }, 120);
 
     return () => {
       clearInterval(typingInterval);
@@ -71,7 +71,7 @@ export default function TypewriterQuote({
           setIsDeleting(false);
           onTypingComplete();
         }
-      }, 50);
+      }, 30);
 
       return () => {
         clearInterval(deletingInterval);

@@ -1,0 +1,306 @@
+---
+title: "深入理解回流与重绘"
+date: "2022-05-12"
+description: "从浏览器渲染原理到源码解析，全面剖析回流与重绘的机制，结合实例深入理解性能优化的关键。"
+keywords: "回流, 重绘, 浏览器渲染, DOM, CSSOM, 性能优化, 前端开发"
+author: "晓龙"
+image: "/images/hero/reflow-repaint.jpg"
+tags: ["浏览器", "性能优化", "前端开发"]
+category: "前端开发"
+---
+
+在前端开发中，性能优化是一个绕不开的话题。而提到性能优化，回流（Reflow）和重绘（Repaint）这两个概念几乎是每个开发者都必须面对的“老朋友”。它们直接影响页面的渲染效率和用户体验。今天，我们将从浏览器的渲染原理出发，深入探讨回流与重绘的本质，结合源码层面的解析和实际案例，带你彻底搞懂这两个核心概念。
+
+## 浏览器的渲染流程
+
+要理解回流与重绘，首先得弄清楚浏览器是如何把 HTML、CSS 和 JavaScript 变成屏幕上可见的像素的。浏览器的渲染流程大致可以分为以下几个步骤：
+
+1. **解析 HTML 和 CSS**：浏览器将 HTML 解析成 DOM 树（Document Object Model），将 CSS 解析成 CSSOM 树（CSS Object Model）。
+2. **构建渲染树（Render Tree）**：将 DOM 和 CSSOM 合并，生成渲染树，只包含需要显示的节点和它们的样式信息。
+3. **布局（Layout / Reflow）**：计算每个节点在屏幕上的确切位置和大小。
+4. **绘制（Paint / Repaint）**：将渲染树转化为屏幕上的像素，涉及颜色、背景、边框等绘制操作。
+5. **合成（Composite）**：将不同层（Layers）组合起来，最终显示在屏幕上。
+
+回流和重绘就发生在布局和绘制这两个阶段。简单来说，回流是重新计算布局，重绘是重新绘制样式。接下来，我们逐一深入。
+
+## 什么是回流（Reflow）？
+
+回流，也叫布局（Layout），是指当 DOM 结构或样式发生变化时，浏览器需要重新计算元素的几何属性（如宽度、高度、位置等），并更新渲染树的过程。回流通常是昂贵的，因为它会触发整个渲染树的重新计算，甚至影响其他未直接修改的元素。
+
+### 🚧 触发回流的典型场景
+
+就像拆改房屋结构需要重新测绘那样，以下操作会触发浏览器重新计算布局：
+
+- **结构变化**：`appendChild` 增删 DOM 元素（类似在房间增砌/拆除隔断墙）
+- **尺寸调整**：修改 `width`/`height`（如同改变房间开间尺寸）
+- **位置变更**：设置 `top`/`left`（类似移动家具位置）
+- **属性读取**：
+
+```javascript
+// 😫 危险操作：交替读写布局属性
+const box = document.getElementById("box");
+box.style.width = "100px"; // 写
+console.log(box.offsetWidth); // 读 → 强制同步回流
+box.style.height = "200px"; // 写
+```
+
+- **环境变化**：窗口缩放（如同改变房屋地基尺寸）
+
+### 示例 1：动态添加 DOM 元素
+
+```javascript
+const container = document.getElementById("container");
+const newDiv = document.createElement("div");
+newDiv.style.width = "100px";
+newDiv.style.height = "100px";
+newDiv.style.backgroundColor = "blue";
+container.appendChild(newDiv);
+```
+
+在这段代码中，`appendChild` 会导致 DOM 树发生变化，浏览器需要重新计算 `container` 及其子元素的布局，触发回流。
+
+### 源码层面的解析
+
+以 Chromium（Chrome 的开源核心）为例，回流的实现主要发生在 `Layout` 模块中。当 DOM 或 CSSOM 发生变化时，浏览器会标记受影响的节点为“脏”（dirty），然后在下一帧渲染时调用布局计算。
+
+以下是简化后的伪代码，展示回流的核心逻辑：
+
+```cpp
+void Document::UpdateLayout() {
+  if (!NeedsLayout()) return; // 检查是否需要回流
+  StyleEngine().RecalcStyle(); // 更新 CSSOM
+  LayoutTreeBuilderTraversal().RebuildLayoutTree(); // 重建渲染树
+  LayoutObject* root = View()->LayoutObject();
+  if (root) {
+    root->Layout(); // 触发布局计算
+  }
+}
+```
+
+- `NeedsLayout()`：检查是否有“脏”节点。
+- `RebuildLayoutTree()`：根据最新的 DOM 和 CSSOM 重建渲染树。
+- `Layout()`：递归计算每个节点的几何属性。
+
+回流的开销之所以高，是因为它是递归的。一个节点的布局变化可能会影响它的父节点、兄弟节点甚至整个页面。
+
+## 🎨 什么是重绘（Repaint）？
+
+想象你在给房间刷新墙面或更换壁纸，这就是重绘的绝佳比喻！重绘是指当元素的样式（如颜色、背景、阴影等）发生变化，但不影响布局时，浏览器重新绘制该元素的过程。就像你只是改变墙面的颜色或图案，并不需要动房间的结构。相比回流，重绘的代价通常较低，因为它只涉及像素的重新填充，不需要重新计算位置和大小。
+
+### 🎯 触发重绘的典型场景
+
+- 🎨 **改变颜色**：如修改 `color` 或 `background-color`
+- 👀 **改变可见性**：如设置 `visibility: hidden`（注意：`display: none` 会触发回流）
+- ✍️ **修改文本内容**：如通过 `innerText` 更改文字（仅在不影响布局时）
+
+💡 **最佳实践提示**：
+
+- 尽可能将样式变化集中处理，避免频繁修改
+- 使用 CSS 类名切换代替直接修改样式
+- 考虑使用 CSS 动画替代 JavaScript 样式操作
+
+### 示例 2：修改背景颜色
+
+```javascript
+const box = document.getElementById("box");
+box.style.backgroundColor = "red";
+```
+
+这里只改变了背景颜色，不涉及几何属性，因此只会触发重绘，不会引发回流。
+
+### 源码层面的解析
+
+在 Chromium 中，重绘的实现主要由 `Paint` 模块负责。当样式变化不影响布局时，浏览器会跳过布局阶段，直接进入绘制阶段。以下是简化的伪代码：
+
+```cpp
+void PaintLayer::Paint(GraphicsContext& context) {
+  if (!NeedsPaint()) return; // 检查是否需要重绘
+  PaintInfo paint_info(context);
+  for (auto* child = FirstChild(); child; child = child->NextSibling()) {
+    child->Paint(paint_info); // 递归绘制子节点
+  }
+}
+```
+
+- `NeedsPaint()`：检查哪些节点需要重绘。
+- `Paint()`：根据样式信息填充像素。
+
+重绘的性能开销取决于受影响的区域大小和绘制复杂度。例如，绘制阴影（`box-shadow`）比填充纯色更耗时。
+
+## 回流与重绘的关系
+
+回流和重绘并不是完全独立的：
+
+- **回流必然触发重绘**：因为布局变化后，浏览器必须重新绘制受影响的区域。
+- **重绘不一定触发回流**：如上文提到的修改背景颜色，只需重绘即可。
+
+这就像装修房子：回流是调整房间的结构（拆墙、扩建），重绘是刷墙漆或换壁纸。前者必然需要后者，但后者可以单独进行。
+
+### 示例 3：回流与重绘的组合
+
+```javascript
+const box = document.getElementById("box");
+box.style.width = "200px"; // 触发回流
+box.style.backgroundColor = "green"; // 触发重绘
+```
+
+在这段代码中，修改 `width` 会触发回流，而回流完成后，`backgroundColor` 的变化会被合并到重绘阶段。
+
+## 🛠️ 现代化框架的优化智慧
+
+优秀的前端框架如 React 通过虚拟 DOM 和差异算法（Diffing Algorithm）实现智能优化：
+
+1. **批量更新**：将多个状态变更合并为单次更新（类似把装修需求积攒后统一施工）
+2. **异步渲染**：在微任务队列执行 DOM 更新（错开同步计算的性能高峰）
+3. **按需更新**：通过 Fiber 架构实现可中断的渐进式渲染（重要改造优先施工）
+
+```javascript
+// React 的自动批处理示例
+function handleClick() {
+  setWidth(100); // 🚀 虚拟DOM更新
+  setHeight(200); // 🚀 合并为单次回流
+  fetchData(); // 🚀 异步操作不会打断批处理
+}
+```
+
+## 🛠️ 性能优化的实践
+
+### 1. 🚀 批量操作 DOM
+
+想象你在搭建一座乐高城堡，你会选择一块一块地往上加（每加一块都要停下来检查整体结构），还是先在工作台上把一个部分拼好再整体安装？这就是批量操作 DOM 的思想！
+
+❌ **不推荐**：频繁操作 DOM 会导致多次回流
+
+```javascript
+const list = document.getElementById("list");
+for (let i = 0; i < 10; i++) {
+  const item = document.createElement("li");
+  item.textContent = `Item ${i}`;
+  list.appendChild(item); // 😫 每次 appendChild 都触发回流
+}
+```
+
+✅ **推荐**：使用 `DocumentFragment` 批量操作
+
+```javascript
+const list = document.getElementById("list");
+const fragment = document.createDocumentFragment();
+for (let i = 0; i < 10; i++) {
+  const item = document.createElement("li");
+  item.textContent = `Item ${i}`;
+  fragment.appendChild(item);
+}
+list.appendChild(fragment); // 🚀 一次性触发回流
+```
+
+💡 **最佳实践提示**：
+
+- 使用文档片段（DocumentFragment）进行批量操作
+- 考虑使用虚拟列表优化大量数据渲染
+- 适当使用防抖和节流控制高频操作
+
+### 2. 🎯 合并样式修改
+
+想象你在装修房子时，不是每改一处就叫工人来施工一次，而是把所有改动计划都列好再一次性施工 —— 这就是样式修改合并的思想！
+
+❌ **不推荐**：多次修改样式会触发多次回流或重绘
+
+```javascript
+const box = document.getElementById("box");
+box.style.width = "200px"; // 😫 回流
+box.style.height = "200px"; // 😫 回流
+box.style.backgroundColor = "blue"; // 😅 重绘
+```
+
+✅ **推荐**：使用 `className` 或 `cssText` 一次性修改
+
+```javascript
+const box = document.getElementById("box");
+box.className = "updated-style"; // 🚀 一次性触发回流和重绘
+```
+
+对应的 CSS：
+
+```css
+.updated-style {
+  width: 200px;
+  height: 200px;
+  background-color: blue;
+}
+```
+
+💡 **最佳实践提示**：
+
+- 尽可能使用 CSS 类名切换来批量修改样式
+- 如果必须用 JavaScript 修改样式，考虑使用 `cssText`
+- 使用 CSS 动画替代 JavaScript 样式操作可以获得更好的性能
+
+### 3. 🔄 避免强制同步布局
+
+想象一下，强制同步布局就像在装修过程中，每改动一处就立即要量一遍房间尺寸 —— 这显然会大大降低装修效率！在代码中，读取某些属性（如 `offsetHeight`）会强制浏览器立即执行回流：
+
+```javascript
+const box = document.getElementById("box");
+box.style.height = "100px";
+console.log(box.offsetHeight); // 😫 强制回流
+box.style.width = "200px";
+```
+
+✨ 优化方法是将读取操作延后，或缓存结果。就像先把所有改动都做完，最后再统一测量：
+
+```javascript
+const box = document.getElementById("box");
+box.style.height = "100px";
+box.style.width = "200px";
+requestAnimationFrame(() => {
+  console.log(box.offsetHeight); // 🎯 在下一帧读取，更高效
+});
+```
+
+💡 **最佳实践提示**：
+
+- 尽可能批量修改样式，再进行布局查询
+- 如果需要多次使用布局信息，将其缓存到变量中
+- 考虑使用 `requestAnimationFrame` 延迟布局查询到下一帧
+
+### 4. 使用 GPU 加速
+
+对于动画效果，可以使用 `transform` 和 `opacity`，它们只影响合成阶段，不触发回流或重绘：
+
+```css
+.box {
+  transition: transform 0.3s;
+}
+.box:hover {
+  transform: translateX(100px); /* 仅触发合成 */
+}
+```
+
+## 🔍 调试技巧：捕捉布局抖动（Layout Shift）
+
+1. 在 Chrome DevTools 的 **Performance** 面板中：
+
+   - 勾选 [Screenshots] 查看渲染过程
+   - 查找紫色标记的 _Layout Shift_ 事件
+
+2. 使用 **Layout Shift Regions** 功能：
+
+```bash
+# 通过 Chrome 的命令行接口开启
+chrome://flags/#layout-shift-regions
+```
+
+3. 优化 CLS 指标的关键策略：
+   - 为动态内容预留空间（如同为装修留出缓冲区域）
+   - 使用 `transform` 代替 `top/left` 动画
+   - 给图片视频设置尺寸比例约束
+
+通过这些工具，你可以直观地看到哪些操作触发了回流或重绘，并据此优化代码。
+
+## 总结
+
+回流与重绘是浏览器渲染过程中的核心环节，直接决定了页面性能的好坏。回流涉及布局计算，代价高昂；重绘涉及像素填充，相对轻量。通过批量操作 DOM、合并样式修改、避免强制同步布局以及利用 GPU 加速，我们可以显著减少渲染开销。
+
+从源码层面看，回流和重绘的实现体现了浏览器对性能的权衡与优化。作为开发者，理解这些底层机制不仅能帮我们写出更高效的代码，还能让我们在性能优化时更有底气。希望这篇文章能为你打开一扇窗，带你走进浏览器渲染的奇妙世界！
+
+---

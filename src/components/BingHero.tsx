@@ -7,10 +7,10 @@ import {
   InformationCircleIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  ArrowDownTrayIcon,
 } from "@heroicons/react/24/outline";
 import { quotes } from "@/data/quotes";
 import TypewriterQuote from "./TypewriterQuote";
-import OptimizedImage from "./OptimizedImage";
 
 interface BingWallpaper {
   url: string;
@@ -160,7 +160,41 @@ export default function BingHero() {
         className="relative w-full flex items-center justify-center"
         style={{ height: "100vh" }}
       >
-        <div className="text-gray-900 dark:text-white text-lg">加载中...</div>
+        <div className="w-full h-full">
+          {/* 骨架屏效果 */}
+          <div className="absolute inset-0 w-full h-full bg-gray-800 dark:bg-gray-900">
+            {/* 模拟壁纸的骨架屏 */}
+            <div className="absolute inset-0 overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 bg-[length:200%_100%] animate-shimmer"></div>
+            </div>
+
+            {/* 模拟导航按钮 */}
+            <div className="absolute top-1/2 -translate-y-1/2 left-4 sm:left-8">
+              <div className="p-2 sm:p-3 bg-gray-700 dark:bg-gray-800 rounded-full animate-pulse"></div>
+            </div>
+            <div className="absolute top-1/2 -translate-y-1/2 right-4 sm:right-8">
+              <div className="p-2 sm:p-3 bg-gray-700 dark:bg-gray-800 rounded-full animate-pulse"></div>
+            </div>
+
+            {/* 模拟信息按钮 */}
+            <div className="absolute top-4 right-4 sm:top-8 sm:right-8">
+              <div className="p-2 sm:p-3 bg-gray-700 dark:bg-gray-800 rounded-full animate-pulse"></div>
+            </div>
+
+            {/* 模拟中央文字区域 */}
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3/4 max-w-2xl space-y-4">
+              <div className="h-8 bg-gray-700 dark:bg-gray-800 rounded-lg w-full animate-pulse"></div>
+              <div className="h-4 bg-gray-700 dark:bg-gray-800 rounded-lg w-3/4 mx-auto animate-pulse"></div>
+              <div className="h-4 bg-gray-700 dark:bg-gray-800 rounded-lg w-1/2 mx-auto animate-pulse"></div>
+              <div className="h-4 bg-gray-700 dark:bg-gray-800 rounded-lg w-2/3 mx-auto animate-pulse"></div>
+            </div>
+
+            {/* 模拟底部滚动按钮 */}
+            <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2">
+              <div className="h-10 w-10 bg-gray-700 dark:bg-gray-800 rounded-full animate-pulse"></div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -245,7 +279,7 @@ export default function BingHero() {
       </div>
 
       {/* Info button */}
-      <div className="absolute top-4 right-4 sm:top-8 sm:right-8">
+      <div className="absolute top-4 right-4 sm:top-8 sm:right-8 flex flex-col items-end">
         <motion.button
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -256,24 +290,52 @@ export default function BingHero() {
         >
           <InformationCircleIcon className="h-6 w-6 sm:h-7 sm:w-7" />
         </motion.button>
-      </div>
 
-      {/* Wallpaper information */}
-      <AnimatePresence>
-        {showInfo && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="absolute top-16 right-4 sm:top-20 sm:right-8 bg-black/40 backdrop-blur-sm text-white p-4 rounded-lg max-w-[calc(100vw-2rem)] sm:max-w-md"
-          >
-            <h3 className="font-bold mb-2 text-sm sm:text-base">
-              {currentWallpaper.title}
-            </h3>
-            <p className="text-xs sm:text-sm">{currentWallpaper.copyright}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        {/* Wallpaper information */}
+        <AnimatePresence>
+          {showInfo && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="mt-2 bg-black/40 backdrop-blur-sm text-white p-4 rounded-lg w-[calc(100vw-2rem)] sm:w-[420px]"
+            >
+              <div className="flex justify-between items-start">
+                <div className="flex-1 pr-4">
+                  <h3 className="font-bold mb-2 text-sm sm:text-base">
+                    {currentWallpaper.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm">
+                    {currentWallpaper.copyright}
+                  </p>
+                </div>
+                <button
+                  onClick={async () => {
+                    try {
+                      const response = await fetch(currentWallpaper.url);
+                      const blob = await response.blob();
+                      const url = window.URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `${currentWallpaper.title}.jpg`;
+                      document.body.appendChild(a);
+                      a.click();
+                      window.URL.revokeObjectURL(url);
+                      document.body.removeChild(a);
+                    } catch (error) {
+                      console.error("下载失败:", error);
+                    }
+                  }}
+                  className="p-2 text-white/50 hover:text-white bg-black/10 hover:bg-black/30 hover:backdrop-blur-sm rounded-full transition-all duration-300 hover:scale-110"
+                  aria-label="下载壁纸"
+                >
+                  <ArrowDownTrayIcon className="h-5 w-5" />
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

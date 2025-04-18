@@ -1,0 +1,688 @@
+---
+title: "Vite+Vue3 项目中集成 Monaco Editor：从零到一的深度实践"
+date: "2024-08-23"
+description: "深入探讨如何在 Vite+Vue3 项目中集成 Monaco Editor，涵盖原理、实现、优化与最佳实践，适合前端开发者。"
+keywords: "Vite, Vue3, Monaco Editor, 代码编辑器, 前端开发, Web 开发, 性能优化, TypeScript"
+author: "晓龙"
+image: "/images/hero/monaco-editor.jpg"
+tags: ["Vite", "Vue3", "Monaco Editor", "前端开发"]
+category: "JavaScript"
+---
+
+> “代码是诗，编辑器是诗人的画布。” —— 匿名前端开发者
+
+在前端开发的浩瀚宇宙中，代码编辑器是开发者与代码对话的桥梁。Monaco Editor，作为 Visual Studio Code 的核心编辑器，以其强大的功能、丝滑的体验和高度可定制性，成为许多前端项目的首选。🎨 今天，我们将深入探讨如何在 **Vite + Vue3** 项目中集成 Monaco Editor，从原理到实践，从优化到哲学，带你体验一场技术与艺术的碰撞。💻
+
+本文的目标读者是前端开发者，无论你是刚入行的新手，还是身经百战的老兵，都能从中找到启发。文章将以清晰的思维链展开，涵盖以下内容：
+
+1. **Monaco Editor 是什么？** —— 了解它的核心与魅力
+2. **为什么选择 Vite + Vue3？** —— 现代前端开发的黄金组合
+3. **集成 Monaco Editor 的完整步骤** —— 从安装到运行
+4. **深入原理** —— 揭秘 Monaco Editor 的工作机制
+5. **优化与最佳实践** —— 让你的编辑器飞起来
+6. **常见问题与解决方案** —— 避坑指南
+7. **哲学思考** —— 技术与人生的交汇
+
+准备好了吗？让我们开始这场技术冒险！🚀
+
+## 1. Monaco Editor 是什么？ 🎹
+
+Monaco Editor 是由微软开发的一款开源代码编辑器库，广泛应用于 Visual Studio Code。它支持语法高亮、代码补全、错误提示、Diff 视图等功能，堪称前端开发者的“瑞士军刀”。🔧 与其他编辑器（如 CodeMirror、Ace）相比，Monaco Editor 的优势在于：
+
+- **与 VS Code 无缝衔接**：几乎复刻了 VS Code 的编辑体验。
+- **TypeScript 支持**：天生为 TypeScript 而生，代码提示精准。
+- **高度可定制**：支持自定义主题、快捷键、语言支持。
+- **Web 友好**：完全运行在浏览器中，无需额外后端支持。
+
+### Monaco Editor 的核心特性
+
+| **特性**               | **描述**                                                                 | **适用场景**                       |
+|------------------------|--------------------------------------------------------------------------|------------------------------------|
+| 语法高亮              | 支持 100+ 种编程语言的语法高亮，动态解析代码结构。                      | 代码展示、在线 IDE                |
+| 智能提示              | 提供上下文感知的代码补全，支持 TypeScript 和自定义补全逻辑。            | 开发工具、文档编辑                |
+| Diff 编辑器           | 内置代码对比功能，展示代码变更，直观易用。                              | 版本控制、代码审查                |
+| 主题与定制            | 支持 VS Code 主题，可自定义编辑器外观和行为。                           | 个性化开发环境                    |
+| 性能优化              | 使用 Web Worker 异步加载语言服务，减少主线程阻塞。                      | 大型项目、复杂代码编辑            |
+
+*Tips：Monaco Editor 的强大之处在于它的模块化设计，但首次加载可能稍慢，建议按需加载语言支持以优化性能。*
+
+### 为什么选择 Monaco Editor？
+
+想象一下，你正在打造一个在线代码编辑器，类似 CodePen 或 Repl.it。你需要一个既强大又美观的编辑器，Monaco Editor 就像一位“全能型选手”，不仅能满足功能需求，还能让用户感受到“哇，这跟 VS Code 一样好用”的惊喜。😎 它的社区活跃，文档详尽，生态完善，简直是前端开发者的“梦中情编”。
+
+## 2. 为什么选择 Vite + Vue3？ 🚀
+
+在开始集成之前，我们先聊聊为什么选择 **Vite + Vue3** 作为技术栈。这不仅是为了炫技，而是因为它们代表了现代前端开发的趋势。
+
+- **Vite**：下一代构建工具，基于 ES Modules 和 Rollup，启动速度快如闪电 ⚡️，热更新几乎无延迟。相比 Webpack，Vite 的开发体验简直是“从拖拉机到高铁”的飞跃。
+- **Vue3**：响应式 API（Composition API）更灵活，性能更优，TypeScript 支持更友好。它的“渐进式”哲学让开发者可以从小项目逐步扩展到复杂应用。
+
+将 Monaco Editor 集成到 Vite + Vue3 项目中，既能发挥 Vite 的高效开发体验，又能利用 Vue3 的响应式特性来动态管理编辑器的状态。就像在咖啡里加了点糖，甜而不腻，刚刚好。☕
+
+*Tips：Vite 的 ES Module 特性要求你注意模块化的代码组织，尽量避免 CommonJS 格式的依赖，以免兼容性问题。*
+
+## 3. 集成 Monaco Editor 的完整步骤 🛠️
+
+现在进入正题！让我们一步步在 Vite + Vue3 项目中集成 Monaco Editor。以下是一个完整的实现流程，包含代码示例和详细说明。
+
+### 3.1 创建 Vite + Vue3 项目
+
+首先，确保你已安装 Node.js（建议 v16+）。运行以下命令创建一个新项目：
+
+```bash
+npm create vite@latest my-monaco-app -- --template vue-ts
+cd my-monaco-app
+npm install
+npm run dev
+```
+
+这会生成一个基于 Vue3 和 TypeScript 的 Vite 项目。打开 `http://localhost:5173`，你将看到 Vite 的欢迎页面。
+
+*Tips：使用 TypeScript 模板可以更好地利用 Monaco Editor 的类型提示功能，强烈推荐！*
+
+### 3.2 安装 Monaco Editor
+
+Monaco Editor 提供了官方的 npm 包 `@monaco-editor/vue` 和原始的 `monaco-editor`。我们选择后者以获得更灵活的控制。
+
+```bash
+npm install monaco-editor
+```
+
+Monaco Editor 的核心依赖会安装到 `node_modules/monaco-editor` 中。注意，Monaco Editor 的大小约为 2MB（压缩后），需要合理优化加载。
+
+### 3.3 配置 Vite
+
+由于 Monaco Editor 使用了 Web Worker 来处理语言服务（如 TypeScript 的代码补全），我们需要在 Vite 中正确配置 Worker 的加载。
+
+编辑 `vite.config.ts`：
+
+```typescript
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+
+export default defineConfig({
+  plugins: [vue()],
+  optimizeDeps: {
+    exclude: ['monaco-editor'], // 避免 Vite 预构建 Monaco Editor
+  },
+  build: {
+    rollupOptions: {
+      external: ['monaco-editor'], // 确保 Monaco Editor 不被打包
+    },
+  },
+  worker: {
+    format: 'es', // 确保 Worker 使用 ES Module 格式
+  },
+})
+```
+
+*Tips：将 `monaco-editor` 排除在预构建之外，可以避免 Vite 尝试解析其复杂的 Worker 文件，导致构建失败。*
+
+### 3.4 创建 Monaco Editor 组件
+
+在 `src/components` 目录下创建 `MonacoEditor.vue`：
+
+```vue
+<template>
+  <div ref="editorContainer" style="width: 100%; height: 500px;"></div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
+import * as monaco from 'monaco-editor'
+
+const props = defineProps<{
+  value: string
+  language?: string
+}>()
+
+const emit = defineEmits<{
+  (e: 'update:value', value: string): void
+}>()
+
+const editorContainer = ref<HTMLDivElement | null>(null)
+let editor: monaco.editor.IStandaloneCodeEditor | null = null
+
+onMounted(() => {
+  if (editorContainer.value) {
+    // 初始化 Monaco Editor
+    editor = monaco.editor.create(editorContainer.value, {
+      value: props.value,
+      language: props.language || 'javascript',
+      theme: 'vs-dark',
+      automaticLayout: true, // 自适应容器大小
+    })
+
+    // 监听编辑器内容变化
+    editor.onDidChangeModelContent(() => {
+      emit('update:value', editor!.getValue())
+    })
+  }
+})
+
+onUnmounted(() => {
+  editor?.dispose() // 销毁编辑器，防止内存泄漏
+})
+</script>
+```
+
+这个组件：
+
+1. 使用 `ref` 创建一个 DOM 容器。
+2. 在 `onMounted` 钩子中初始化 Monaco Editor。
+3. 支持双向绑定，通过 `v-model` 更新代码内容。
+4. 在 `onUnmounted` 中销毁编辑器，释放资源。
+
+*Tips：`automaticLayout` 选项可以让编辑器自动适应容器大小，非常适合响应式布局。*
+
+### 3.5 在页面中使用
+
+编辑 `src/App.vue`，引入并使用 `MonacoEditor` 组件：
+
+```vue
+<template>
+  <div style="padding: 20px;">
+    <h1>Monaco Editor in Vue3</h1>
+    <MonacoEditor v-model="code" language="typescript" />
+    <pre>{{ code }}</pre>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import MonacoEditor from './components/MonacoEditor.vue'
+
+const code = ref(`console.log('Hello, Monaco Editor!');\n// Try editing this code!`)
+</script>
+```
+
+运行 `npm run dev`，你将看到一个可交互的代码编辑器！🎉 输入代码，底部的 `<pre>` 标签会实时显示编辑器内容。
+
+### 3.6 添加 TypeScript 支持
+
+Monaco Editor 对 TypeScript 的支持非常强大，但需要额外配置。假设你的项目中有以下 TypeScript 文件：
+
+```typescript
+// src/types/example.ts
+export interface User {
+  name: string
+  age: number
+}
+```
+
+我们希望编辑器在输入 `User` 类型时提供智能提示。需要在初始化编辑器时加载类型定义：
+
+```vue
+<template>
+  <div ref="editorContainer" style="width: 100%; height: 500px;"></div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
+import * as monaco from 'monaco-editor'
+import userTypes from '../types/example?raw' // 使用 Vite 的 ?raw 导入原始内容
+
+const props = defineProps<{
+  value: string
+  language?: string
+}>()
+
+const emit = defineEmits<{
+  (e: 'update:value', value: string): void
+}>()
+
+const editorContainer = ref<HTMLDivElement | null>(null)
+let editor: monaco.editor.IStandaloneCodeEditor | null = null
+
+onMounted(() => {
+  if (editorContainer.value) {
+    // 注册 TypeScript 类型
+    monaco.languages.typescript.typescriptDefaults.addExtraLib(
+      userTypes,
+      'file:///types/example.ts'
+    )
+
+    editor = monaco.editor.create(editorContainer.value, {
+      value: props.value,
+      language: props.language || 'typescript',
+      theme: 'vs-dark',
+      automaticLayout: true,
+    })
+
+    editor.onDidChangeModelContent(() => {
+      emit('update:value', editor!.getValue())
+    })
+  }
+})
+
+onUnmounted(() => {
+  editor?.dispose()
+})
+</script>
+```
+
+现在，编辑器会在输入 `User` 时提供智能提示，比如：
+
+```typescript
+const user: User = { name: 'Alice', age: 25 }
+```
+
+*Tips：使用 Vite 的 `?raw` 导入类型文件可以避免额外的打包步骤，但要注意文件路径的正确性。*
+
+## 4. 深入原理：Monaco Editor 的工作机制 🕵️‍♂️
+
+要真正掌握 Monaco Editor，我们需要了解它的工作原理。Monaco Editor 的架构可以类比为一台精密的“代码解析机器”，由以下核心模块组成：
+
+### 4.1 核心模块
+
+1. **编辑器核心**：负责渲染编辑器 UI，处理用户输入（如键盘事件、鼠标操作）。
+2. **语言服务**：通过 Web Worker 运行，解析代码、提供补全建议、错误检查等。
+3. **模型（Model）**：表示编辑器的内容，支持多语言、版本控制和 Diff。
+4. **主题系统**：基于 JSON 定义的主题，控制编辑器的外观。
+
+### 4.2 Web Worker 的作用
+
+Monaco Editor 的语言服务（如 TypeScript 的解析）运行在 Web Worker 中，避免阻塞主线程。这就像把繁重的计算任务交给一个“后台助手”，让编辑器保持流畅。Worker 通信基于消息传递，流程如下：
+
+1. 主线程发送代码内容到 Worker。
+2. Worker 解析代码，返回补全建议、错误信息等。
+3. 主线程更新 UI，展示结果。
+
+### 4.3 性能瓶颈与优化
+
+Monaco Editor 的首次加载可能较慢，因为它需要加载多个 JS 和 CSS 文件。以下是常见瓶颈与解决方案：
+
+| **瓶颈**                     | **解决方案**                                                                 |
+|------------------------------|-----------------------------------------------------------------------------|
+| 首次加载时间长               | 使用 CDN 或按需加载语言支持（如只加载 JavaScript 和 TypeScript）。          |
+| Worker 初始化慢              | 预加载 Worker 或延迟初始化语言服务。                                        |
+| 大文件编辑卡顿               | 启用 `largeFileOptimizations` 选项，减少实时解析频率。                      |
+
+*Tips：如果你的项目只需要支持少数语言，可以通过 `monaco.languages.register` 动态注册语言，减少初始加载的资源。*
+
+## 5. 优化与最佳实践 🌟
+
+集成 Monaco Editor 只是开始，如何让它在生产环境中表现卓越才是关键。以下是一些实用建议，结合了我的经验和社区的最佳实践。
+
+### 5.1 按需加载语言支持
+
+Monaco Editor 默认加载所有语言支持，体积较大。我们可以动态加载需要的语言。例如，只加载 JavaScript 和 TypeScript：
+
+```vue
+<template>
+  <div ref="editorContainer" style="width: 100%; height: 500px;"></div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
+import * as monaco from 'monaco-editor'
+import { loader } from 'monaco-editor'
+
+const props = defineProps<{
+  value: string
+  language?: string
+}>()
+
+const emit = defineEmits<{
+  (e: 'update:value', value: string): void
+}>()
+
+const editorContainer = ref<HTMLDivElement | null>(null)
+let editor: monaco.editor.IStandaloneCodeEditor | null = null
+
+onMounted(async () => {
+  // 配置 Monaco Editor 的 CDN 路径
+  loader.config({
+    paths: {
+      vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.43.0/min/vs',
+    },
+  })
+
+  // 动态加载 Monaco Editor
+  await loader.init()
+
+  if (editorContainer.value) {
+    editor = monaco.editor.create(editorContainer.value, {
+      value: props.value,
+      language: props.language || 'javascript',
+      theme: 'vs-dark',
+      automaticLayout: true,
+    })
+
+    editor.onDidChangeModelContent(() => {
+      emit('update:value', editor!.getValue())
+    })
+  }
+})
+
+onUnmounted(() => {
+  editor?.dispose()
+})
+</script>
+```
+
+*Tips：使用 CDN 加载 Monaco Editor 可以减少本地打包体积，但要注意网络延迟对加载速度的影响。*
+
+### 5.2 自定义主题
+
+Monaco Editor 支持自定义主题，让你的编辑器与品牌风格一致。以下是一个简单的自定义主题：
+
+```typescript
+import * as monaco from 'monaco-editor'
+
+monaco.editor.defineTheme('myCustomTheme', {
+  base: 'vs-dark',
+  inherit: true,
+  rules: [
+    { token: 'comment', foreground: 'ffa500', fontStyle: 'italic' },
+    { token: 'keyword', foreground: 'ff55ff' },
+    { token: 'string', foreground: '00ff00' },
+  ],
+  colors: {
+    'editor.background': '#1e1e1e',
+    'editor.foreground': '#ffffff',
+  },
+})
+```
+
+在编辑器初始化时应用主题：
+
+```typescript
+editor = monaco.editor.create(editorContainer.value, {
+  value: props.value,
+  language: props.language || 'javascript',
+  theme: 'myCustomTheme',
+  automaticLayout: true,
+})
+```
+
+*Tips：自定义主题时，优先继承现有主题（如 `vs-dark`），可以减少配置的工作量。*
+
+### 5.3 响应式布局
+
+为了让编辑器适应不同屏幕大小，可以结合 Vue 的响应式特性动态调整容器尺寸：
+
+```vue
+<template>
+  <div ref="editorContainer" :style="{ width: '100%', height: containerHeight }"></div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted, computed } from 'vue'
+import * as monaco from 'monaco-editor'
+
+const props = defineProps<{
+  value: string
+  language?: string
+}>()
+
+const emit = defineEmits<{
+  (e: 'update:value', value: string): void
+}>()
+
+const editorContainer = ref<HTMLDivElement | null>(null)
+let editor: monaco.editor.IStandaloneCodeEditor | null = null
+
+// 动态计算容器高度
+const containerHeight = computed(() => {
+  return window.innerWidth < 768 ? '300px' : '500px'
+})
+
+onMounted(() => {
+  if (editorContainer.value) {
+    editor = monaco.editor.create(editorContainer.value, {
+      value: props.value,
+      language: props.language || 'javascript',
+      theme: 'vs-dark',
+      automaticLayout: true,
+    })
+
+    editor.onDidChangeModelContent(() => {
+      emit('update:value', editor!.getValue())
+    })
+  }
+})
+
+onUnmounted(() => {
+  editor?.dispose()
+})
+</script>
+```
+
+*Tips：结合 `window.addEventListener('resize')` 可以进一步优化编辑器的动态调整逻辑。*
+
+## 6. 常见问题与解决方案 🚨
+
+在集成 Monaco Editor 的过程中，你可能会遇到一些“拦路虎”。以下是常见问题及解决方案，助你快速避坑。
+
+### 6.1 问题：Web Worker 加载失败
+
+**现象**：控制台报错 `Failed to fetch dynamically imported module` 或 Worker 初始化失败。
+
+**原因**：Vite 默认将 Worker 文件视为动态模块，可能导致路径解析错误。
+
+**解决方案**：确保 `vite.config.ts` 中正确配置 Worker 格式，并使用 CDN 加载 Monaco Editor 的 Worker 文件。
+
+*Tips：如果使用 CDN，确保 Worker 文件的路径与主模块一致，避免跨域问题。*
+
+### 6.2 问题：TypeScript 提示不生效
+
+**现象**：编辑器没有提供 TypeScript 的智能提示。
+
+**原因**：未正确注册类型定义或类型文件的路径错误。
+
+**解决方案**：检查 `addExtraLib` 的文件路径，确保类型定义正确加载。参考前文的 TypeScript 支持配置。
+
+*Tips：使用 `monaco.languages.typescript.typescriptDefaults.getDiagnostics` 可以调试类型解析问题。*
+
+### 6.3 问题：编辑器内存泄漏
+
+**现象**：页面切换后，内存占用持续增加。
+
+**原因**：未正确销毁编辑器实例。
+
+**解决方案**：在 `onUnmounted` 中调用 `editor.dispose()`，并确保不重复初始化编辑器。
+
+*Tips：使用浏览器的开发者工具（Performance 面板）可以监控内存使用情况，及时发现泄漏。*
+
+## 7. 哲学思考：技术与人生的交汇 🌌
+
+技术从来不是孤立的，它是人类智慧的延伸，是我们与世界对话的方式。集成 Monaco Editor 的过程，就像在代码的世界中搭建一座桥梁，连接了开发者的创意与用户的体验。正如哲学家赫拉克利特所说：“万物皆流，无物常驻。” 技术的潮流在不断变化，Vite 取代了 Webpack，Vue3 迭代了 Vue2，Monaco Editor 也在不断进化。学会拥抱变化，是每个前端开发者的必修课。
+
+在编写代码时，我们不仅是技术的执行者，更是创造者。每行代码背后，都是对问题的思考、对用户的关怀。Monaco Editor 的丝滑体验，提醒我们追求卓越；Vite 的高效开发，启发我们优化流程。技术让我们更高效，但人生的意义在于用技术创造价值，温暖世界。
+
+> “技术是工具，智慧是灵魂。” —— 晓龙
+
+## 8. 总结与展望 🎯
+
+通过本文，我们从零开始，在 Vite + Vue3 项目中集成了 Monaco Editor，深入剖析了其原理，分享了优化技巧和最佳实践。以下是核心要点：
+
+- **Monaco Editor** 是一个强大的代码编辑器，适合打造在线 IDE、文档工具等。
+- **Vite + Vue3** 提供了高效的开发体验，与 Monaco Editor 完美契合。
+- **优化与实践** 是生产环境的关键，按需加载、自定义主题、响应式布局一个都不能少。
+- **哲学思考** 让我们从技术中看到更大的格局，找到开发的意义。
+
+未来，Monaco Editor 可能会支持更多的语言、更智能的补全，甚至与 AI 深度结合。而 Vite 和 Vue3 也将继续推动前端开发的边界。作为开发者，我们需要保持学习，拥抱变化，用代码书写属于自己的故事。
+
+希望这篇文章能成为你前端路上的“灯塔”，照亮前行的方向。如果你有任何问题或想法，欢迎在评论区交流！😄
+
+
+# Vite+Vue3 项目中集成 Monaco Editor：从零到一的深度实践
+
+## 1. Monaco Editor 是什么？
+
+Monaco Editor 是由微软开发的一款开源代码编辑器库，广泛应用于 Visual Studio Code。它支持语法高亮、代码补全、错误提示、Diff 视图等功能，适合打造在线 IDE、文档编辑器等。
+
+### 核心特性
+
+| **特性**               | **描述**                                                                 | **适用场景**                       |
+|------------------------|--------------------------------------------------------------------------|------------------------------------|
+| 语法高亮              | 支持 100+ 种编程语言的语法高亮，动态解析代码结构。                      | 代码展示、在线 IDE                |
+| 智能提示              | 提供上下文感知的代码补全，支持 TypeScript 和自定义补全逻辑。            | 开发工具、文档编辑                |
+| Diff 编辑器           | 内置代码对比功能，展示代码变更，直观易用。                              | 版本控制、代码审查                |
+| 主题与定制            | 支持 VS Code 主题，可自定义编辑器外观和行为。                           | 个性化开发环境                    |
+| 性能优化              | 使用 Web Worker 异步加载语言服务，减少主线程阻塞。                      | 大型项目、复杂代码编辑            |
+
+*Tips：Monaco Editor 的模块化设计允许按需加载语言支持，优化首次加载时间。*
+
+## 2. 为什么选择 Vite + Vue3？
+
+- **Vite**：基于 ES Modules 的构建工具，启动快、热更新无延迟。
+- **Vue3**：Composition API 灵活，性能优，TypeScript 支持友好。
+
+*Tips：Vite 的 ES Module 特性要求模块化代码组织，避免 CommonJS 依赖。*
+
+## 3. 集成步骤
+
+### 3.1 创建项目
+
+```bash
+npm create vite@latest my-monaco-app -- --template vue-ts
+cd my-monaco-app
+npm install
+npm run dev
+```
+
+### 3.2 安装 Monaco Editor
+
+```bash
+npm install monaco-editor
+```
+
+### 3.3 配置 Vite
+
+```typescript
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+
+export default defineConfig({
+  plugins: [vue()],
+  optimizeDeps: {
+    exclude: ['monaco-editor'],
+  },
+  build: {
+    rollupOptions: {
+      external: ['monaco-editor'],
+    },
+  },
+  worker: {
+    format: 'es',
+  },
+})
+```
+
+### 3.4 创建 Monaco Editor 组件
+
+```vue
+<template>
+  <div ref="editorContainer" style="width: 100%; height: 500px;"></div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
+import * as monaco from 'monaco-editor'
+
+const props = defineProps<{
+  value: string
+  language?: string
+}>()
+
+const emit = defineEmits<{
+  (e: 'update:value', value: string): void
+}>()
+
+const editorContainer = ref<HTMLDivElement | null>(null)
+let editor: monaco.editor.IStandaloneCodeEditor | null = null
+
+onMounted(() => {
+  if (editorContainer.value) {
+    editor = monaco.editor.create(editorContainer.value, {
+      value: props.value,
+      language: props.language || 'javascript',
+      theme: 'vs-dark',
+      automaticLayout: true,
+    })
+
+    editor.onDidChangeModelContent(() => {
+      emit('update:value', editor!.getValue())
+    })
+  }
+})
+
+onUnmounted(() => {
+  editor?.dispose()
+})
+</script>
+```
+
+### 3.5 使用组件
+
+```vue
+<template>
+  <div style="padding: 20px;">
+    <h1>Monaco Editor in Vue3</h1>
+    <MonacoEditor v-model="code" language="typescript" />
+    <pre>{{ code }}</pre>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import MonacoEditor from './components/MonacoEditor.vue'
+
+const code = ref(`console.log('Hello, Monaco Editor!');\n// Try editing this code!`)
+</script>
+```
+
+## 4. 深入原理
+
+### 4.1 核心模块
+
+- **编辑器核心**：渲染 UI，处理用户输入。
+- **语言服务**：运行在 Web Worker 中，解析代码、提供补全。
+- **模型**：表示编辑器内容，支持多语言和 Diff。
+- **主题系统**：基于 JSON 的主题配置。
+
+### 4.2 Web Worker
+
+语言服务通过 Worker 异步处理，避免主线程阻塞。
+
+## 5. 优化与最佳实践
+
+### 5.1 按需加载
+
+使用 CDN 或动态加载语言支持，减少首次加载时间。
+
+### 5.2 自定义主题
+
+```typescript
+monaco.editor.defineTheme('myCustomTheme', {
+  base: 'vs-dark',
+  inherit: true,
+  rules: [
+    { token: 'comment', foreground: 'ffa500', fontStyle: 'italic' },
+    { token: 'keyword', foreground: 'ff55ff' },
+    { token: 'string', foreground: '00ff00' },
+  ],
+  colors: {
+    'editor.background': '#1e1e1e',
+    'editor.foreground': '#ffffff',
+  },
+})
+```
+
+### 5.3 响应式布局
+
+动态调整编辑器容器大小，适配不同屏幕。
+
+## 6. 常见问题
+
+- **Web Worker 加载失败**：检查 Vite 配置，使用 CDN。
+- **TypeScript 提示不生效**：确保类型定义正确注册。
+- **内存泄漏**：在 `onUnmounted` 中销毁编辑器。
+
+## 7. 总结
+
+Monaco Editor + Vite + Vue3 是一个强大的组合，适合打造高性能的代码编辑工具。通过本文，你学会了从零开始集成、优化和调试。希望这篇文章能为你的前端之旅增添一抹亮色！🌟
+
+---

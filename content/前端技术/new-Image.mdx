@@ -1,0 +1,179 @@
+---
+title: "new Image 预加载为什么比 img 直接加载要好？"
+date: "2022-09-21"
+description: "深入剖析 new Image 预加载的原理与优势，带你从前端开发者的视角理解它为何能吊打直接用 img 加载的场景。"
+keywords: "new Image, 图片预加载, 前端性能优化, JavaScript, DOM, 浏览器渲染"
+author: "晓龙"
+image: "/images/hero/image-preload.jpg"
+tags: ["前端开发", "JavaScript", "性能优化"]
+category: "前端技术"
+---
+
+作为前端开发者，你有没有遇到过这样的场景：页面加载时，图片像个慢性子的小乌龟🐢，慢吞吞地蹦出来，甚至还带着“白屏尴尬症”？或者用户滑动到某个区域，图片却迟迟不加载，体验感直接拉垮？别急，今天我们来聊聊一个老朋友——`new Image()`，它可能是你优化图片加载体验的秘密武器。相比直接丢个 `<img>` 标签在页面上，`new Image()` 预加载到底好在哪？让我们从原理到实践，抽丝剥茧地聊透彻。
+
+## 先从基础聊起：什么是图片预加载？
+
+图片预加载，顾名思义，就是在用户真正需要看到图片之前，提前把图片资源加载到浏览器缓存中。就像你去餐厅吃饭，服务员还没等你点单就把水端上来——贴心吧？在前端世界里，`new Image()` 就是这个“贴心服务员”，而 `<img>` 则是“等你喊了才上菜”的普通模式。
+
+具体来说，`new Image()` 是 JavaScript 提供的一个构造函数，用于创建一个新的 `HTMLImageElement` 实例。你可以简单地这样用：
+
+```javascript
+const img = new Image();
+img.src = "https://example.com/hero.jpg";
+```
+
+这行代码会在后台默默加载图片，但不会直接显示在页面上。而 `<img>` 标签则是直接丢到 DOM 里，加载和渲染几乎同时发生。那么，为什么不直接用 `<img>`，非得搞个“后台加载”呢？别急，答案马上揭晓。
+
+## 核心优势：为什么 `new Image()` 更胜一筹？
+
+### 1. **加载与渲染分离，掌控权在你手里**
+用 `<img>` 标签时，图片加载和 DOM 渲染是“捆绑销售”的。你丢个 `<img src="big-pic.jpg">` 到页面，浏览器会立刻开始下载并尝试渲染。如果图片很大或者网络很慢，用户可能会看到“半拉子”的加载效果，甚至触发布局重排（reflow），体验直接崩盘。
+
+而 `new Image()` 就像个幕后英雄，它只负责加载图片资源，完全不干扰 DOM。你可以等它加载完再决定什么时候、怎么把它塞进页面。比如：
+
+```javascript
+const img = new Image();
+img.src = "https://example.com/hero.jpg";
+img.onload = () => {
+  document.querySelector(".hero").appendChild(img);
+};
+```
+
+**小 Tips**: 用 `onload` 事件确保图片加载完成后再操作，避免“图片还没Ready就上场”的尴尬。
+
+### 2. **预加载的“未雨绸缪”哲学**
+想象一下，你在做一个图片轮播组件，用户滑动到第三张时，图片才开始加载，那体验简直像在看PPT时卡住了一样。而用 `new Image()`，你可以提前把后面几张图加载好，等用户切换时直接从缓存中秒取，丝滑得像刚涂了润滑油。
+
+```javascript
+const preloadImages = ["pic1.jpg", "pic2.jpg", "pic3.jpg"];
+preloadImages.forEach((src) => {
+  const img = new Image();
+  img.src = src;
+});
+```
+
+**小 Tips**: 如果图片列表很长，建议加个优先级逻辑，先预加载用户最可能看到的几张，别一股脑全塞给浏览器，免得它“消化不良”。
+
+### 3. **避免不必要的渲染开销**
+直接用 `<img>` 时，浏览器会立刻触发渲染管道（rendering pipeline），包括解析、布局、绘制等步骤。如果图片还没加载完，浏览器还得留个占位符，甚至可能导致闪烁。而 `new Image()` 是“静默加载”，不占用主线程的渲染资源，性能友好得像个低调的好邻居。
+
+举个例子，假设你有个产品详情页，上面有个高清大图。如果用 `<img>`，页面可能会因为图片加载慢而抖动；而用 `new Image()` 预加载，等加载完再插入 DOM，就能保证“一次到位”的丝滑体验。
+
+### 4. **错误处理更灵活**
+`<img>` 加载失败时，你只能通过 `onerror` 属性做有限的处理。而 `new Image()` 让你能在 JavaScript 中更灵活地掌控。比如，加载失败时可以切换备用图片：
+
+```javascript
+const img = new Image();
+img.src = "https://example.com/main.jpg";
+img.onerror = () => {
+  img.src = "https://example.com/fallback.jpg"; // 备用图
+};
+img.onload = () => {
+  document.body.appendChild(img);
+};
+```
+
+**小 Tips**: 可以加个超时机制，如果图片加载时间超过预期（比如 5 秒），就直接切到备用方案，别让用户干等。
+
+## 深入原理：浏览器是怎么处理的？
+
+想知道为什么 `new Image()` 这么香？我们得稍微钻进浏览器的“肚子”里看看。
+
+1. **缓存机制**  
+   当你调用 `new Image()` 并设置 `src` 时，浏览器会发起 HTTP 请求，把图片下载到内存缓存（Memory Cache）或磁盘缓存（Disk Cache）中。后续任何使用相同 URL 的 `<img>` 标签都会直接从缓存中读取，速度快得像闪电⚡。
+
+2. **不触发渲染**  
+   `<img>` 标签是 DOM 的一部分，加载过程会触发 CSSOM 和 Render Tree 的更新。而 `new Image()` 创建的只是个 JavaScript 对象，浏览器压根不会把它算进渲染流程，直到你手动插入 DOM。
+
+3. **异步加载的本质**  
+   图片加载本质上是异步的，但 `<img>` 的异步是“被动式”的，依赖浏览器调度。而 `new Image()` 让你主动掌控加载时机，简直是从“被动挨打”到“主动出击”的进化。
+
+## 实战场景：哪里能用起来？
+
+### 场景 1：首页大图优化
+首页通常有个巨型 Hero 图片，直接用 `<img>` 可能导致首屏加载时间（FCP）飙升。用 `new Image()` 预加载，配合 `onload`，就能确保图片加载完再渲染，体验和性能双赢。
+
+```javascript
+window.addEventListener("load", () => {
+  const heroImg = new Image();
+  heroImg.src = "https://example.com/hero.jpg";
+  heroImg.onload = () => {
+    document.querySelector(".hero").style.backgroundImage = `url(${heroImg.src})`;
+  };
+});
+```
+
+### 场景 2：懒加载的前置准备
+懒加载（lazy loading）很常见，但如果用户滑动得太快，图片还是会“来不及”。可以用 `new Image()` 预加载即将进入视口的图片：
+
+```javascript
+const nextImg = new Image();
+nextImg.src = "https://example.com/next-section.jpg";
+window.addEventListener("scroll", () => {
+  if (isInViewport(".next-section")) {
+    document.querySelector(".next-section img").src = nextImg.src;
+  }
+});
+```
+
+**小 Tips**: 结合 `IntersectionObserver`，效果更佳，懒加载和预加载双剑合璧。
+
+### 场景 3：游戏或动画中的资源管理
+如果你在做 Canvas 游戏，几十张精灵图（sprite）需要按需加载，`new Image()` 是你的最佳拍档。可以用个加载器管理进度：
+
+```javascript
+const assets = ["player.png", "enemy.png", "bg.png"];
+let loadedCount = 0;
+assets.forEach((src) => {
+  const img = new Image();
+  img.src = src;
+  img.onload = () => {
+    loadedCount++;
+    if (loadedCount === assets.length) {
+      startGame(); // 所有资源就绪，开始游戏
+    }
+  };
+});
+```
+
+## 最佳实践：如何优雅地用 `new Image()`？
+
+1. **优先级管理**  
+   别一股脑预加载所有图片，按需加载最重要的高优先级资源，比如首页 banner 或交互核心图片。
+
+2. **配合现代属性**  
+   可以给 `new Image()` 创建的实例加 `decoding="async"`，告诉浏览器异步解码图片，进一步提升性能：
+
+   ```javascript
+   const img = new Image();
+   img.src = "https://example.com/hero.jpg";
+   img.decoding = "async";
+   ```
+
+3. **监控加载状态**  
+   用 `onload` 和 `onerror` 做状态管理，别让加载失败悄无声息地溜走。
+
+4. **避免重复加载**  
+   检查缓存中是否已有相同 URL 的图片，节省带宽：
+
+   ```javascript
+   const preload = (src) => {
+     if (!document.querySelector(`img[src="${src}"]`)) {
+       const img = new Image();
+       img.src = src;
+     }
+   };
+   ```
+
+5. **别忘了清理**  
+   如果预加载的图片最终没用上，记得解除事件监听，免得内存泄漏。
+
+## 幽默小结：`<img>` 是“直男”，`new Image()` 是“暖男”
+如果把 `<img>` 比作直男，看到任务就一股脑冲上去干活，完全不考虑时机和后果；那 `new Image()` 就是个暖男，先默默准备好一切，等你需要时再温柔奉上。😂 在前端开发中，我们显然更需要这种“暖男”式的高效与贴心。
+
+## 写在最后
+`new Image()` 预加载的优势在于它的灵活性、性能友好和对体验的极致优化。无论是首页大图、懒加载优化，还是复杂的资源管理，它都能帮你把图片加载这件“小事”做到极致。希望这篇文章能让你对它刮目相看，下次写代码时不妨试试这个“幕后英雄”，让用户体验再上一层楼！
+
+有什么疑问或者更好的实践？欢迎在评论区跟我聊聊～
+
+---
