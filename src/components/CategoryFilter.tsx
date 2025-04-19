@@ -5,8 +5,20 @@ import PostCard from "./PostCard";
 import FadeIn from "@/components/FadeIn";
 import Categories from "./Categories";
 
+interface MinimalPost {
+  title: string;
+  date: string;
+  description: string;
+  url: string;
+  category: string;
+  tags?: string[];
+  image?: string;
+  views?: number;
+  likes?: number;
+}
+
 interface CategoryFilterProps {
-  posts: Post[];
+  posts: MinimalPost[];
 }
 
 export default function CategoryFilter({ posts }: CategoryFilterProps) {

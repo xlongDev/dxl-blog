@@ -1,11 +1,22 @@
 "use client";
 
-import { Post } from "contentlayer/generated";
 import Link from "next/link";
 import { useMemo, memo } from "react";
 
+interface MinimalPost {
+  title: string;
+  date: string;
+  description: string;
+  url: string;
+  category: string;
+  tags?: string[];
+  image?: string;
+  views?: number;
+  likes?: number;
+}
+
 interface CategoriesProps {
-  posts: Post[];
+  posts: MinimalPost[];
 }
 
 const CategoryLink = memo(
@@ -44,7 +55,7 @@ function Categories({ posts }: CategoriesProps) {
     const postsMap = categories.reduce((acc, category) => {
       acc[category] = posts.filter((post) => post.category === category);
       return acc;
-    }, {} as Record<string, Post[]>);
+    }, {} as Record<string, MinimalPost[]>);
 
     return { allCategories: categories, postsByCategory: postsMap };
   }, [posts]);

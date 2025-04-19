@@ -1,50 +1,73 @@
 import { promisePool } from "@/lib/db/config";
 import { NextResponse } from "next/server";
+import { RowDataPacket } from "mysql2";
+
+// 1. 定义类型（继承RowDataPacket以兼容MySQL2返回类型）
+interface ActivityRaw extends RowDataPacket {
+  type: string;
+  userId: number;
+  articleSlug: string;
+  createdAt: Date;
+  articleTitle?: string | null; // 明确标记可能为null
+}
+
+interface Activity {
+  id: string;
+  type: string;
+  userId: number;
+  articleSlug: string;
+  createdAt: Date;
+  articleTitle: string;
+}
 
 export async function GET() {
   try {
-    // 获取最近的用户活动数据
-    const [rows] = await promisePool.query(
-      `SELECT 
-        CONCAT(action_type, '_', article_slug, '_', user_id) as id,
-        action_type as type,
-        user_id as userId,
-        article_slug as articleSlug,
-        created_at as createdAt
+    // 2. 查询数据（自动匹配RowDataPacket类型）
+    const [rows] = await promisePool.query<ActivityRaw[]>(`
+      SELECT 
+        a.action_type as type,
+        a.user_id as userId,
+        a.article_slug as articleSlug,
+        a.created_at as createdAt,
+        ar.title as articleTitle
       FROM (
-        SELECT 'like' as action_type, user_id, article_slug, created_at
-        FROM article_likes
+        SELECT 'like' as action_type, user_id, article_slug, created_at FROM article_likes
         UNION ALL
-        SELECT 'favorite' as action_type, user_id, article_slug, created_at
-        FROM article_favorites
+        SELECT 'favorite' as action_type, user_id, article_slug, created_at FROM article_favorites
         UNION ALL
-        SELECT 'comment' as action_type, user_id, article_slug, created_at
-        FROM article_comments
-      ) as activities
-      ORDER BY created_at DESC
-      LIMIT 20`
-    );
+        SELECT 'comment' as action_type, user_id, article_slug, created_at FROM article_comments
+      ) a
+      LEFT JOIN article_interactions ar ON a.article_slug = ar.article_slug
+      ORDER BY a.created_at DESC
+      LIMIT 20
+    `);
 
-    // 获取文章标题
-    const activities = await Promise.all(
-      (Array.isArray(rows) ? rows : []).map(async (activity: any) => {
-        const [titleRows] = await promisePool.query(
-          "SELECT title FROM articles WHERE slug = ?",
-          [activity.articleSlug]
-        );
-        return {
-          ...activity,
-          articleTitle:
-            Array.isArray(titleRows) && titleRows.length > 0
-              ? (titleRows[0] as any).title
-              : "未知文章",
-        };
-      })
-    );
+    // 3. 转换数据格式
+    const activities: Activity[] = rows.map((row) => ({
+      id: `${row.type}_${row.articleSlug}_${row.userId}`,
+      type: row.type,
+      userId: row.userId,
+      articleSlug: row.articleSlug,
+      createdAt: row.createdAt,
+      articleTitle: row.articleTitle || "未知文章", // 处理null/undefined情况
+    }));
 
-    return NextResponse.json(activities);
+    // 4. 返回结果
+    return NextResponse.json(activities, {
+      headers: {
+        "Cache-Control": "public, max-age=60", // 添加缓存头
+      },
+    });
   } catch (error) {
     console.error("Error fetching activities:", error);
-    return NextResponse.json({ error: "获取活动数据失败" }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: "获取活动数据失败",
+        ...(process.env.NODE_ENV === "development" && {
+          details: error instanceof Error ? error.message : String(error),
+        }),
+      },
+      { status: 500 }
+    );
   }
 }

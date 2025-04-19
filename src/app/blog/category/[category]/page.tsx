@@ -2,6 +2,7 @@ import { allPosts } from "contentlayer/generated";
 import { compareDesc } from "date-fns";
 import FadeIn from "@/components/FadeIn";
 import CategoryFilter from "@/components/CategoryFilter";
+import { notFound } from "next/navigation";
 
 type Props = {
   params: {
@@ -21,11 +22,29 @@ export function generateStaticParams() {
 export default function CategoryPage({ params }: Props) {
   const { category } = params;
   const decodedCategory = decodeURIComponent(category);
+
+  // 只获取必要的字段，减少数据量
   const posts = allPosts
     .filter(
       (post) => post.category?.toLowerCase() === decodedCategory.toLowerCase()
     )
+    .map((post) => ({
+      title: post.title,
+      date: post.date,
+      description: post.description,
+      url: post.url,
+      category: post.category,
+      tags: post.tags,
+      image: post.image,
+      views: post.views,
+      likes: post.likes,
+    }))
     .sort((a, b) => compareDesc(new Date(a.date), new Date(b.date)));
+
+  // 如果没有找到任何文章，返回404
+  if (posts.length === 0) {
+    notFound();
+  }
 
   // 获取原始分类名称
   const originalCategory =
