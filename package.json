@@ -31,6 +31,7 @@
     "chart.js": "^4.4.7",
     "clipboard-copy": "^4.0.1",
     "clsx": "^2.1.1",
+    "critters": "^0.0.25",
     "date-fns": "^3.6.0",
     "framer-motion": "^11.18.2",
     "gray-matter": "^4.0.3",
@@ -44,7 +45,9 @@
     "prismjs": "^1.30.0",
     "react": "^18",
     "react-dom": "^18",
+    "react-intersection-observer": "^9.16.0",
     "react-use": "^17.6.0",
+    "sharp": "^0.34.1",
     "tailwind-merge": "^3.2.0",
     "typewriter-effect": "^2.21.0",
     "uuid": "^11.0.5"
@@ -74,7 +77,8 @@
       "contentlayer",
       "esbuild",
       "parse-entities",
-      "protobufjs"
+      "protobufjs",
+      "sharp"
     ]
   },
   "packageManager": "pnpm@10.8.1+sha512.c50088ba998c67b8ca8c99df8a5e02fd2ae2e2b29aaf238feaa9e124248d3f48f9fb6db2424949ff901cffbb5e0f0cc1ad6aedb602cd29450751d11c35023677"
