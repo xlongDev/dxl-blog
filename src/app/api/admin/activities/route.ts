@@ -29,7 +29,7 @@ export async function GET() {
         a.user_id as userId,
         a.article_slug as articleSlug,
         a.created_at as createdAt,
-        ar.title as articleTitle
+        a.article_slug as articleTitle
       FROM (
         SELECT 'like' as action_type, user_id, article_slug, created_at FROM article_likes
         UNION ALL
@@ -37,10 +37,11 @@ export async function GET() {
         UNION ALL
         SELECT 'comment' as action_type, user_id, article_slug, created_at FROM article_comments
       ) a
-      LEFT JOIN article_interactions ar ON a.article_slug = ar.article_slug
       ORDER BY a.created_at DESC
       LIMIT 20
     `);
+
+    // 注意：article_interactions表中没有title列，暂时使用article_slug代替
 
     // 3. 转换数据格式
     const activities: Activity[] = rows.map((row) => ({
