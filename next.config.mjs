@@ -44,7 +44,7 @@ const nextConfig = {
     // 优化文件监视配置
     config.watchOptions = {
       ...config.watchOptions,
-      ignored: ["**/.git/**", "**/node_modules/**", "**/.next/**"],
+      ignored: /node_modules|.git|.next/,
       aggregateTimeout: 300,
       poll: 1000,
     };
