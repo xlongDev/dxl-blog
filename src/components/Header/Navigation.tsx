@@ -38,9 +38,29 @@ export default function Navigation({ onNavigate }: NavigationProps) {
     );
   };
 
+  const getPanelGradient = () => {
+    return getThemeValue(
+      {
+        light: "from-blue-500/5 via-purple-500/5 to-pink-500/5",
+        dark: "from-blue-400/10 via-purple-400/10 to-pink-400/10",
+        green: "from-green-500/10 via-green-400/10 to-green-300/10",
+        purple: "from-purple-500/10 via-purple-400/10 to-purple-300/10",
+        orange: "from-orange-500/10 via-orange-400/10 to-orange-300/10",
+        blue: "from-blue-500/10 via-blue-400/10 to-blue-300/10",
+        pink: "from-pink-500/10 via-pink-400/10 to-pink-300/10",
+        brown: "from-amber-500/10 via-amber-400/10 to-amber-300/10",
+      },
+      "from-blue-500/5 via-purple-500/5 to-pink-500/5"
+    );
+  };
+
   const linkGradient = mounted
     ? getLinkGradient()
     : "after:from-blue-600 after:to-purple-600";
+  
+  const panelGradient = mounted
+    ? getPanelGradient()
+    : "from-blue-500/5 via-purple-500/5 to-pink-500/5";
 
   return (
     <div className="flex md:items-center md:space-x-6 flex-col md:flex-row space-y-4 md:space-y-0">
@@ -88,7 +108,7 @@ export default function Navigation({ onNavigate }: NavigationProps) {
                 : "opacity-0 invisible translate-y-2 h-0 md:h-auto"
             }`}
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 pointer-events-none" />
+          <div className={`absolute inset-0 bg-gradient-to-br ${panelGradient} pointer-events-none`} />
           <div className="grid grid-cols-2 gap-1 relative z-10">
             {categories.map((category) => (
               <Link

@@ -4,7 +4,7 @@ import remarkGfm from "remark-gfm";
 
 export const Post = defineDocumentType(() => ({
   name: "Post",
-  filePathPattern: `*/**/*.mdx`,
+  filePathPattern: `**/*.mdx`,
   contentType: "mdx",
   fields: {
     title: {
@@ -53,32 +53,19 @@ export const Post = defineDocumentType(() => ({
     },
     category: {
       type: "string",
-      required: true,
+      required: true, // category 是必需字段，确保类型为 string
     },
   },
   computedFields: {
     url: {
       type: "string",
-      resolve: (post) => {
-        const encodedPath = post._raw.flattenedPath
-          .split("/")
-          .map((segment) => encodeURIComponent(segment))
-          .join("/");
-        return `/blog/${encodedPath}`;
-      },
-    },
-    category: {
-      type: "string",
-      resolve: (post) => {
-        const pathSegments = post._raw.flattenedPath.split("/");
-        return pathSegments[0];
-      },
+      resolve: (post) => `/blog/${encodeURIComponent(post._raw.flattenedPath)}`,
     },
     subcategory: {
       type: "string",
       resolve: (post) => {
-        const pathSegments = post._raw.flattenedPath.split("/");
-        return pathSegments.length > 1 ? pathSegments[1] : null;
+        const segments = post._raw.flattenedPath.split("/");
+        return segments.length > 1 ? segments[1] : null;
       },
     },
   },
@@ -89,35 +76,27 @@ export default makeSource({
   documentTypes: [Post],
   mdx: {
     remarkPlugins: [
-      remarkGfm, // 添加GitHub风格Markdown支持，包括表格
+      remarkGfm,
     ],
     rehypePlugins: [
       [
         rehypePrettyCode as any,
         {
           theme: "github-dark",
-          onVisitLine(node: {
-            children: Array<{ type: string; value: string }>;
-          }) {
-            // 防止空行折叠
+          onVisitLine(node: any) {
             if (node.children.length === 0) {
               node.children = [{ type: "text", value: " " }];
             }
           },
-          onVisitHighlightedLine(node: {
-            properties: { className: string[] };
-          }) {
-            // 添加高亮行的样式
-            node.properties.className.push("line--highlighted");
+          onVisitHighlightedLine(node: any) {
+            node.properties.className = [...(node.properties.className || []), "line--highlighted"];
           },
-          onVisitHighlightedWord(node: {
-            properties: { className: string[] };
-          }) {
-            // 添加高亮词的样式
+          onVisitHighlightedWord(node: any) {
             node.properties.className = ["word--highlighted"];
           },
         },
       ],
     ],
   },
+  disableImportAliasWarning: true,
 });

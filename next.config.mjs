@@ -4,10 +4,9 @@ const nextConfig = {
   distDir: ".next",
   generateBuildId: () => "build",
   generateEtags: true,
-  // 增加静态页面生成超时时间
   staticPageGenerationTimeout: 180,
 
-  // 启用增量静态再生成
+  // 启用增量静态再生（ISR），优化动态页面
   async rewrites() {
     return {
       beforeFiles: [
@@ -26,13 +25,31 @@ const nextConfig = {
     };
   },
 
-  // 配置大型页面的处理方式
+  // 优化大型页面数据处理
   experimental: {
     largePageDataBytes: 128 * 1000, // 128KB
+    optimizePackageImports: ["contentlayer/source-files", "rehype-pretty-code", "remark-gfm"], // 优化第三方包导入
+    workerThreads: true, // 启用 worker threads 加速构建
+    isrMemoryCacheSize: 50, // ISR 内存缓存大小（MB）
   },
 
+  // 启用 React 严格模式（开发时）
+  reactStrictMode: process.env.NODE_ENV === "development",
+
+  // 优化图像加载
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**",
+      },
+    ],
+    minimumCacheTTL: 60, // 图片缓存 60 秒
+  },
+
+  // Webpack 配置优化
   webpack: (config, { isServer }) => {
-    // 处理 punycode 警告
+    // 禁用 punycode 警告
     config.resolve = {
       ...config.resolve,
       fallback: {
@@ -49,7 +66,7 @@ const nextConfig = {
       poll: 1000,
     };
 
-    // 修复 __webpack_require__.C is not a function 错误
+    // 优化 runtimeChunk 配置
     if (config.optimization && config.optimization.runtimeChunk) {
       if (isServer) {
         config.optimization.runtimeChunk = {
@@ -60,14 +77,14 @@ const nextConfig = {
       }
     }
 
-    // 优化构建性能
+    // 优化客户端构建性能
     if (!isServer) {
       config.optimization = {
         ...config.optimization,
         splitChunks: {
           chunks: "all",
           minSize: 20000,
-          maxSize: 244000,
+          maxSize: 200000, // 减小 maxSize，提升加载速度
           minChunks: 1,
           maxAsyncRequests: 30,
           maxInitialRequests: 30,
@@ -82,10 +99,37 @@ const nextConfig = {
               priority: -20,
               reuseExistingChunk: true,
             },
+            contentlayer: {
+              test: /[\\/]node_modules[\\/](contentlayer|rehype-pretty-code|remark-gfm)[\\/]/,
+              name: "contentlayer",
+              priority: -5,
+              reuseExistingChunk: true,
+            },
           },
         },
       };
     }
+
+    // 启用 SWC 编译器加速 MDX 处理
+    config.module.rules.push({
+      test: /\.mdx$/,
+      use: {
+        loader: "swc-loader",
+        options: {
+          jsc: {
+            parser: {
+              syntax: "typescript",
+              tsx: true,
+            },
+            transform: {
+              react: {
+                runtime: "automatic",
+              },
+            },
+          },
+        },
+      },
+    });
 
     return config;
   },
