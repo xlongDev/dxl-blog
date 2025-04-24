@@ -300,18 +300,23 @@ const RecommendedPosts = ({ recommendedPosts }: RecommendedPostsProps) => {
           {post.description}
         </p>
         <div className="mt-4 pt-3 border-t border-gray-200/30 dark:border-gray-700/30 flex justify-between items-center relative z-10">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
             {post.tags &&
               post.tags.length > 0 &&
-              post.tags.map((tag) => (
+              post.tags.slice(0, 2).map((tag) => (
                 <motion.span
                   key={tag}
-                  className={`text-xs px-2 py-1 rounded-full ${tagClass}`}
+                  className={`text-xs px-2 py-1 rounded-full ${tagClass} shrink-0`}
                   whileHover={{ scale: 1.05 }}
                 >
                   {tag}
                 </motion.span>
               ))}
+            {post.tags && post.tags.length > 2 && (
+              <span className="text-xs opacity-70">
+                +{post.tags.length - 2}
+              </span>
+            )}
           </div>
           <div className="text-xs opacity-70 flex items-center gap-1">
             <span>{post.views || 0}</span>

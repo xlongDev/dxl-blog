@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node scripts/generateCache.js && next dev --turbo",
+    "dev": "next dev --turbo",
     "build": "next build",
     "prebuild": "contentlayer build && node scripts/generateCache.js",
     "start": "next start",

@@ -4,15 +4,17 @@ import remarkGfm from "remark-gfm";
 
 export const Post = defineDocumentType(() => ({
   name: "Post",
-  filePathPattern: `content/**/*.mdx`,
+  filePathPattern: `**/*.mdx`,
   contentType: "mdx",
   fields: {
     title: { type: "string", required: true },
     date: { type: "date", required: true },
     description: { type: "string", required: true },
+    keywords: { type: "string", required: false },
     author: { type: "string", required: false, default: "晓龙" },
     image: { type: "string", required: false },
     tags: { type: "list", of: { type: "string" }, required: false },
+    category: { type: "string", required: false },
   },
   computedFields: {
     url: {
@@ -29,7 +31,7 @@ export default makeSource({
     remarkPlugins: [remarkGfm],
     rehypePlugins: [
       [
-        rehypePrettyCode,
+        rehypePrettyCode as any,
         {
           theme: "github-dark",
         },
