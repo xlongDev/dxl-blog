@@ -2,7 +2,14 @@
 
 import React, { useState } from "react";
 import { Post } from "contentlayer/generated";
-import { Bookmark, ChevronDown, ChevronUp, List, Grid, ExternalLink } from "lucide-react";
+import {
+  Bookmark,
+  ChevronDown,
+  ChevronUp,
+  List,
+  Grid,
+  ExternalLink,
+} from "lucide-react";
 import { useThemeUtils } from "@/hooks/useThemeUtils";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -15,6 +22,26 @@ const RecommendedPosts = ({ recommendedPosts }: RecommendedPostsProps) => {
   const { theme, getThemeValue } = useThemeUtils();
   const [expanded, setExpanded] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+
+  // 卡片动画变体
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: i * 0.1,
+        duration: 0.5,
+        ease: "easeOut",
+      },
+    }),
+    hover: {
+      scale: 1.03,
+      transition: { duration: 0.3 },
+    },
+    tap: { scale: 0.98 },
+  };
 
   // 根据主题获取图标渐变色
   const getIconGradient = () => {
@@ -59,12 +86,10 @@ const RecommendedPosts = ({ recommendedPosts }: RecommendedPostsProps) => {
       light:
         "from-white to-indigo-50/30 dark:from-gray-800 dark:to-indigo-900/20",
       dark: "from-gray-800 to-indigo-900/20",
-      green:
-        "from-white to-teal-50/30 dark:from-gray-800 dark:to-teal-900/20",
+      green: "from-white to-teal-50/30 dark:from-gray-800 dark:to-teal-900/20",
       purple:
         "from-white to-violet-50/30 dark:from-gray-800 dark:to-violet-900/20",
-      orange:
-        "from-white to-red-50/30 dark:from-gray-800 dark:to-red-900/20",
+      orange: "from-white to-red-50/30 dark:from-gray-800 dark:to-red-900/20",
       blue: "from-white to-sky-50/30 dark:from-gray-800 dark:to-sky-900/20",
       pink: "from-white to-rose-50/30 dark:from-gray-800 dark:to-rose-900/20",
       brown:
@@ -109,14 +134,17 @@ const RecommendedPosts = ({ recommendedPosts }: RecommendedPostsProps) => {
   // 根据主题获取标签颜色
   const getTagClass = () => {
     const themeColors = {
-      light: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300",
+      light:
+        "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300",
       dark: "bg-indigo-900/40 text-indigo-300",
       green: "bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300",
-      purple: "bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300",
+      purple:
+        "bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300",
       orange: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
       blue: "bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300",
       pink: "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300",
-      brown: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300",
+      brown:
+        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300",
     };
 
     return themeColors[theme as keyof typeof themeColors] || themeColors.light;
@@ -141,12 +169,38 @@ const RecommendedPosts = ({ recommendedPosts }: RecommendedPostsProps) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.1 }}
       key={post._id}
+      onHoverStart={() => setHoveredCard(post._id)}
+      onHoverEnd={() => setHoveredCard(null)}
+      whileHover="hover"
+      whileTap="tap"
+      variants={cardVariants}
     >
       <Link
         href={post.url}
-        className={`block p-4 rounded-xl border ${borderClass} bg-gradient-to-br ${cardGradient} ${shadowEffect} transition-all duration-300 hover:scale-[1.02]`}
+        className={`block p-4 rounded-xl border ${borderClass} bg-gradient-to-br ${cardGradient} ${shadowEffect} transition-all duration-300 relative overflow-hidden`}
       >
-        <div className="flex items-center justify-between">
+        {/* 背景动画效果 */}
+        {hoveredCard === post._id && (
+          <motion.div
+            className="absolute inset-0 opacity-10"
+            initial={{ opacity: 0 }}
+            animate={{
+              opacity: 0.05,
+              background: [
+                "radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.5) 0%, transparent 50%)",
+                "radial-gradient(circle at 80% 70%, rgba(99, 102, 241, 0.5) 0%, transparent 50%)",
+                "radial-gradient(circle at 40% 20%, rgba(99, 102, 241, 0.5) 0%, transparent 50%)",
+              ],
+            }}
+            transition={{
+              duration: 5,
+              repeat: Infinity,
+              repeatType: "reverse",
+            }}
+          />
+        )}
+
+        <div className="flex items-center justify-between relative z-10">
           <h4 className="font-medium line-clamp-1 flex-1">{post.title}</h4>
           <div className="flex items-center gap-2">
             <span className="text-xs opacity-70 whitespace-nowrap">
@@ -155,21 +209,38 @@ const RecommendedPosts = ({ recommendedPosts }: RecommendedPostsProps) => {
             <ExternalLink size={14} className="opacity-70" />
           </div>
         </div>
-        <p className="text-sm opacity-70 mt-2 line-clamp-2">{post.description}</p>
+        <p className="text-sm opacity-70 mt-2 line-clamp-2 relative z-10">
+          {post.description}
+        </p>
         {post.tags && post.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-3">
-            {post.tags.slice(0, 2).map((tag) => (
-              <span
+          <div className="flex flex-wrap gap-2 mt-3 relative z-10">
+            {post.tags.map((tag) => (
+              <motion.span
                 key={tag}
                 className={`text-xs px-2 py-1 rounded-full ${tagClass}`}
+                whileHover={{ scale: 1.05 }}
               >
                 {tag}
-              </span>
+              </motion.span>
             ))}
-            {post.tags.length > 2 && (
-              <span className="text-xs opacity-70">+{post.tags.length - 2}</span>
-            )}
           </div>
+        )}
+
+        {/* 悬停时显示的闪光效果 */}
+        {hoveredCard === post._id && (
+          <motion.div
+            className="absolute -inset-1 opacity-0"
+            animate={{
+              opacity: [0, 0.2, 0],
+              rotate: [0, 5],
+              scale: [0.8, 1.2],
+            }}
+            transition={{ duration: 2, repeat: Infinity, repeatType: "loop" }}
+          >
+            <div
+              className={`w-full h-full rounded-xl bg-gradient-to-r ${iconGradient} blur-xl`}
+            />
+          </motion.div>
         )}
       </Link>
     </motion.div>
@@ -178,40 +249,92 @@ const RecommendedPosts = ({ recommendedPosts }: RecommendedPostsProps) => {
   // 渲染网格视图的文章
   const renderGridView = (post: Post, index: number) => (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.1 }}
       key={post._id}
+      custom={index}
+      initial="hidden"
+      animate="visible"
+      whileHover="hover"
+      whileTap="tap"
+      variants={cardVariants}
+      onHoverStart={() => setHoveredCard(post._id)}
+      onHoverEnd={() => setHoveredCard(null)}
     >
       <Link
         href={post.url}
-        className={`block p-5 rounded-xl border ${borderClass} bg-gradient-to-br ${cardGradient} ${shadowEffect} transition-all duration-300 hover:scale-[1.02] h-full flex flex-col`}
+        className={`block p-5 rounded-xl border ${borderClass} bg-gradient-to-br ${cardGradient} ${shadowEffect} transition-all duration-300 h-full flex flex-col relative overflow-hidden`}
       >
-        <div className="flex justify-between items-start mb-3">
-          <h4 className="font-medium text-lg line-clamp-2 flex-1">{post.title}</h4>
-          <div className={`p-1.5 rounded-lg bg-gradient-to-r ${iconGradient} text-white transform transition-all duration-300 hover:rotate-12`}>
+        {/* 背景动画效果 */}
+        {hoveredCard === post._id && (
+          <motion.div
+            className="absolute inset-0 opacity-10"
+            initial={{ opacity: 0 }}
+            animate={{
+              opacity: 0.05,
+              background: [
+                "radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.5) 0%, transparent 50%)",
+                "radial-gradient(circle at 80% 70%, rgba(99, 102, 241, 0.5) 0%, transparent 50%)",
+                "radial-gradient(circle at 40% 20%, rgba(99, 102, 241, 0.5) 0%, transparent 50%)",
+              ],
+            }}
+            transition={{
+              duration: 5,
+              repeat: Infinity,
+              repeatType: "reverse",
+            }}
+          />
+        )}
+
+        <div className="flex justify-between items-start mb-3 relative z-10">
+          <h4 className="font-medium text-lg line-clamp-2 flex-1">
+            {post.title}
+          </h4>
+          <motion.div
+            className={`p-1.5 rounded-lg bg-gradient-to-r ${iconGradient} text-white transform transition-all duration-300`}
+            whileHover={{ rotate: 12, scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
             <Bookmark size={14} />
-          </div>
+          </motion.div>
         </div>
-        <p className="text-sm opacity-70 mb-auto line-clamp-3 flex-grow">
+        <p className="text-sm opacity-70 mb-auto line-clamp-3 flex-grow relative z-10">
           {post.description}
         </p>
-        <div className="mt-4 pt-3 border-t border-gray-200/30 dark:border-gray-700/30 flex justify-between items-center">
+        <div className="mt-4 pt-3 border-t border-gray-200/30 dark:border-gray-700/30 flex justify-between items-center relative z-10">
           <div className="flex flex-wrap gap-2">
-            {post.tags && post.tags.length > 0 && post.tags.slice(0, 1).map((tag) => (
-              <span
-                key={tag}
-                className={`text-xs px-2 py-1 rounded-full ${tagClass}`}
-              >
-                {tag}
-              </span>
-            ))}
+            {post.tags &&
+              post.tags.length > 0 &&
+              post.tags.map((tag) => (
+                <motion.span
+                  key={tag}
+                  className={`text-xs px-2 py-1 rounded-full ${tagClass}`}
+                  whileHover={{ scale: 1.05 }}
+                >
+                  {tag}
+                </motion.span>
+              ))}
           </div>
           <div className="text-xs opacity-70 flex items-center gap-1">
             <span>{post.views || 0}</span>
             <span>阅读</span>
           </div>
         </div>
+
+        {/* 悬停时显示的闪光效果 */}
+        {hoveredCard === post._id && (
+          <motion.div
+            className="absolute -inset-1 opacity-0"
+            animate={{
+              opacity: [0, 0.2, 0],
+              rotate: [0, 5],
+              scale: [0.8, 1.2],
+            }}
+            transition={{ duration: 2, repeat: Infinity, repeatType: "loop" }}
+          >
+            <div
+              className={`w-full h-full rounded-xl bg-gradient-to-r ${iconGradient} blur-xl`}
+            />
+          </motion.div>
+        )}
       </Link>
     </motion.div>
   );
@@ -239,13 +362,11 @@ const RecommendedPosts = ({ recommendedPosts }: RecommendedPostsProps) => {
         inactive: "text-gray-400 hover:text-violet-500",
       },
       orange: {
-        active:
-          "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400",
+        active: "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400",
         inactive: "text-gray-400 hover:text-red-500",
       },
       blue: {
-        active:
-          "bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400",
+        active: "bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400",
         inactive: "text-gray-400 hover:text-sky-500",
       },
       pink: {
@@ -260,10 +381,7 @@ const RecommendedPosts = ({ recommendedPosts }: RecommendedPostsProps) => {
       },
     };
 
-    return (
-      themeColors[theme as keyof typeof themeColors] ||
-      themeColors.light
-    );
+    return themeColors[theme as keyof typeof themeColors] || themeColors.light;
   };
 
   const buttonColors = getViewButtonColors();
@@ -288,9 +406,7 @@ const RecommendedPosts = ({ recommendedPosts }: RecommendedPostsProps) => {
           <button
             onClick={() => setViewMode("list")}
             className={`p-1.5 rounded-md transition-colors ${
-              viewMode === "list"
-                ? buttonColors.active
-                : buttonColors.inactive
+              viewMode === "list" ? buttonColors.active : buttonColors.inactive
             }`}
             aria-label="列表视图"
           >
@@ -299,9 +415,7 @@ const RecommendedPosts = ({ recommendedPosts }: RecommendedPostsProps) => {
           <button
             onClick={() => setViewMode("grid")}
             className={`p-1.5 rounded-md transition-colors ${
-              viewMode === "grid"
-                ? buttonColors.active
-                : buttonColors.inactive
+              viewMode === "grid" ? buttonColors.active : buttonColors.inactive
             }`}
             aria-label="网格视图"
           >
@@ -326,14 +440,45 @@ const RecommendedPosts = ({ recommendedPosts }: RecommendedPostsProps) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.3 }}
           onClick={() => setExpanded(!expanded)}
-          className={`mt-5 w-full flex items-center justify-center p-2 rounded-lg border ${borderClass} bg-gradient-to-br ${cardGradient} transition-all duration-300 hover:shadow-md`}
+          className={`mt-5 w-full flex items-center justify-center p-2 rounded-lg border ${borderClass} bg-gradient-to-br ${cardGradient} transition-all duration-300 hover:shadow-md relative overflow-hidden group`}
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.99 }}
         >
-          <span className="mr-2">{expanded ? "收起" : "查看更多推荐"}</span>
-          {expanded ? (
-            <ChevronUp className="w-4 h-4" />
-          ) : (
-            <ChevronDown className="w-4 h-4" />
-          )}
+          {/* 按钮背景动画 */}
+          <motion.div
+            className="absolute inset-0 opacity-0 group-hover:opacity-10"
+            animate={{
+              background: [
+                "radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.5) 0%, transparent 50%)",
+                "radial-gradient(circle at 80% 70%, rgba(99, 102, 241, 0.5) 0%, transparent 50%)",
+                "radial-gradient(circle at 40% 20%, rgba(99, 102, 241, 0.5) 0%, transparent 50%)",
+              ],
+            }}
+            transition={{
+              duration: 5,
+              repeat: Infinity,
+              repeatType: "reverse",
+            }}
+          />
+
+          <span className="mr-2 relative z-10">
+            {expanded ? "收起" : "查看更多推荐"}
+          </span>
+          <motion.span
+            animate={{ y: expanded ? -3 : 3 }}
+            transition={{
+              duration: 0.5,
+              repeat: Infinity,
+              repeatType: "reverse",
+            }}
+            className="relative z-10"
+          >
+            {expanded ? (
+              <ChevronUp className="w-4 h-4" />
+            ) : (
+              <ChevronDown className="w-4 h-4" />
+            )}
+          </motion.span>
         </motion.button>
       )}
     </div>

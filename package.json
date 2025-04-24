@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "node scripts/generateCache.js && next dev --turbo",
-    "build": "contentlayer build && node scripts/generateCache.js && next build",
+    "build": "next build",
+    "prebuild": "contentlayer build && node scripts/generateCache.js",
     "start": "next start",
     "lint": "next lint",
     "contentlayer": "contentlayer build"
@@ -79,7 +80,10 @@
       "esbuild",
       "parse-entities",
       "protobufjs",
-      "sharp"
+      "sharp",
+      "next",
+      "react",
+      "react-dom"
     ],
     "ignoredBuiltDependencies": [
       "@swc/core"
