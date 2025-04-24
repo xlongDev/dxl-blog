@@ -1,27 +1,53 @@
 "use client";
 
-import { useState } from "react";
-import { Post } from "contentlayer/generated";
+import { useState, useEffect } from "react";
 import { ChevronRight, ChevronDown, FileText } from "lucide-react";
 import { useThemeUtils } from "@/hooks/useThemeUtils";
 import Link from "next/link";
+import { MinimalPost } from "@/types";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface TreeNode {
   name: string;
   children?: TreeNode[];
-  posts?: Post[];
+  posts?: MinimalPost[];
   isExpanded?: boolean;
 }
 
 interface ArticleTreeProps {
-  posts: Post[];
+  posts: MinimalPost[];
+}
+
+interface CachedTreeData {
+  treeData: TreeNode[];
 }
 
 const ArticleTree = ({ posts }: ArticleTreeProps) => {
-  const [treeData, setTreeData] = useState(() => buildTree(posts));
+  const [treeData, setTreeData] = useState<TreeNode[]>([]);
+  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const { theme } = useThemeUtils();
 
-  // 根据主题获取颜色
+  useEffect(() => {
+    const fetchTreeData = async () => {
+      try {
+        const response = await fetch("/cache/articleTree.json");
+        if (response.ok) {
+          const cachedData = await response.json();
+          setTreeData(cachedData.treeData);
+        } else {
+          const newTreeData = buildTree(posts);
+          setTreeData(newTreeData);
+        }
+      } catch (error) {
+        console.error("Failed to load article tree cache:", error);
+        const newTreeData = buildTree(posts);
+        setTreeData(newTreeData);
+      }
+    };
+
+    fetchTreeData();
+  }, [posts]);
+
   const getAccentColor = () => {
     const themeColors = {
       light: "text-blue-500",
@@ -37,7 +63,6 @@ const ArticleTree = ({ posts }: ArticleTreeProps) => {
     return themeColors[theme as keyof typeof themeColors] || themeColors.light;
   };
 
-  // 获取悬停时的文本颜色
   const getHoverTextClass = () => {
     const themeColors = {
       light: "hover:text-blue-600",
@@ -96,7 +121,7 @@ const ArticleTree = ({ posts }: ArticleTreeProps) => {
   const borderClass = getBorderClass();
   const hoverTextClass = getHoverTextClass();
 
-  function buildTree(posts: Post[]): TreeNode[] {
+  function buildTree(posts: MinimalPost[]): TreeNode[] {
     const tree: { [key: string]: TreeNode } = {};
 
     posts.forEach((post) => {
@@ -111,7 +136,6 @@ const ArticleTree = ({ posts }: ArticleTreeProps) => {
       tree[category].posts?.push(post);
     });
 
-    // 将对象值转换为数组并按照分类名称排序
     return Object.values(tree).sort((a, b) => {
       const isAEnglish = /^[A-Za-z]/.test(a.name);
       const isBEnglish = /^[A-Za-z]/.test(b.name);
@@ -128,23 +152,44 @@ const ArticleTree = ({ posts }: ArticleTreeProps) => {
     setTreeData([...treeData]);
   };
 
-  const renderNode = (node: TreeNode) => {
+  const handleKeyDown = (
+    event: React.KeyboardEvent,
+    node: TreeNode,
+    index: number
+  ) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      toggleNode(node);
+    } else if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setFocusedIndex((prev) =>
+        prev === null ? 0 : Math.min(prev + 1, treeData.length - 1)
+      );
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setFocusedIndex((prev) => (prev === null ? 0 : Math.max(prev - 1, 0)));
+    }
+  };
+
+  const renderNode = (node: TreeNode, index: number) => {
     return (
       <div key={node.name} className="pl-4">
         <div
-          className={`flex items-center gap-2 py-2 cursor-pointer ${hoverTextClass} transition-all duration-300`}
+          tabIndex={0}
+          className={`flex items-center gap-2 py-2 cursor-pointer ${hoverTextClass} transition-all duration-200 outline-none focus:ring-0`}
           onClick={() => toggleNode(node)}
+          onKeyDown={(e) => handleKeyDown(e, node, index)}
         >
           {node.posts && node.posts.length > 0 ? (
             node.isExpanded ? (
               <ChevronDown
                 size={16}
-                className="transform transition-transform duration-300"
+                className="transform transition-transform duration-200"
               />
             ) : (
               <ChevronRight
                 size={16}
-                className="transform transition-transform duration-300"
+                className="transform transition-transform duration-200"
               />
             )
           ) : null}
@@ -155,44 +200,49 @@ const ArticleTree = ({ posts }: ArticleTreeProps) => {
             </span>
           )}
         </div>
-        <div
-          className={`overflow-hidden transition-all duration-300 ease-in-out ${
-            node.isExpanded
-              ? "max-h-[1000px] opacity-100 scale-y-100 origin-top"
-              : "max-h-0 opacity-0 scale-y-0 origin-top"
-          }`}
-        >
-          {node.posts && (
-            <div className="pl-6 pt-1">
-              {node.posts.map((post) => (
-                <Link
-                  key={post.url}
-                  href={post.url}
-                  className={`flex items-center gap-2 py-1 text-sm ${hoverTextClass} transition-all duration-300`}
-                >
-                  <FileText size={14} className={accentColor} />
-                  <span
-                    className="block"
-                    title={post.description || post.title}
-                  >
-                    {post.title}
-                  </span>
-                </Link>
-              ))}
-            </div>
+        <AnimatePresence>
+          {node.isExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0, y: -10 }}
+              animate={{ height: "auto", opacity: 1, y: 0 }}
+              exit={{ height: 0, opacity: 0, y: -10 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="pl-6 pt-1"
+            >
+              {node.posts && (
+                <div>
+                  {node.posts.map((post) => (
+                    <Link
+                      key={post.url}
+                      href={post.url}
+                      tabIndex={0}
+                      className={`flex items-center gap-2 py-1 text-sm ${hoverTextClass} transition-all duration-200 outline-none focus:ring-0`}
+                    >
+                      <FileText size={14} className={accentColor} />
+                      <span
+                        className="block"
+                        title={post.description || post.title}
+                      >
+                        {post.title}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
       </div>
     );
   };
 
   return (
     <div
-      className={`w-full max-w-sm ${bgClass} rounded-lg shadow-lg p-4 transition-all duration-300 hover:shadow-xl border ${borderClass} backdrop-blur-sm`}
+      className={`w-full max-w-sm ${bgClass} rounded-lg shadow-lg p-4 transition-all duration-200 hover:shadow-xl border ${borderClass} backdrop-blur-sm`}
     >
       <h3 className={`text-lg font-semibold mb-4 ${accentColor}`}>文章目录</h3>
       <div className="overflow-y-auto max-h-[600px]">
-        {treeData.map((node) => renderNode(node))}
+        {treeData.map((node, index) => renderNode(node, index))}
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { Post } from "contentlayer/generated";
 import BasicStats from "./BasicStats";
 import TimeStats from "./TimeStats";
 import PopularPosts from "./PopularPosts";
+import FeaturedPosts from "./FeaturedPosts";
 import ExtendedStats from "./ExtendedStats";
 import { useThemeUtils } from "@/hooks/useThemeUtils";
 
@@ -122,6 +123,24 @@ const BlogStats = ({ posts }: BlogStatsProps) => {
       .sort((a, b) => (b.views || 0) - (a.views || 0))
       .slice(0, 3);
 
+    // 获取精选文章（根据标签或阅读量筛选）
+    const featuredPosts = posts
+      .filter(
+        (post) => post.tags?.includes("精选") || post.tags?.includes("推荐")
+      )
+      .slice(0, 3);
+
+    // 如果没有带特定标签的文章，则使用阅读量最高但不在热门文章中的文章
+    if (featuredPosts.length === 0) {
+      const topPostIds = new Set(topPosts.map((post) => post._id));
+      featuredPosts.push(
+        ...posts
+          .filter((post) => !topPostIds.has(post._id))
+          .sort((a, b) => (b.views || 0) - (a.views || 0))
+          .slice(0, 3)
+      );
+    }
+
     const avgReadingTime = Math.ceil(totalWords / posts.length / 200);
 
     return {
@@ -130,6 +149,7 @@ const BlogStats = ({ posts }: BlogStatsProps) => {
       totalTags: tags.size,
       latestUpdate: latestPost.date,
       topPosts,
+      featuredPosts,
       avgReadingTime,
       totalViews,
       totalLikes,
@@ -140,27 +160,47 @@ const BlogStats = ({ posts }: BlogStatsProps) => {
 
   return (
     <div
-      className={`md:block w-full max-w-6xl mx-auto bg-gradient-to-br ${gradientBgClass} rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 p-10 border ${borderClass} backdrop-blur-sm relative overflow-hidden group`}
+      className={`w-full max-w-6xl mx-auto bg-gradient-to-br ${gradientBgClass} rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 sm:p-8 md:p-10 border ${borderClass} backdrop-blur-sm relative overflow-hidden group`}
     >
+      {/* 悬停渐变效果 */}
       <div
         className={`absolute inset-0 bg-gradient-to-br ${hoverGradientClass} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
       />
-      <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-        <BasicStats
-          totalPosts={stats.totalPosts}
-          totalCategories={stats.totalCategories}
-          totalTags={stats.totalTags}
-        />
-        <div className="md:col-span-1">
-          <TimeStats
-            latestUpdate={stats.latestUpdate}
-            avgReadingTime={stats.avgReadingTime}
-          />
+
+      {/* 主内容区域 */}
+      <div className="relative z-10 space-y-8 md:space-y-10">
+        {/* 顶部统计区域 - 在大屏幕上并排显示 */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+          {/* 基础统计信息 */}
+          <div className="lg:col-span-1 h-full">
+            <BasicStats
+              totalPosts={stats.totalPosts}
+              totalCategories={stats.totalCategories}
+              totalTags={stats.totalTags}
+            />
+          </div>
+
+          {/* 时间统计信息 */}
+          <div className="lg:col-span-1 h-full">
+            <TimeStats
+              latestUpdate={stats.latestUpdate}
+              avgReadingTime={stats.avgReadingTime}
+            />
+          </div>
+
+          {/* 热门文章 */}
+          <div className="lg:col-span-1 h-full">
+            <PopularPosts topPosts={stats.topPosts} />
+          </div>
         </div>
-        <div className="md:col-span-1">
-          <PopularPosts topPosts={stats.topPosts} />
+
+        {/* 中部区域 - 精选文章 */}
+        <div className="w-full">
+          <FeaturedPosts featuredPosts={stats.featuredPosts} />
         </div>
-        <div className="col-span-1 md:col-span-2 lg:col-span-3 mt-6 lg:mt-8">
+
+        {/* 底部区域 - 扩展统计 */}
+        <div className="w-full">
           <ExtendedStats
             totalViews={stats.totalViews}
             totalLikes={stats.totalLikes}

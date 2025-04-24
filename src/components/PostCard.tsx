@@ -7,17 +7,7 @@ import { useThemeUtils } from "@/hooks/useThemeUtils";
 import { useTheme } from "next-themes";
 import { renderEmojiText } from "@/utils/emojiUtils";
 
-interface MinimalPost {
-  title: string;
-  date: string;
-  description: string;
-  url: string;
-  category: string;
-  tags?: string[];
-  image?: string;
-  views?: number;
-  likes?: number;
-}
+import { MinimalPost } from "@/types";
 
 interface PostCardProps {
   post: MinimalPost;
@@ -220,14 +210,6 @@ export default function PostCard({ post }: PostCardProps) {
             ))}
           </div>
         )}
-        <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-          {post.views !== undefined && (
-            <span>👁️ {post.views.toLocaleString()} 次阅读</span>
-          )}
-          {post.likes !== undefined && (
-            <span>❤️ {post.likes.toLocaleString()} 次点赞</span>
-          )}
-        </div>
       </div>
     </Link>
   );

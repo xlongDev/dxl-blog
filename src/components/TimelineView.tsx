@@ -1,26 +1,150 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Post } from "contentlayer/generated";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
-import { Calendar, ChevronDown, ChevronUp } from "lucide-react";
+import { Calendar, ChevronRight } from "lucide-react";
 import { useThemeUtils } from "@/hooks/useThemeUtils";
+import { MinimalPost } from "@/types";
+import { useInView } from "react-intersection-observer";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface TimelineViewProps {
-  posts: Post[];
+  posts: MinimalPost[];
 }
 
 interface TimelineItem {
   year: string;
-  posts: Post[];
+  posts: MinimalPost[];
+  isExpanded?: boolean;
 }
 
+interface CachedTimelineData {
+  timelineData: TimelineItem[];
+}
+
+const TimelinePost = ({ post, accentColor, hoverColorClass }: { post: MinimalPost; accentColor: string; hoverColorClass: string }) => {
+  const { ref, inView } = useInView({
+    threshold: 0,
+    triggerOnce: true,
+  });
+
+  return (
+    <div ref={ref} className={`relative pl-4 border-l-2 transition-all duration-200`}>
+      {inView ? (
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <motion.div
+            className={`absolute left-[-5px] top-2 w-2 h-2 rounded-full ${accentColor.replace(
+              "text-",
+              "bg-"
+            )}`}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+          />
+          <a
+            href={post.url}
+            tabIndex={0}
+            className={`block ${hoverColorClass} transition-all duration-200 outline-none focus:ring-0`}
+          >
+            <time className="text-sm text-gray-500 dark:text-gray-400">
+              {format(new Date(post.date), "MM月dd日", { locale: zhCN })}
+            </time>
+            <h4 className="text-base font-medium mt-1">{post.title}</h4>
+          </a>
+        </motion.div>
+      ) : (
+        <div className="h-16" />
+      )}
+    </div>
+  );
+};
+
 const TimelineView = ({ posts }: TimelineViewProps) => {
-  const [expanded, setExpanded] = useState(false);
+  const [timelineData, setTimelineData] = useState<TimelineItem[]>([]);
+  const [visibleYears, setVisibleYears] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const { theme, getThemeColor } = useThemeUtils();
 
-  // 定义hover状态的颜色映射
+  const { ref: loadMoreRef, inView: loadMoreInView } = useInView({
+    threshold: 0.1,
+  });
+
+  useEffect(() => {
+    const fetchTimelineData = async () => {
+      try {
+        const response = await fetch("/cache/timelineData.json");
+        if (response.ok) {
+          const cachedData = await response.json();
+          const dataWithExpand = cachedData.timelineData.map(
+            (item: TimelineItem, index: number) => ({
+              ...item,
+              isExpanded: index === 0,
+            })
+          );
+          setTimelineData(dataWithExpand);
+        } else {
+          const newTimelineData = buildTimeline(posts);
+          setTimelineData(newTimelineData);
+        }
+      } catch (error) {
+        console.error("Failed to load timeline cache:", error);
+        const newTimelineData = buildTimeline(posts);
+        setTimelineData(newTimelineData);
+      }
+    };
+
+    fetchTimelineData();
+  }, [posts]);
+
+  useEffect(() => {
+    if (loadMoreInView && visibleYears < timelineData.length) {
+      setIsLoading(true);
+      const timeout = setTimeout(() => {
+        setVisibleYears((prev) => prev + 1);
+        setIsLoading(false);
+      }, 100);
+      return () => clearTimeout(timeout);
+    }
+  }, [loadMoreInView, visibleYears, timelineData.length]);
+
+  const buildTimeline = (posts: MinimalPost[]): TimelineItem[] => {
+    const sortedPosts = [...posts].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    const timeline: { [key: string]: MinimalPost[] } = {};
+
+    sortedPosts.forEach((post) => {
+      const year = new Date(post.date).getFullYear().toString();
+      if (!timeline[year]) {
+        timeline[year] = [];
+      }
+      timeline[year].push(post);
+    });
+
+    return Object.entries(timeline)
+      .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
+      .map(([year, posts]) => ({
+        year,
+        posts,
+        isExpanded: false,
+      }));
+  };
+
+  const toggleYear = (year: string) => {
+    setTimelineData((prev) =>
+      prev.map((item) =>
+        item.year === year ? { ...item, isExpanded: !item.isExpanded } : item
+      )
+    );
+  };
+
   const getHoverColorClass = () => {
     const hoverColors = {
       light: "hover:text-blue-600",
@@ -36,33 +160,6 @@ const TimelineView = ({ posts }: TimelineViewProps) => {
     return hoverColors[theme as keyof typeof hoverColors] || hoverColors.light;
   };
 
-  const timelineData = useMemo(() => {
-    const sortedPosts = [...posts].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-
-    const timeline: { [key: string]: Post[] } = {};
-
-    sortedPosts.forEach((post) => {
-      const year = new Date(post.date).getFullYear().toString();
-      if (!timeline[year]) {
-        timeline[year] = [];
-      }
-      timeline[year].push(post);
-    });
-
-    return Object.entries(timeline)
-      .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
-      .map(([year, posts]) => ({
-        year,
-        posts,
-      }));
-  }, [posts]);
-
-  // 默认只显示第一年的数据，展开后显示全部
-  const displayData = expanded ? timelineData : timelineData.slice(0, 1);
-
-  // 根据主题获取颜色
   const getAccentColor = () => {
     const themeColors = {
       light: "text-blue-500",
@@ -117,63 +214,112 @@ const TimelineView = ({ posts }: TimelineViewProps) => {
     return themeColors[theme as keyof typeof themeColors] || themeColors.light;
   };
 
+  const displayData = timelineData.slice(0, visibleYears);
+
   const accentColor = getAccentColor();
   const bgClass = getBgClass();
   const borderClass = getBorderClass();
   const hoverColorClass = getHoverColorClass();
 
+  const handleKeyDown = (
+    event: React.KeyboardEvent,
+    year: string,
+    index: number
+  ) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      toggleYear(year);
+    } else if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setFocusedIndex((prev) =>
+        prev === null ? 0 : Math.min(prev + 1, displayData.length - 1)
+      );
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setFocusedIndex((prev) => (prev === null ? 0 : Math.max(prev - 1, 0)));
+    }
+  };
+
+  const loadingVariants = {
+    hidden: { opacity: 0, scale: 0.8 },
+    visible: { opacity: 1, scale: 1, transition: { duration: 0.2 } },
+    exit: { opacity: 0, scale: 0.8, transition: { duration: 0.2 } },
+  };
+
   return (
     <div
-      className={`w-full max-w-2xl ${bgClass} rounded-lg shadow-lg p-6 group transition-all duration-300 hover:shadow-xl border ${borderClass} backdrop-blur-sm`}
+      className={`w-full max-w-2xl ${bgClass} rounded-lg shadow-lg p-6 group transition-all duration-200 hover:shadow-xl border ${borderClass} backdrop-blur-sm`}
     >
       <div className="flex items-center gap-2 mb-6">
         <Calendar className={accentColor} />
         <h3 className={`text-lg font-semibold ${accentColor}`}>文章时间线</h3>
       </div>
-      <div className="space-y-8">
-        {displayData.map(({ year, posts }) => (
-          <div key={year} className="relative">
-            <div className="flex items-center gap-4 mb-4">
+      <div className="space-y-8 overflow-y-auto max-h-[2100px]">
+        {displayData.map(({ year, posts, isExpanded }, index) => (
+          <motion.div
+            key={year}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div
+              tabIndex={0}
+              className={`flex items-center gap-4 mb-4 cursor-pointer outline-none focus:ring-0`}
+              onClick={() => toggleYear(year)}
+              onKeyDown={(e) => handleKeyDown(e, year, index)}
+            >
               <span className={`text-xl font-bold ${accentColor}`}>{year}</span>
+              <motion.div
+                animate={{ rotate: isExpanded ? 90 : 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <ChevronRight className={accentColor} size={20} />
+              </motion.div>
               <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
             </div>
-            <div className="space-y-4 pl-4">
-              {posts.map((post) => (
-                <div
-                  key={post.url}
-                  className={`relative pl-4 border-l-2 ${borderClass} transition-all duration-300`}
+            <AnimatePresence>
+              {isExpanded && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-4 pl-4"
                 >
-                  <div
-                    className={`absolute left-[-5px] top-2 w-2 h-2 rounded-full ${accentColor.replace(
-                      "text-",
-                      "bg-"
-                    )}`}
-                  />
-                  <a
-                    href={post.url}
-                    className={`block ${hoverColorClass} transition-all duration-300`}
-                  >
-                    <time className="text-sm text-gray-500 dark:text-gray-400">
-                      {format(new Date(post.date), "MM月dd日", {
-                        locale: zhCN,
-                      })}
-                    </time>
-                    <h4 className="text-base font-medium mt-1">{post.title}</h4>
-                  </a>
-                </div>
-              ))}
-            </div>
-          </div>
+                  {posts.map((post) => (
+                    <TimelinePost
+                      key={post.url}
+                      post={post}
+                      accentColor={accentColor}
+                      hoverColorClass={hoverColorClass}
+                    />
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
         ))}
 
-        {timelineData.length > 1 && (
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className={`flex items-center justify-center w-full mt-4 py-2 text-sm ${accentColor} ${hoverColorClass} transition-colors focus:outline-none`}
+        {visibleYears < timelineData.length && (
+          <div
+            ref={loadMoreRef}
+            className="h-10 flex justify-center items-center"
           >
-            <span className="mr-1">{expanded ? "收起" : "查看更多"}</span>
-            {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-          </button>
+            <AnimatePresence>
+              {isLoading && (
+                <motion.div
+                  variants={loadingVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  className="flex items-center gap-2"
+                >
+                  <div className="w-4 h-4 border-2 border-t-transparent border-blue-500 rounded-full animate-spin"></div>
+                  <span className="text-sm text-gray-500">加载中...</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         )}
       </div>
     </div>

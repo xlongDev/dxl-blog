@@ -1,223 +1,1073 @@
 ---
-
-title: "聊聊前端常用数据结构"  
-date: "2023-02-14"  
-description: "从数组到树，从栈到图，带你深入前端开发中常用的数据结构，聊聊它们的原理、使用场景和最佳实践。"  
-keywords: "前端开发, 数据结构, 数组, 链表, 栈, 队列, 树, 图, JavaScript, 算法"  
-author: "晓龙"  
-image: "/images/hero/data-structures.jpg"  
-tags: ["前端开发", "JavaScript", "数据结构", "算法"]  
-category: "DSA"  
-
+title: "前端数据结构探秘：从数组到图的进阶之旅"
+date: "2024-06-31"
+description: "深入剖析前端开发中常用的数据结构，涵盖原理、实践与优化，带你从数组到图的全面进阶，适合渴望提升的前端开发者。"
+keywords: "前端开发, 数据结构, 数组, 链表, 栈, 队列, 树, 图, 算法, JavaScript, 性能优化, 设计哲学"
+author: "晓龙"
+image: "/images/hero/data-structures.jpg"
+tags: ["精选", "前端开发", "数据结构", "算法", "JavaScript"]
+category: "DSA"
 ---
 
-作为一个前端开发者，你可能每天都在和数据打交道——渲染一个列表、处理表单输入、优化组件状态，甚至偶尔写点“算法题”应付面试。数据结构就像厨房里的锅碗瓢盆，用对了能让你的代码如丝般顺滑，用错了可能就是一场灾难。今天咱们就来聊聊前端开发中那些常见的数据结构，深入它们的原理，结合实际场景，带点幽默和个人感悟，顺便抛出一些实用的小技巧。准备好了吗？Let’s dive in! 🚀
+> “数据结构是程序的骨架，算法是程序的灵魂。” —— 匿名程序员
 
-## 1. 数组 (Array)：前端的“万金油”
+作为前端开发者，我们每天都在与数据打交道：从渲染一个简单的 `<ul>` 列表到构建复杂的树形菜单，从优化搜索性能到实现交互式网络图，数据结构无处不在。它们不仅是代码的基石，更是思维的延伸。🌟 本文将带你走进前端常用数据结构的奇妙世界，深入原理、结合实践、分享感悟，力求让你的代码更优雅、思维更清晰、用户体验更流畅。
 
-数组是前端开发中最常见的数据结构，简直是 JavaScript 的“国民老婆”。从渲染 `<ul>` 列表到存储 API 返回的数据，数组无处不在。但你知道吗？它虽然简单，背后却藏着不少门道。
+本文的目标是：**全面、深入、实用、有趣**。我们将从最基础的数组开始，逐步探索链表、栈、队列、树、图、哈希表等数据结构，结合前端场景，穿插代码示例、最佳实践，甚至一些设计哲学和生活类比。每个部分都会有清晰的表格总结，方便你快速查阅。📊 无论你是初学者还是资深开发者，这篇文章都希望能为你带来启发和乐趣。准备好了吗？让我们开始这场数据结构的冒险吧！🚀
 
-### 原理浅谈
-在 JavaScript 中，数组并不是真正的连续内存块，而是类似对象的高级结构。它的索引是字符串类型（是的，`arr[0]` 其实是 `arr['0']` 的语法糖），底层实现依赖哈希表。这也是为什么数组可以有“稀疏数组”（sparse array）这种神奇操作，比如 `let arr = []; arr[100] = 'hi';`。
+## 为什么前端需要数据结构？
 
-### 使用场景
-- **渲染列表**：`items.map(item => <li>{item}</li>)`，React 开发者的日常。
-- **临时存储**：比如收集用户输入的表单数据。
-- **排序和过滤**：`arr.sort()` 和 `arr.filter()` 是前端的“瑞士军刀”。
+在前端开发的早期，有人可能会说：“数据结构和算法是后端的专属，前端不就是写写页面、调调接口吗？”这种观念早已被现代前端的复杂性彻底颠覆。从 React 的虚拟 DOM 树到 Vue 的响应式系统，从 Webpack 的依赖图到状态管理库（如 Redux 或 Zustand）的设计，数据结构早已渗透到前端开发的方方面面。
 
-### 最佳实践
-1. **小心稀疏数组**：别滥用大跨度索引，不然性能会偷偷跑路。试试 `console.log(arr.length)`，你会发现它变成了 101，却只有 1 个元素。
-2. **用 `forEach` 还是 `map`？**：如果你只是遍历，别用 `map`，因为它会生成新数组，浪费内存。就像点外卖只吃一口就扔，太奢侈了！
-3. **大数据量优化**：数组超大时（比如 10 万条数据），考虑分片处理或用 `TypedArray`（如 `Int32Array`），性能提升不是一点点。
+用一个比喻来说，数据结构就像乐高积木：你可以用简单的方块搭出一个房子，但如果懂得用更复杂的零件（比如铰链、齿轮），就能构建出动态的机器人。🧱 选择合适的数据结构，不仅能提升代码性能，还能让逻辑更清晰、扩展更灵活。
 
-### 小例子
-假设你需要实现一个简单的“最近搜索记录”功能：
+### 数据结构的三大意义
+1. **性能优化**：正确的数据结构可以大幅降低时间和空间复杂度。例如，用哈希表（`Map`）替代数组循环查找，能将时间复杂度从 O(n) 降到 O(1)。
+2. **代码可维护性**：清晰的数据结构让代码更具可读性和扩展性，比如用树结构管理嵌套的 UI 组件。
+3. **思维提升**：学习数据结构不仅是技术提升，更是锻炼逻辑思维和抽象能力的过程。正如 Paul Graham 在《黑客与画家》中所说：“编程是一种艺术，而数据结构是画布。”
+
+> *“好的程序员关注数据结构，伟大的程序员思考数据结构如何改变世界。”*  
+> —— 改编自 Linus Torvalds
+
+接下来，我们将逐一探讨前端常用的数据结构，结合前端场景、代码示例和最佳实践，深入挖掘它们的原理和应用。每个部分都会穿插一些幽默的类比、名言警句，以及设计哲学的感悟，让学习过程既有深度又不失乐趣。😄
+
+## 1. 数组（Array）：前端的“瑞士军刀” 🛠️
+
+数组是前端开发中最基础、最常用的数据结构。JavaScript 的数组更是灵活多变，既可以作为列表、栈、队列的载体，还能模拟矩阵、集合等复杂结构。别看数组简单，深入挖掘，你会发现它的无穷魅力和潜在的“坑”。
+
+### 数组的本质
+在 JavaScript 中，数组是一个有序的元素集合，底层实现基于动态数组。它的核心特点包括：
+- **索引访问**：通过下标快速访问元素，时间复杂度 O(1)。
+- **动态扩展**：可以随时增加或删除元素，长度自动调整。
+- **内存连续**：元素在内存中连续存储，适合快速遍历。
+
+但 JavaScript 的数组并非“真数组”，而是基于对象的实现。这意味着：
+- **稀疏数组**：`arr[1000] = 1` 会创建一个长度为 1001 的数组，但只有 1 个实际元素，浪费内存。
+- **性能陷阱**：频繁在数组头部操作（如 `unshift` 或 `shift`）会导致元素移动，时间复杂度为 O(n)。
+
+### 前端场景
+- **渲染列表**：React 的 `map` 方法常用于将数组渲染为 `<li>` 元素。
+- **数据处理**：通过 `filter`、`reduce`、`sort` 等方法处理用户输入或 API 数据。
+- **状态管理**：Redux 中常用数组存储 todos、posts 等数据。
+- **分页和虚拟列表**：数组切片（`slice`）用于实现分页或无限滚动。
+
+### 代码示例：数组去重与排序
+假设我们需要对一个用户 ID 数组去重并按升序排序，来看几种实现方式：
+
 ```javascript
-const recentSearches = [];
-function addSearch(term) {
-  const index = recentSearches.indexOf(term);
-  if (index !== -1) recentSearches.splice(index, 1); // 去重
-  recentSearches.unshift(term); // 插到开头
-  if (recentSearches.length > 5) recentSearches.pop(); // 限制 5 条
-}
-addSearch('React'); // ['React']
-addSearch('Vue');   // ['Vue', 'React']
-addSearch('React'); // ['React', 'Vue']
+const ids = [3, 1, 4, 1, 5, 9, 2, 6, 5, 3];
+
+// 方法 1：使用 Set 和 sort
+const dedupeAndSortWithSet = (arr) => [...new Set(arr)].sort((a, b) => a - b);
+console.log(dedupeAndSortWithSet(ids)); // [1, 2, 3, 4, 5, 6, 9]
+
+// 方法 2：使用对象哈希
+const dedupeAndSortWithObject = (arr) => {
+  const hash = {};
+  arr.forEach(id => (hash[id] = true));
+  return Object.keys(hash).map(Number).sort((a, b) => a - b);
+};
+console.log(dedupeAndSortWithObject(ids)); // [1, 2, 3, 4, 5, 6, 9]
+
+// 方法 3：使用 reduce（不推荐）
+const dedupeAndSortWithReduce = (arr) => arr
+  .reduce((acc, cur) => acc.includes(cur) ? acc : [...acc, cur], [])
+  .sort((a, b) => a - b);
+console.log(dedupeAndSortWithReduce(ids)); // [1, 2, 3, 4, 5, 6, 9]
 ```
 
-## 2. 栈 (Stack)：后进先出的“压栈侠”
+### 性能分析
+| 方法            | 时间复杂度 | 空间复杂度 | 适用场景                     |
+|-----------------|------------|------------|-----------------------------|
+| Set + sort      | O(n log n) | O(n)       | 简单、优雅，推荐日常使用     |
+| 对象哈希        | O(n log n) | O(n)       | 需要额外逻辑时更灵活        |
+| reduce          | O(n²)      | O(n)       | 小数组，注重可读性          |
 
-栈就像一摞盘子，只能从顶部放进去或拿出来，后进先出（LIFO）。前端里虽然不常直接用栈，但它的思想无处不在。
+**最佳实践**：
+- 优先使用 `Set` 去重，它简洁且性能优异。
+- 如果需要处理复杂对象去重，可以结合 `Map` 或自定义哈希逻辑。
+- 排序时，注意 `sort` 方法会修改原数组，建议使用 `slice` 或扩展运算符复制数组。  
+*Tips：避免在大型数组上使用 `includes` 或 `indexOf`，因为它们的时间复杂度是 O(n)。改为 `Set` 或 `Map` 实现 O(1) 查找。*
 
-### 原理浅谈
-栈的核心是两个操作：`push`（入栈）和 `pop`（出栈）。时间复杂度都是 O(1)。JavaScript 没有原生 Stack 类，但数组的 `push` 和 `pop` 完全可以胜任。
+### 进阶：稀疏数组的优化
+稀疏数组可能导致内存浪费和性能问题。例如：
 
-### 使用场景
-- **浏览器历史**：你点击“后退”按钮，其实就是在操作浏览器的历史栈。
-- **函数调用栈**：`console.log` 调用时，JS 引擎会把函数压入调用栈，执行完再弹出。
-- **撤销功能**：比如文本编辑器的 “undo”，每次操作入栈，撤销时出栈。
-
-### 最佳实践
-- **别用 `shift` 和 `unshift`**：如果你用数组模拟栈，尽量避免 `shift` 和 `unshift`，因为它们会移动所有元素，复杂度变成 O(n)。
-- **内存管理**：栈太深可能导致“栈溢出”（stack overflow），写递归时记得加终止条件，别让它无限压栈。
-
-### 小例子
-实现一个简单的括号匹配检查：
 ```javascript
-function isValidParentheses(str) {
-  const stack = [];
-  for (let char of str) {
-    if (char === '(') stack.push(char);
-    else if (char === ')') {
-      if (!stack.pop()) return false; // 栈空了还想弹出？不匹配！
-    }
-  }
-  return stack.length === 0; // 栈空才算完美匹配
-}
-console.log(isValidParentheses('()')); // true
-console.log(isValidParentheses('(()')); // false
+const sparse = [];
+sparse[1000] = 1; // 长度为 1001，但只有 1 个元素
 ```
 
-## 3. 队列 (Queue)：先进先出的“排队王”
+**优化方案**：使用 `Map` 或 `Set` 替代稀疏数组，存储非连续索引的数据：
 
-队列就像超市收银台的队伍，先进先出（FIFO）。它在前端异步任务处理中特别常见。
-
-### 原理浅谈
-队列有 `enqueue`（入队）和 `dequeue`（出队）两个核心操作。可以用数组的 `push` 和 `shift` 模拟，但 `shift` 是 O(n)，效率不高。更优的选择是用链表或环形队列。
-
-### 使用场景
-- **任务队列**：比如 `setTimeout` 的回调队列，事件循环里少不了它。
-- **请求缓冲**：短时间内大量 API 请求，可以用队列控制并发。
-- **动画序列**：按顺序播放一系列动画。
-
-### 最佳实践
-- **用双端队列**：JavaScript 没有原生 Queue，但可以用 `Array` 或自己封装一个双端队列（Deque），支持前后操作。
-- **优化性能**：如果频繁出队，考虑用对象模拟环形队列，避免数组移动。
-
-### 小例子
-实现一个简单的请求队列：
 ```javascript
-class RequestQueue {
-  constructor(max = 3) {
-    this.queue = [];
-    this.running = 0;
-    this.max = max;
-  }
-  async enqueue(task) {
-    this.queue.push(task);
-    this.run();
-  }
-  async run() {
-    while (this.running < this.max && this.queue.length) {
-      this.running++;
-      const task = this.queue.shift();
-      await task();
-      this.running--;
-      this.run(); // 递归执行剩余任务
-    }
-  }
-}
-const queue = new RequestQueue();
-queue.enqueue(() => fetch('https://api.example.com/1'));
+const sparseMap = new Map();
+sparseMap.set(1000, 1); // 仅存储实际数据
+console.log(sparseMap.size); // 1
 ```
 
-## 4. 链表 (Linked List)：灵活的“链条侠”
+**最佳实践**：对于稀疏数据，优先使用 `Map` 或对象，避免数组的内存浪费。  
+*Tips：定期检查数组的稀疏性，使用 `Array.prototype.filter` 清理空槽。*
 
-链表不常见于前端日常，但它的灵活性在特定场景下很香。每个节点包含数据和指向下个节点的指针，像一串珍珠。
+### 哲学感悟
+数组就像生活中的待办清单：简单直接，但如果不加整理（去重、排序），就会变得杂乱无章。学会用合适的方法（比如 `Set` 或 `Map`）去“精简”数组，就像学会在生活中“断舍离”。😌 正如《禅与摩托车维修艺术》中所说：“简单并不意味着简陋，而是清晰的极致。”
 
-### 原理浅谈
-不像数组需要连续内存，链表的节点可以散落在内存各处，通过指针连接。插入和删除是 O(1)，但查找是 O(n)。
+## 2. 链表（Linked List）：动态的“链条” 🔗
 
-### 使用场景
-- **动态数据**：需要频繁增删时，链表比数组高效。
-- **LRU 缓存**：实现“最近最少使用”算法时，链表很合适。
+链表在前端开发中不常见，但在特定场景（如虚拟列表、历史记录）却能大显身手。链表由节点组成，每个节点包含数据和指向下一个节点的指针。
 
-### 最佳实践
-- **用对象模拟**：JavaScript 没有原生链表，用对象 `{ value, next }` 就能搞定。
-- **小心内存泄漏**：删除节点时记得断开引用，不然垃圾回收器会“迷路”。
+### 链表的本质
+- **单向链表**：每个节点只指向下一个节点。
+- **双向链表**：节点同时指向前一个和后一个节点。
+- **优势**：插入和删除操作高效（O(1)），无需移动元素。
+- **劣势**：随机访问慢（O(n)），内存开销大。
 
-### 小例子
-简单实现一个单链表：
+### 前end场景
+- **浏览器历史**：浏览器的前进后退功能可以用双向链表实现。
+- **虚拟列表**：在渲染超长列表（如聊天记录）时，链表可以动态管理可见节点。
+- **Undo/Redo**：文本编辑器的撤销重做功能常用链表存储操作历史。
+- **LRU 缓存**：实现最近最少使用（LRU）缓存时，双向链表是理想选择。
+
+### 代码示例：实现双向链表
+让我们用 JavaScript 实现一个双向链表，支持插入、删除和反转操作：
+
 ```javascript
 class Node {
-  constructor(value) {
-    this.value = value;
+  constructor(data) {
+    this.data = data;
     this.next = null;
+    this.prev = null;
   }
 }
-class LinkedList {
+
+class DoublyLinkedList {
   constructor() {
     this.head = null;
+    this.tail = null;
+    this.size = 0;
   }
-  append(value) {
-    const node = new Node(value);
+
+  // 在尾部插入节点
+  append(data) {
+    const newNode = new Node(data);
     if (!this.head) {
-      this.head = node;
+      this.head = newNode;
+      this.tail = newNode;
     } else {
-      let current = this.head;
-      while (current.next) current = current.next;
-      current.next = node;
+      newNode.prev = this.tail;
+      this.tail.next = newNode;
+      this.tail = newNode;
+    }
+    this.size++;
+  }
+
+  // 删除指定值的节点
+  remove(data) {
+    let current = this.head;
+    while (current) {
+      if (current.data === data) {
+        if (current === this.head) {
+          this.head = current.next;
+          if (this.head) this.head.prev = null;
+        } else if (current === this.tail) {
+          this.tail = current.prev;
+          this.tail.next = null;
+        } else {
+          current.prev.next = current.next;
+          current.next.prev = current.prev;
+        }
+        this.size--;
+        return true;
+      }
+      current = current.next;
+    }
+    return false;
+  }
+
+  // 反转链表
+  reverse() {
+    let current = this.head;
+    let temp = null;
+    while (current) {
+      temp = current.prev;
+      current.prev = current.next;
+      current.next = temp;
+      current = current.prev;
+    }
+    if (temp) {
+      this.tail = this.head;
+      this.head = temp.prev;
     }
   }
+
+  // 打印链表
+  print() {
+    let current = this.head;
+    const result = [];
+    while (current) {
+      result.push(current.data);
+      current = current.next;
+    }
+    console.log(result.join(' <-> '));
+  }
 }
+
+// 测试
+const list = new DoublyLinkedList();
+list.append(1);
+list.append(2);
+list.append(3);
+list.print(); // 1 <-> 2 <-> 3
+list.remove(2);
+list.print(); // 1 <-> 3
+list.reverse();
+list.print(); // 3 <-> 1
 ```
 
-## 5. 树 (Tree)：层级的“家族树”
+### 性能分析
+| 操作       | 时间复杂度 | 适用场景                     |
+|------------|------------|-----------------------------|
+| 插入       | O(1) ~ O(n)| 频繁插入删除的动态列表       |
+| 删除       | O(1) ~ O(n)| 需要快速移除特定元素         |
+| 随机访问   | O(n)       | 不适合频繁随机访问           |
+| 反转       | O(n)       | 需要逆序处理数据             |
 
-树在前端非常重要，尤其是 DOM 树和组件树。树有根节点、子节点，层次分明，像家族谱。
+**最佳实践**：在前端中，链表适合管理动态变化的顺序数据（如历史记录或 LRU 缓存）。如果需要频繁随机访问，优先考虑数组。  
+*Tips：链表实现时注意内存泄漏，确保删除节点时断开所有引用（`next` 和 `prev`）。*
 
-### 原理浅谈
-树是一种递归结构，每个节点可以有多个子节点。常见操作包括遍历（DFS、BFS）和查找。
+### 进阶：LRU 缓存实现
+LRU（Least Recently Used）缓存是一种典型的应用场景，常用于优化前端数据加载（如图片缓存）。我们可以用双向链表和哈希表结合实现：
 
-### 使用场景
-- **DOM 树**：`document.body` 就是树的根，层层嵌套。
-- **组件树**：React 的 JSX 最终解析成树结构。
-- **数据层级**：比如展示文件目录。
-
-### 最佳实践
-- **递归遍历**：处理树时，递归是你的好朋友，但别忘了备忘录优化，避免重复计算。
-- **用 Map 加速查找**：树节点多时，建个 Map 存节点引用，查找更快。
-
-### 小例子
-简单遍历树：
 ```javascript
-const tree = {
-  value: 'root',
-  children: [{ value: 'child1' }, { value: 'child2', children: [{ value: 'grandchild' }] }]
-};
-function traverse(node) {
-  console.log(node.value);
-  if (node.children) node.children.forEach(traverse);
+class LRUCache {
+  constructor(capacity) {
+    this.capacity = capacity;
+    this.cache = new Map();
+    this.head = new Node(0);
+    this.tail = new Node(0);
+    this.head.next = this.tail;
+    this.tail.prev = this.head;
+  }
+
+  // 获取节点，若存在则移到头部
+  get(key) {
+    if (this.cache.has(key)) {
+      const node = this.cache.get(key);
+      this._moveToHead(node);
+      return node.data.value;
+    }
+    return -1;
+  }
+
+  // 添加节点，若超出容量则移除尾部
+  put(key, value) {
+    if (this.cache.has(key)) {
+      const node = this.cache.get(key);
+      node.data.value = value;
+      this._moveToHead(node);
+    } else {
+      const newNode = new Node({ key, value });
+      this.cache.set(key, newNode);
+      this._addToHead(newNode);
+      if (this.cache.size > this.capacity) {
+        const lru = this.tail.prev;
+        this._removeNode(lru);
+        this.cache.delete(lru.data.key);
+      }
+    }
+  }
+
+  _addToHead(node) {
+    node.next = this.head.next;
+    node.prev = this.head;
+    this.head.next.prev = node;
+    this.head.next = node;
+  }
+
+  _removeNode(node) {
+    node.prev.next = node.next;
+    node.next.prev = node.prev;
+  }
+
+  _moveToHead(node) {
+    this._removeNode(node);
+    this._addToHead(node);
+  }
 }
-traverse(tree); // root -> child1 -> child2 -> grandchild
+
+// 测试
+const cache = new LRUCache(2);
+cache.put(1, 'one');
+cache.put(2, 'two');
+console.log(cache.get(1)); // 'one'
+cache.put(3, 'three'); // 移除 key=2
+console.log(cache.get(2)); // -1
 ```
 
-## 6. 图 (Graph)：复杂关系的“社交网”
+**最佳实践**：LRU 缓存适合优化前端性能（如图片懒加载）。结合 `Map` 和双向链表，实现 O(1) 的获取和更新操作。  
+*Tips：确保缓存容量合理，避免频繁替换导致性能抖动。*
 
-图由节点和边组成，像社交网络。前端用得少，但在某些复杂场景（如依赖分析）很强大。
+### 哲学感悟
+链表就像人生的旅途：每个节点都是一个阶段，连接着过去与未来。插入和删除节点就像生活中选择接纳或放下，关键在于保持“链条”的完整性。🌍 正如《星际穿越》中所说：“我们总是被引力拉回过去，但也要勇敢迈向未来。”
 
-### 原理浅谈
-图可以用邻接表或邻接矩阵表示。常见算法有 DFS、BFS 和最短路径。
+## 3. 栈（Stack）：后进先出的“盘子堆” 🍽️
 
-### 使用场景
-- **依赖图**：Webpack 的模块依赖分析。
-- **路由规划**：比如可视化页面跳转关系。
+栈是一种后进先出（LIFO）的数据结构，类似于堆叠的盘子：最后一个放上去的盘子最先被取走。
 
-### 小例子
-简单邻接表表示图：
+### 栈的本质
+- **操作**：`push`（入栈）、`pop`（出栈）、`peek`（查看栈顶）。
+- **时间复杂度**：入栈和出栈均为 O(1)。
+- **实现**：可以用数组或链表实现，JavaScript 中数组的 `push` 和 `pop` 方法天生支持栈操作。
+
+### 前端场景
+- **函数调用栈**：JavaScript 的调用栈就是栈结构，递归函数尤其依赖它。
+- **撤销功能**：编辑器的 undo 操作可以用栈存储历史状态。
+- **路由管理**：React Router 的页面导航可以用栈管理历史记录。
+- **表达式求值**：处理数学表达式（如 `2 + 3 * 4`）时，栈用于管理运算符优先级。
+
+### 代码示例：实现表达式求值
+栈常用于处理中缀表达式求值，比如计算 `2 + 3 * 4`：
+
 ```javascript
-const graph = {
-  A: ['B', 'C'],
-  B: ['A', 'D'],
-  C: ['A'],
-  D: ['B']
-};
+function evaluateExpression(expression) {
+  const values = [];
+  const operators = [];
+  const precedence = { '+': 1, '-': 1, '*': 2, '/': 2 };
+
+  const applyOperator = () => {
+    const op = operators.pop();
+    const b = values.pop();
+    const a = values.pop();
+    switch (op) {
+      case '+': values.push(a + b); break;
+      case '-': values.push(a - b); break;
+      case '*': values.push(a * b); break;
+      case '/': values.push(a / b); break;
+    }
+  };
+
+  const tokens = expression.replace(/\s/g, '').split(/(\+|-|\*|\/)/);
+  for (let token of tokens) {
+    if (/\d+/.test(token)) {
+      values.push(Number(token));
+    } else if (token in precedence) {
+      while (
+        operators.length &&
+        precedence[operators[operators.length - 1]] >= precedence[token]
+      ) {
+        applyOperator();
+      }
+      operators.push(token);
+    }
+  }
+
+  while (operators.length) {
+    applyOperator();
+  }
+
+  return values[0];
+}
+
+console.log(evaluateExpression('2 + 3 * 4')); // 14
+console.log(evaluateExpression('10 - 2 * 3')); // 4
 ```
 
-## 结语：数据结构是前端的“内功”
+### 性能分析
+| 操作       | 时间复杂度 | 适用场景                     |
+|------------|------------|-----------------------------|
+| 入栈       | O(1)       | 添加新元素                   |
+| 出栈       | O(1)       | 移除最新元素                 |
+| 查看栈顶   | O(1)       | 检查最新状态                 |
 
-数据结构就像武侠小说里的内功，表面上看不到，但决定了你的代码能不能“飞檐走壁”。数组是最基础的“拳脚功夫”，栈和队列是“轻功”，链表是“柔术”，树和图则是“绝学”。多理解它们的原理，结合实际场景灵活运用，你的代码会更优雅，面试官也会对你刮目相看。😎
+**最佳实践**：在实现栈时，优先使用数组的 `push` 和 `pop`，因为它们简单高效。如果需要自定义逻辑，可以用链表实现栈。  
+*Tips：注意栈溢出问题，尤其在递归场景中，尽量优化尾递归或使用循环替代。*
 
-有什么想聊的，或者觉得哪个部分还能再深入？欢迎留言，咱们接着唠！✌️
+### 进阶：单调栈
+单调栈是一种特殊栈，保持元素单调递增或递减，常用于解决“下一个更大元素”问题。例如，找到数组中每个元素的下一个更大值：
 
---- 
+```javascript
+function nextGreaterElement(nums) {
+  const stack = [];
+  const result = new Array(nums.length).fill(-1);
+
+  for (let i = 0; i < nums.length; i++) {
+    while (stack.length && nums[stack[stack.length - 1]] < nums[i]) {
+      result[stack.pop()] = nums[i];
+    }
+    stack.push(i);
+  }
+
+  return result;
+}
+
+console.log(nextGreaterElement([4, 5, 2, 25])); // [5, 25, 25, -1]
+```
+
+**最佳实践**：单调栈适合处理有序性问题（如股票价格分析）。通过维护单调性，降低时间复杂度到 O(n)。  
+*Tips：单调栈实现时，注意边界条件，确保栈顶元素有效。*
+
+### 哲学感悟
+栈就像我们的记忆：最近的事情总是最先想起，但如果堆积太多未处理的事（栈溢出），大脑就会“宕机”。学会及时“出栈”，保持内心清爽。🧠 正如《盗梦空间》中所说：“你必须深入潜意识，但别忘了如何醒来。”
+
+## 4. 队列（Queue）：先进先出的“排队” 🛒
+
+队列是一种先进先出（FIFO）的数据结构，就像超市排队结账：最先排队的人最先结账。
+
+### 队列的本质
+- **操作**：`enqueue`（入队）、`dequeue`（出队）、`front`（查看队首）。
+- **时间复杂度**：入队和出队通常为 O(1)。
+- **实现**：可以用数组或链表实现，双端队列（Deque）支持两端操作。
+
+### 前端场景
+- **任务调度**：JavaScript 的任务队列（如 Promise 微任务队列）基于队列原理。
+- **动画队列**：GSAP 等动画库用队列管理动画序列。
+- **消息队列**：WebSocket 的消息处理可以用队列保证顺序。
+- **打印队列**：前端生成 PDF 时，队列用于管理打印任务。
+
+### 代码示例：实现优先队列
+优先队列是一种特殊队列，元素按优先级排序，常用于任务调度：
+
+```javascript
+class PriorityQueue {
+  constructor() {
+    this.queue = [];
+  }
+
+  enqueue(item, priority) {
+    this.queue.push({ item, priority });
+    this.queue.sort((a, b) => b.priority - a.priority);
+  }
+
+  dequeue() {
+    return this.queue.shift()?.item || null;
+  }
+
+  isEmpty() {
+    return this.queue.length === 0;
+  }
+}
+
+// 测试
+const pq = new PriorityQueue();
+pq.enqueue('Task 1', 1);
+pq.enqueue('Task 2', 3);
+pq.enqueue('Task 3', 2);
+console.log(pq.dequeue()); // Task 2
+console.log(pq.dequeue()); // Task 3
+console.log(pq.dequeue()); // Task 1
+```
+
+### 性能分析
+| 操作       | 时间复杂度 | 适用场景                     |
+|------------|------------|-----------------------------|
+| 入队       | O(n)       | 添加新任务                   |
+| 出队       | O(1)       | 处理最早任务                 |
+| 查看队首   | O(1)       | 检查下一任务                 |
+
+**最佳实践**：在前端中，队列适合处理顺序任务（如事件循环）。如果需要优先级管理，使用优先队列或堆实现。  
+*Tips：避免在数组前端频繁使用 `shift`，因为它会导致元素移动，时间复杂度为 O(n)。改为循环队列或链表。*
+
+### 进阶：循环队列优化
+循环队列可以避免空间浪费，常用于固定大小的缓冲区：
+
+```javascript
+class CircularQueue {
+  constructor(capacity) {
+    this.capacity = capacity;
+    this.queue = new Array(capacity).fill(null);
+    this.front = 0;
+    this.rear = -1;
+    this.size = 0;
+  }
+
+  enqueue(item) {
+    if (this.isFull()) return false;
+    this.rear = (this.rear + 1) % this.capacity;
+    this.queue[this.rear] = item;
+    this.size++;
+    return true;
+  }
+
+  dequeue() {
+    if (this.isEmpty()) return null;
+    const item = this.queue[this.front];
+    this.queue[this.front] = null;
+    this.front = (this.front + 1) % this.capacity;
+    this.size--;
+    return item;
+  }
+
+  isEmpty() {
+    return this.size === 0;
+  }
+
+  isFull() {
+    return this.size === this.capacity;
+  }
+}
+
+// 测试
+const queue = new CircularQueue(3);
+queue.enqueue(1);
+queue.enqueue(2);
+queue.enqueue(3);
+console.log(queue.dequeue()); // 1
+queue.enqueue(4);
+console.log(queue.queue); // [null, 2, 3, 4]
+```
+
+**最佳实践**：循环队列适合固定大小的缓冲区（如音频流处理）。通过取模运算，避免空间浪费。  
+*Tips：初始化队列时，预分配足够容量，减少动态调整开销。*
+
+### 哲学感悟
+队列就像生活中的排队：每个人都有自己的顺序，耐心等待才能公平前行。有时候，学会“插队”（优先队列）也是一种智慧。😉 正如《阿甘正传》中所说：“生活就像一盒巧克力，你永远不知道下一块是什么。”
+
+## 5. 树（Tree）：层级分明的“家族树” 🌳
+
+树是一种层级结构，由节点和边组成，广泛用于表示嵌套关系。树的典型代表是二叉树和 DOM 树。
+
+### 树的本质
+- **节点**：包括根节点、子节点、叶子节点。
+- **类型**：二叉树、平衡二叉树（如 AVL 树）、B 树、红黑树等。
+- **操作**：遍历（前序、中序、后序）、插入、删除。
+- **时间复杂度**：取决于树的高度，通常为 O(log n) 或 O(n)。
+
+### 前端场景
+- **DOM 树**：HTML 文档的树形结构，React 的虚拟 DOM 也是树。
+- **组件树**：React 和 Vue 的组件层级形成树结构。
+- **文件系统**：VS Code 的文件资源管理器用树展示目录。
+- **搜索建议**：Trie 树（前缀树）用于实现高效的自动补全功能。
+
+### 代码示例：实现 Trie 树
+Trie 树是一种高效的字符串存储结构，常用于搜索建议或自动补全：
+
+```javascript
+class TrieNode {
+  constructor() {
+    this.children = new Map();
+    this.isEnd = false;
+  }
+}
+
+class Trie {
+  constructor() {
+    this.root = new TrieNode();
+  }
+
+  insert(word) {
+    let node = this.root;
+    for (let char of word) {
+      if (!node.children.has(char)) {
+        node.children.set(char, new TrieNode());
+      }
+      node = node.children.get(char);
+    }
+    node.isEnd = true;
+  }
+
+  search(word) {
+    let node = this.root;
+    for (let char of word) {
+      if (!node.children.has(char)) return false;
+      node = node.children.get(char);
+    }
+    return node.isEnd;
+  }
+
+  startsWith(prefix) {
+    let node = this.root;
+    for (let char of prefix) {
+      if (!node.children.has(char)) return false;
+      node = node.children.get(char);
+    }
+    return true;
+  }
+}
+
+// 测试
+const trie = new Trie();
+trie.insert('apple');
+trie.insert('app');
+console.log(trie.search('apple')); // true
+console.log(trie.search('app')); // true
+console.log(trie.startsWith('ap')); // true
+console.log(trie.search('banana')); // false
+```
+
+### 性能分析
+| 操作       | 时间复杂度 | 适用场景                     |
+|------------|------------|-----------------------------|
+| 插入       | O(m)       | 动态添加字符串               |
+| 查找       | O(m)       | 快速搜索前缀或单词           |
+| 遍历       | O(n)       | 访问所有节点                 |
+
+**最佳实践**：Trie 树适合前端搜索框的自动补全功能。结合防抖（debounce）优化用户输入体验。  
+*Tips：Trie 树的内存开销较大，适合高频查询场景，避免在低频场景中使用。*
+
+### 进阶：平衡二叉树
+普通二叉搜索树可能退化为链表，导致 O(n) 的查找复杂度。平衡二叉树（如 AVL 树或红黑树）通过旋转操作保持平衡，确保 O(log n) 的性能。以下是一个简化的 AVL 树实现：
+
+```javascript
+class AVLNode {
+  constructor(value) {
+    this.value = value;
+    this.left = null;
+    this.right = null;
+    this.height = 1;
+  }
+}
+
+class AVLTree {
+  constructor() {
+    this.root = null;
+  }
+
+  height(node) {
+    return node ? node.height : 0;
+  }
+
+  balanceFactor(node) {
+    return this.height(node.left) - this.height(node.right);
+  }
+
+  updateHeight(node) {
+    node.height = Math.max(this.height(node.left), this.height(node.right)) + 1;
+  }
+
+  rightRotate(y) {
+    const x = y.left;
+    const T2 = x.right;
+    x.right = y;
+    y.left = T2;
+    this.updateHeight(y);
+    this.updateHeight(x);
+    return x;
+  }
+
+  leftRotate(x) {
+    const y = x.right;
+    const T2 = y.left;
+    y.left = x;
+    x.right = T2;
+    this.updateHeight(x);
+    this.updateHeight(y);
+    return y;
+  }
+
+  insert(value) {
+    this.root = this._insert(this.root, value);
+  }
+
+  _insert(node, value) {
+    if (!node) return new AVLNode(value);
+
+    if (value < node.value) {
+      node.left = this._insert(node.left, value);
+    } else if (value > node.value) {
+      node.right = this._insert(node.right, value);
+    } else {
+      return node;
+    }
+
+    this.updateHeight(node);
+    const balance = this.balanceFactor(node);
+
+    // 左左
+    if (balance > 1 && value < node.left.value) {
+      return this.rightRotate(node);
+    }
+    // 右右
+    if (balance < -1 && value > node.right.value) {
+      return this.leftRotate(node);
+    }
+    // 左右
+    if (balance > 1 && value > node.left.value) {
+      node.left = this.leftRotate(node.left);
+      return this.rightRotate(node);
+    }
+    // 右左
+    if (balance < -1 && value < node.right.value) {
+      node.right = this.rightRotate(node.right);
+      return this.leftRotate(node);
+    }
+
+    return node;
+  }
+}
+
+// 测试
+const avl = new AVLTree();
+avl.insert(10);
+avl.insert(20);
+avl.insert(30);
+avl.insert(40);
+avl.insert(50);
+avl.insert(25);
+console.log(avl.root.height); // 3
+```
+
+**最佳实践**：AVL 树适合需要动态平衡的场景（如实时数据排序）。如果对插入性能要求更高，可考虑红黑树。  
+*Tips：平衡树的实现复杂，建议使用成熟库（如 `avl` 或 `redblacktree`）替代手写。*
+
+### 哲学感悟
+树就像我们的知识体系：根深才能叶茂，层级清晰才能条理分明。学会构建自己的“知识树”，才能在技术海洋中游刃有余。🌲 正如《权利的游戏》中所说：“知识是武器，智慧是盔甲。”
+
+## 6. 图（Graph）：连接世界的“网络” 🌐
+
+图是一种由节点和边组成的复杂结构，适合表示多对多的关系。图可以是有向图、无向图、加权图等。
+
+### 图的本质
+- **节点和边**：节点表示实体，边表示关系。
+- **表示方式**：邻接矩阵（空间换时间）或邻接表（节省空间）。
+- **操作**：遍历（DFS、BFS）、最短路径（如 Dijkstra）、拓扑排序。
+
+### 前端场景
+- **社交网络**：朋友关系可以用无向图表示。
+- **路由规划**：地图导航可以用加权图实现。
+- **依赖管理**：Webpack 的模块依赖图基于有向无环图（DAG）。
+- **推荐系统**：Netflix 的推荐算法可能基于图的协同过滤。
+
+### 代码示例：实现 Dijkstra 算法
+Dijkstra 算法用于寻找加权图的最短路径，常用于导航或网络优化：
+
+```javascript
+class Graph {
+  constructor() {
+    this.adjacencyList = new Map();
+  }
+
+  addVertex(vertex) {
+    if (!this.adjacencyList.has(vertex)) {
+      this.adjacencyList.set(vertex, []);
+    }
+  }
+
+  addEdge(v1, v2, weight) {
+    this.adjacencyList.get(v1).push({ vertex: v2, weight });
+    this.adjacencyList.get(v2).push({ vertex: v1, weight });
+  }
+
+  dijkstra(start) {
+    const distances = new Map();
+    const previous = new Map();
+    const pq = new PriorityQueue();
+    const visited = new Set();
+
+    for (let vertex of this.adjacencyList.keys()) {
+      distances.set(vertex, Infinity);
+      previous.set(vertex, null);
+    }
+    distances.set(start, 0);
+    pq.enqueue(start, 0);
+
+    while (!pq.isEmpty()) {
+      const { item: current } = pq.dequeue();
+      if (visited.has(current)) continue;
+      visited.add(current);
+
+      const neighbors = this.adjacencyList.get(current);
+      for (let { vertex: neighbor, weight } of neighbors) {
+        const distance = distances.get(current) + weight;
+        if (distance < distances.get(neighbor)) {
+          distances.set(neighbor, distance);
+          previous.set(neighbor, current);
+          pq.enqueue(neighbor, distance);
+        }
+      }
+    }
+
+    return { distances, previous };
+  }
+}
+
+// 优先队列实现（简化版）
+class PriorityQueue {
+  constructor() {
+    this.queue = [];
+  }
+
+  enqueue(item, priority) {
+    this.queue.push({ item, priority });
+    this.queue.sort((a, b) => a.priority - b.priority);
+  }
+
+  dequeue() {
+    return this.queue.shift();
+  }
+
+  isEmpty() {
+    return this.queue.length === 0;
+  }
+}
+
+// 测试
+const graph = new Graph();
+graph.addVertex('A');
+graph.addVertex('B');
+graph.addVertex('C');
+graph.addEdge('A', 'B', 4);
+graph.addEdge('A', 'C', 2);
+graph.addEdge('B', 'C', 1);
+const { distances } = graph.dijkstra('A');
+console.log(distances.get('B')); // 3 (A -> C -> B)
+console.log(distances.get('C')); // 2 (A -> C)
+```
+
+### 性能分析
+| 操作       | 时间复杂度 | 适用场景                     |
+|------------|------------|-----------------------------|
+| 添加节点   | O(1)       | 动态扩展图                   |
+| 添加边     | O(1)       | 建立关系                     |
+| Dijkstra   | O((V + E) log V) | 寻找最短路径             |
+
+**最佳实践**：在前端中，图适合处理复杂关系（如社交网络）。邻接表比邻接矩阵更节省空间，适合稀疏图。  
+*Tips：实现图算法时，注意避免循环引用，使用 `WeakMap` 优化内存管理。*
+
+### 进阶：拓扑排序
+拓扑排序用于有向无环图（DAG），常用于依赖管理（如 npm 包安装顺序）：
+
+```javascript
+class Graph {
+  constructor() {
+    this.adjacencyList = new Map();
+  }
+
+  addVertex(vertex) {
+    if (!this.adjacencyList.has(vertex)) {
+      this.adjacencyList.set(vertex, []);
+    }
+  }
+
+  addEdge(v1, v2) {
+    this.adjacencyList.get(v1).push(v2);
+  }
+
+  topologicalSort() {
+    const visited = new Set();
+    const stack = [];
+
+    const dfs = (vertex) => {
+      visited.add(vertex);
+      const neighbors = this.adjacencyList.get(vertex);
+      for (let neighbor of neighbors) {
+        if (!visited.has(neighbor)) {
+          dfs(neighbor);
+        }
+      }
+      stack.push(vertex);
+    };
+
+    for (let vertex of this.adjacencyList.keys()) {
+      if (!visited.has(vertex)) {
+        dfs(vertex);
+      }
+    }
+
+    return stack.reverse();
+  }
+}
+
+// 测试
+const graph = new Graph();
+graph.addVertex('A');
+graph.addVertex('B');
+graph.addVertex('C');
+graph.addEdge('A', 'B');
+graph.addEdge('B', 'C');
+console.log(graph.topologicalSort()); // ['A', 'B', 'C']
+```
+
+**最佳实践**：拓扑排序适合前端构建工具（如 Webpack）或任务调度。使用 DFS 或 Kahn 算法实现高效排序。  
+*Tips：确保图是无环的，使用循环检测算法（如 DFS）验证 DAG 性质。*
+
+### 哲学感悟
+图就像人际关系：每个人都是一个节点，关系是连接的边。学会用“广度优先”探索生活中的可能性，也是一种智慧。🌍 正如《社交网络》中所说：“你不是在建立一个网站，你在改变人类的连接方式。”
+
+## 7. 哈希表（Hash Table）：快速查找的“魔法书” 📖
+
+哈希表是一种通过哈希函数将键映射到值的数据结构，JavaScript 的 `Map` 和 `Object` 都是哈希表的典型实现。
+
+### 哈希表的本质
+- **哈希函数**：将键转换为数组索引，理想情况下分布均匀。
+- **冲突解决**：通过链地址法（链表）或开放寻址法（探测）处理冲突。
+- **时间复杂度**：平均情况下，插入、查找、删除为 O(1)。
+
+### 前端场景
+- **状态管理**：Redux 的 store 用哈希表存储状态。
+- **缓存**：用哈希表实现数据缓存（如 API 响应）。
+- **去重**：快速检查数据是否重复。
+- **路由表**：React Router 用哈希表映射路径到组件。
+
+### 代码示例：实现简单哈希表
+让我们实现一个简单的哈希表，使用链地址法处理冲突：
+
+```javascript
+class HashTable {
+  constructor(size = 53) {
+    this.keyMap = new Array(size);
+  }
+
+  _hash(key) {
+    let total = 0;
+    const WEIRD_PRIME = 31;
+    for (let i = 0; i < Math.min(key.length, 100); i++) {
+      let char = key[i];
+      let value = char.charCodeAt(0) - 96;
+      total = (total * WEIRD_PRIME + value) % this.keyMap.length;
+    }
+    return total;
+  }
+
+  set(key, value) {
+    const index = this._hash(key);
+    if (!this.keyMap[index]) {
+      this.keyMap[index] = [];
+    }
+    this.keyMap[index].push([key, value]);
+  }
+
+  get(key) {
+    const index = this._hash(key);
+    if (this.keyMap[index]) {
+      for (let [k, v] of this.keyMap[index]) {
+        if (k === key) return v;
+      }
+    }
+    return undefined;
+  }
+
+  keys() {
+    const keysArr = [];
+    for (let i = 0; i < this.keyMap.length; i++) {
+      if (this.keyMap[i]) {
+        for (let [key] of this.keyMap[i]) {
+          keysArr.push(key);
+        }
+      }
+    }
+    return keysArr;
+  }
+
+  values() {
+    const valuesArr = [];
+    for (let i = 0; i < this.keyMap.length; i++) {
+      if (this.keyMap[i]) {
+        for (let [, value] of this.keyMap[i]) {
+          if (!valuesArr.includes(value)) {
+            valuesArr.push(value);
+          }
+        }
+      }
+    }
+    return valuesArr;
+  }
+}
+
+// 测试
+const ht = new HashTable();
+ht.set('maroon', '#800000');
+ht.set('yellow', '#FFFF00');
+ht.set('olive', '#808000');
+console.log(ht.get('yellow')); // #FFFF00
+console.log(ht.keys()); // ['maroon', 'yellow', 'olive']
+console.log(ht.values()); // ['#800000', '#FFFF00', '#808000']
+```
+
+### 性能分析
+| 操作       | 时间复杂度 | 适用场景                     |
+|------------|------------|-----------------------------|
+| 插入       | O(1)       | 快速存储键值对               |
+| 查找       | O(1)       | 高效检索数据                 |
+| 删除       | O(1)       | 移除键值对                   |
+
+**最佳实践**：在前端中，优先使用 `Map` 而非 `Object`，因为 `Map` 支持任意类型的键且性能更稳定。  
+*Tips：设计哈希函数时，确保分布均匀，减少冲突。使用质数（如 31 或 53）作为模数。*
+
+### 进阶：布隆过滤器
+布隆过滤器是一种概率型数据结构，用于快速判断元素是否“可能”存在，适合大规模数据去重（如 URL 爬取）：
+
+```javascript
+class BloomFilter {
+  constructor(size = 1000, hashCount = 3) {
+    this.size = size;
+    this.hashCount = hashCount;
+    this.bitArray = new Array(size).fill(0);
+  }
+
+  _hash(str, seed) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = (hash * seed + str.charCodeAt(i)) % this.size;
+    }
+    return hash;
+  }
+
+  add(str) {
+    for (let i = 0; i < this.hashCount; i++) {
+      const index = this._hash(str, i + 31);
+      this.bitArray[index] = 1;
+    }
+  }
+
+  contains(str) {
+    for (let i = 0; i < this.hashCount; i++) {
+      const index = this._hash(str, i + 31);
+      if (!this.bitArray[index]) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+
+// 测试
+const bf = new BloomFilter();
+bf.add('apple');
+bf.add('banana');
+console.log(bf.contains('apple')); // true
+console.log(bf.contains('orange')); // false (可能有误判)
+```
+
+**最佳实践**：布隆过滤器适合大规模数据去重（如爬虫去重）。调整 `size` 和 `hashCount`，平衡误判率和内存。  
+*Tips：布隆过滤器不可删除元素，适合只增不减的场景。*
+
+### 哲学感悟
+哈希表就像一本魔法书：只需念出咒语（键），就能瞬间找到答案（值）。但如果咒语设计得不好（哈希冲突），魔法就会失灵。📖 正如《哈利波特》中所说：“魔法的力量在于精准和专注。”
+
+## 总结与感悟
+
+数据结构不仅是代码的工具，更是思维的延伸。从数组的简洁到图的复杂，每种结构都有其独特的美感和适用场景。作为前端开发者，掌握数据结构不仅能提升代码效率，还能让我们更深刻地理解技术和世界的运行规律。
+
+> “计算机科学的所有问题都可以通过增加一层抽象来解决，除了抽象层过多的问题。”  
+> —— David Wheeler
+
+希望这篇文章能为你打开数据结构的大门，让你在前端开发的道路上更加游刃有余。无论是优化性能、设计优雅的代码，还是在技术面试中脱颖而出，数据结构都是你的得力助手。💪
+
+以下是一些额外的学习建议：
+- **书籍推荐**：
+  - 《算法（第 4 版）》：经典算法与数据结构入门书，图文并茂。
+  - 《JavaScript 数据结构与算法》：专注于 JS 的实践指南。
+  - 《学习 JavaScript 数据结构与算法》：适合前端开发者的入门书籍。
+- **实践平台**：
+  - LeetCode：刷题提升算法思维。
+  - HackerRank：提供前端相关的算法挑战。
+  - Codewars：趣味性强的编程练习。
+- **开源项目**：
+  - 贡献到 Lodash 或 Underscore，深入理解数组和哈希表实现。
+  - 参与 React 或 Vue 的虚拟 DOM 优化，体会树结构的魅力。
+
+最后，送你一句话：**代码如诗，数据结构是韵脚**。愿你的代码之路，既有技术深度，也有诗意浪漫。🌟
+
+### 附录：数据结构速查表
+| 数据结构 | 核心操作 | 时间复杂度 | 前端场景 | 最佳实践 |
+|----------|----------|------------|----------|----------|
+| 数组     | 索引、遍历 | O(1) ~ O(n)| 列表渲染 | 优先用 `Set` 去重 |
+| 链表     | 插入、删除 | O(1) ~ O(n)| 历史记录 | 注意内存泄漏 |
+| 栈       | 入栈、出栈 | O(1)       | 括号匹配 | 优化递归 |
+| 队列     | 入队、出队 | O(1)       | 任务调度 | 避免 `shift` |
+| 树       | 插入、查找 | O(log n)   | DOM 树   | 平衡树优化 |
+| 图       | BFS、DFS   | O(V + E)   | 社交网络 | 用邻接表 |
+| 哈希表   | 插入、查找 | O(1)       | 状态管理 | 用 `Map` 替代 `Object` |
+
+愿你在这场数据结构的冒险中，找到属于自己的宝藏！🏆
+
+---

@@ -65,11 +65,11 @@ export default function MobileCategories({ posts }: MobileCategoriesProps) {
   return (
     <div className="lg:hidden">
       <Menu as="div" className="relative z-[200]">
-        <MenuButton className="w-full flex items-center justify-between px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg border border-gray-200/50 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-all duration-300">
+        <MenuButton className="w-full flex items-center justify-between px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-lg border border-gray-200/50 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-all duration-300">
           分类
           <ChevronDownIcon className="ml-2 h-5 w-5" aria-hidden="true" />
         </MenuButton>
-        <MenuItems className="absolute z-[200] mt-2 w-full bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl rounded-lg shadow-xl border border-gray-200/50 dark:border-gray-700/50 focus:outline-none overflow-hidden">
+        <MenuItems className="absolute z-[200] mt-2 w-full bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200/50 dark:border-gray-700/50 focus:outline-none overflow-hidden">
           <div className="overflow-y-auto max-h-[80vh] space-y-4">
             {allCategories.map((category) => (
               <MenuItem key={category} as="div">

@@ -109,18 +109,21 @@ const BasicStats = ({
   const hoverBgClass = getHoverBgClass();
   const shadowEffect = getShadowEffect();
   return (
-    <div className="space-y-8">
-      <div className="flex items-center gap-4 mb-8">
-        <div
-          className={`p-3 rounded-xl bg-gradient-to-r ${iconGradient} text-white shadow-lg transform transition-all duration-500 hover:scale-125 hover:rotate-12 ${shadowEffect}`}
-        >
-          <BarChart3 className="w-6 h-6" />
+    <div className="w-full">
+      {/* 标题区域 */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div
+            className={`p-2 rounded-lg bg-gradient-to-r ${iconGradient} text-white transform transition-all duration-300 hover:scale-110`}
+          >
+            <BarChart3 size={20} />
+          </div>
+          <h3
+            className={`text-xl font-bold bg-gradient-to-r ${textGradient} bg-clip-text text-transparent`}
+          >
+            博客统计
+          </h3>
         </div>
-        <h3
-          className={`text-2xl font-bold bg-gradient-to-r ${textGradient} bg-clip-text text-transparent`}
-        >
-          博客统计
-        </h3>
       </div>
       <div className="space-y-8">
         <div
@@ -129,7 +132,7 @@ const BasicStats = ({
           <div className="flex items-center gap-3">
             <FileText
               size={20}
-              className={`${iconColor} transition-colors duration-300`}
+              className={`${iconColor} transition-all duration-300 transform group-hover/item:scale-125`}
             />
             <span className="text-base text-gray-700 dark:text-gray-300 font-medium">
               文章总数
@@ -147,7 +150,7 @@ const BasicStats = ({
           <div className="flex items-center gap-3">
             <Folder
               size={20}
-              className={`${iconColor} transition-colors duration-300`}
+              className={`${iconColor} transition-all duration-300 transform group-hover/item:translate-x-1`}
             />
             <span className="text-base text-gray-700 dark:text-gray-300 font-medium">
               文章分类
@@ -165,7 +168,7 @@ const BasicStats = ({
           <div className="flex items-center gap-3">
             <Hash
               size={20}
-              className={`${iconColor} transition-colors duration-300`}
+              className={`${iconColor} transition-all duration-300 transform group-hover/item:rotate-12`}
             />
             <span className="text-base text-gray-700 dark:text-gray-300 font-medium">
               文章标签

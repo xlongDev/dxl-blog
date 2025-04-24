@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { Post } from "contentlayer/generated";
 import PostCard from "./PostCard";
-import FadeIn from "@/components/FadeIn";
+import { motion } from "framer-motion";
 import { useThemeUtils } from "@/hooks/useThemeUtils";
 
 interface BlogFilterProps {
@@ -44,7 +44,6 @@ export default function BlogFilter({ posts }: BlogFilterProps) {
     []
   );
 
-  // 根据主题获取边框颜色
   const getBorderClass = () => {
     const themeColors = {
       light: "border-gray-200 dark:border-gray-800",
@@ -56,11 +55,9 @@ export default function BlogFilter({ posts }: BlogFilterProps) {
       pink: "border-pink-200 dark:border-pink-800",
       brown: "border-amber-200 dark:border-amber-800",
     };
-
     return themeColors[theme as keyof typeof themeColors] || themeColors.light;
   };
 
-  // 根据主题获取文本颜色
   const getTextClass = () => {
     const themeColors = {
       light: "text-gray-500 dark:text-gray-400",
@@ -72,16 +69,21 @@ export default function BlogFilter({ posts }: BlogFilterProps) {
       pink: "text-pink-500 dark:text-pink-400",
       brown: "text-amber-500 dark:text-amber-400",
     };
-
     return themeColors[theme as keyof typeof themeColors] || themeColors.light;
   };
 
   const borderClass = getBorderClass();
   const textClass = getTextClass();
 
+  // 卡片动画变体
+  const cardVariants = {
+    hidden: { opacity: 0, y: 50 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+  };
+
   return (
     <div className="space-y-8">
-      <FadeIn className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col sm:flex-row gap-4">
         <input
           type="text"
           placeholder="搜索文章..."
@@ -109,18 +111,22 @@ export default function BlogFilter({ posts }: BlogFilterProps) {
             </option>
           ))}
         </select>
-      </FadeIn>
+      </div>
       <div className="grid gap-8 md:grid-cols-2">
-        {filteredPosts.map((post) => (
-          <FadeIn key={post._id}>
+        {filteredPosts.map((post, index) => (
+          <motion.div
+            key={post._id}
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+            transition={{ delay: index * 0.1 }}
+          >
             <PostCard post={post} />
-          </FadeIn>
+          </motion.div>
         ))}
       </div>
       {filteredPosts.length === 0 && (
-        <FadeIn>
-          <p className={`text-center ${textClass}`}>未找到匹配的文章</p>
-        </FadeIn>
+        <p className={`text-center ${textClass}`}>未找到匹配的文章</p>
       )}
     </div>
   );

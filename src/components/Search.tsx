@@ -1,13 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { Post } from "contentlayer/generated";
+import { useState, useEffect, useCallback, useRef, useMemo, useDeferredValue } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { debounce } from "lodash-es";
 import { useRouter } from "next/navigation";
 import { useThemeUtils } from "@/hooks/useThemeUtils";
-import { THEME_COLORS } from "@/hooks/themeConstants";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   XMarkIcon,
@@ -15,9 +12,9 @@ import {
   ArrowUpIcon,
   ArrowDownIcon,
 } from "@heroicons/react/24/outline";
+import { MinimalPost } from "@/types";
 
-// 预处理文章数据的接口
-interface ProcessedPost extends Post {
+interface ProcessedPost extends MinimalPost {
   searchableText: string;
   titleLower: string;
   descriptionLower: string;
@@ -25,39 +22,117 @@ interface ProcessedPost extends Post {
 }
 
 interface SearchProps {
-  posts: Post[];
+  posts: MinimalPost[];
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
 }
 
 export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Post[]>([]);
+  const [results, setResults] = useState<MinimalPost[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [allTags, setAllTags] = useState<string[]>([]);
   const router = useRouter();
   const { theme } = useThemeUtils();
 
-  // 添加refs用于DOM操作
+  const deferredQuery = useDeferredValue(query);
+
   const resultsListRef = useRef<HTMLUListElement>(null);
   const parentRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const resultItemsRef = useRef<(HTMLElement | null)[]>([]);
 
-  // 预处理文章数据，提高搜索效率
+  // 从缓存加载所有文章的标签
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const response = await fetch("/cache/tags.json");
+        if (response.ok) {
+          const cachedData: { allTags: string[] } = await response.json();
+          setAllTags(cachedData.allTags);
+        } else {
+          const tags = Array.from(
+            new Set(posts.flatMap((post) => post.tags || []))
+          ).sort();
+          setAllTags(tags);
+        }
+      } catch (error) {
+        console.error("Failed to load tags cache:", error);
+        const tags = Array.from(
+          new Set(posts.flatMap((post) => post.tags || []))
+        ).sort();
+        setAllTags(tags);
+      }
+    };
+
+    fetchTags();
+  }, [posts]);
+
   const processedPosts = useMemo(() => {
     return posts.map((post) => ({
       ...post,
       titleLower: post.title.toLowerCase(),
-      descriptionLower: post.description.toLowerCase(),
+      descriptionLower: post.description?.toLowerCase() || "",
       tagsLower: post.tags?.join(" ").toLowerCase() || "",
-      searchableText: `${post.title.toLowerCase()} ${post.description.toLowerCase()} ${
+      searchableText: `${post.title.toLowerCase()} ${post.description?.toLowerCase() || ""} ${
         post.tags?.join(" ").toLowerCase() || ""
       }`,
     }));
   }, [posts]);
 
-  // 使用useMemo缓存主题相关的样式类，避免重复计算
+  useEffect(() => {
+    if (!deferredQuery) {
+      setResults([]);
+      setSelectedIndex(-1);
+      return;
+    }
+
+    const lowerQuery = deferredQuery.toLowerCase();
+    const queryTerms = lowerQuery
+      .split(/\s+/)
+      .filter((term) => term.length > 0);
+
+    if (queryTerms.length === 0) {
+      setResults([]);
+      setSelectedIndex(-1);
+      return;
+    }
+
+    const scoredResults = processedPosts
+      .map((post) => {
+        if (!queryTerms.some((term) => post.searchableText.includes(term))) {
+          return null;
+        }
+
+        let score = 0;
+        const { titleLower, descriptionLower, tagsLower } = post;
+
+        for (const term of queryTerms) {
+          if (titleLower.includes(term)) {
+            score += 100;
+            if (titleLower.startsWith(term)) score += 50;
+            if (titleLower === term) score += 100;
+          }
+          if (descriptionLower.includes(term)) score += 50;
+          if (tagsLower.includes(term)) {
+            score += 75;
+            if (post.tags?.some((tag) => tag.toLowerCase() === term)) {
+              score += 50;
+            }
+          }
+        }
+
+        return { post, score };
+      })
+      .filter((item) => item !== null)
+      .sort((a, b) => b!.score - a!.score)
+      .map((item) => item!.post);
+
+    setResults(scoredResults);
+    setSelectedIndex(-1);
+  }, [deferredQuery, processedPosts]);
+
   const themeClasses = useMemo(() => {
     return {
       backdrop:
@@ -223,88 +298,13 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
     };
   }, [theme]);
 
-  // 虚拟列表配置
   const rowVirtualizer = useVirtualizer({
     count: results.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 120, // 增加预估高度，确保有足够空间
+    estimateSize: () => 120,
     overscan: 5,
   });
 
-  // 优化的防抖搜索函数
-  const debouncedSearch = useCallback(
-    debounce((searchQuery: string) => {
-      if (!searchQuery) {
-        setResults([]);
-        return;
-      }
-
-      const lowerQuery = searchQuery.toLowerCase();
-      const queryTerms = lowerQuery
-        .split(/\s+/)
-        .filter((term) => term.length > 0);
-
-      // 如果没有有效的搜索词，返回空结果
-      if (queryTerms.length === 0) {
-        setResults([]);
-        return;
-      }
-
-      // 使用预处理的数据进行搜索，提高效率
-      const scoredResults = processedPosts
-        .map((post) => {
-          // 快速预筛选 - 使用searchableText进行初步筛选
-          if (!queryTerms.some((term) => post.searchableText.includes(term))) {
-            return null; // 不包含任何搜索词，直接排除
-          }
-
-          // 计算相关性分数
-          let score = 0;
-          const { titleLower, descriptionLower, tagsLower } = post;
-
-          // 对每个搜索词进行评分
-          for (const term of queryTerms) {
-            // 标题匹配权重最高
-            if (titleLower.includes(term)) {
-              score += 100;
-              // 标题开头匹配加分
-              if (titleLower.startsWith(term)) {
-                score += 50;
-              }
-              // 标题完全匹配加分
-              if (titleLower === term) {
-                score += 100;
-              }
-            }
-
-            // 描述匹配
-            if (descriptionLower.includes(term)) {
-              score += 50;
-            }
-
-            // 标签匹配
-            if (tagsLower.includes(term)) {
-              score += 75;
-              // 标签完全匹配加分
-              if (post.tags?.some((tag) => tag.toLowerCase() === term)) {
-                score += 50;
-              }
-            }
-          }
-
-          return { post, score };
-        })
-        .filter((item) => item !== null) // 过滤掉不匹配的结果
-        .sort((a, b) => b!.score - a!.score) // 按分数降序排序
-        .map((item) => item!.post); // 提取排序后的文章
-
-      setResults(scoredResults);
-      setSelectedIndex(-1); // 重置选中索引
-    }, 50), // 减少延迟时间提高响应速度
-    [processedPosts]
-  );
-
-  // 监听键盘事件，支持快捷键打开/关闭搜索框
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
@@ -320,23 +320,14 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, setIsOpen]);
 
-  // 当查询变化时触发搜索
-  useEffect(() => {
-    debouncedSearch(query);
-    // 注意：setSelectedIndex(-1) 已移至 debouncedSearch 内部
-  }, [query, debouncedSearch]);
-
-  // 当搜索框打开时，自动聚焦输入框
   useEffect(() => {
     if (isOpen && inputRef.current) {
-      // 短暂延迟确保动画开始后再聚焦
       setTimeout(() => {
         inputRef.current?.focus();
       }, 50);
     }
   }, [isOpen]);
 
-  // 优化的键盘导航处理函数
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       switch (e.key) {
@@ -344,7 +335,6 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
           e.preventDefault();
           setSelectedIndex((prev) => {
             const newIndex = prev < results.length - 1 ? prev + 1 : prev;
-            // 使用虚拟列表的scrollToIndex方法，更高效
             if (newIndex >= 0 && rowVirtualizer) {
               rowVirtualizer.scrollToIndex(newIndex, { align: "center" });
             }
@@ -355,7 +345,6 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
           e.preventDefault();
           setSelectedIndex((prev) => {
             const newIndex = prev > 0 ? prev - 1 : prev;
-            // 使用虚拟列表的scrollToIndex方法，更高效
             if (newIndex >= 0 && rowVirtualizer) {
               rowVirtualizer.scrollToIndex(newIndex, { align: "center" });
             }
@@ -364,7 +353,7 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
           break;
         case "Enter":
           if (selectedIndex >= 0 && results[selectedIndex]) {
-            router.push(`/blog/${results[selectedIndex]._raw.flattenedPath}`);
+            router.push(results[selectedIndex].url);
             setIsOpen(false);
           }
           break;
@@ -373,19 +362,16 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
     [results, selectedIndex, router, setIsOpen, rowVirtualizer]
   );
 
-  // 优化的高亮匹配文本函数
   const highlightMatch = useCallback(
     (text: string) => {
       if (!query || query.trim() === "") return text;
 
-      // 处理多个搜索词
       const terms = query
         .toLowerCase()
         .split(/\s+/)
         .filter((term) => term.length > 0);
       if (terms.length === 0) return text;
 
-      // 创建正则表达式匹配所有搜索词
       const regex = new RegExp(
         `(${terms
           .map((term) => term.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"))
@@ -408,11 +394,9 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
     [query, themeClasses.highlight]
   );
 
-  // 优化的清空搜索框函数
   const clearSearch = useCallback(() => {
     setQuery("");
     setResults([]);
-    // 直接聚焦，不需要延迟
     inputRef.current?.focus();
   }, []);
 
@@ -442,7 +426,6 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
             <div
               className={`${themeClasses.container} rounded-xl shadow-2xl border overflow-hidden`}
             >
-              {/* 搜索输入区域 */}
               <div className="relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
                   <MagnifyingGlassIcon className="h-5 w-5" />
@@ -467,7 +450,6 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
                 )}
               </div>
 
-              {/* 搜索结果区域 */}
               <div className="relative">
                 <AnimatePresence mode="wait">
                   {results.length > 0 && (
@@ -477,7 +459,6 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.2 }}
                     >
-                      {/* 搜索结果计数 */}
                       <motion.div
                         key="results-count"
                         initial={{ opacity: 0, y: -5 }}
@@ -532,7 +513,7 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
                               const post = results[virtualRow.index];
                               return (
                                 <div
-                                  key={post._id}
+                                  key={post.url}
                                   data-index={virtualRow.index}
                                   className="absolute top-0 left-0 w-full"
                                   style={{
@@ -550,7 +531,7 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
                                     className="py-1"
                                   >
                                     <Link
-                                      href={`/blog/${post._raw.flattenedPath}`}
+                                      href={post.url}
                                       className={`group block px-4 py-3 rounded-lg transition-all duration-200 border ${
                                         virtualRow.index === selectedIndex
                                           ? themeClasses.selectedItem
@@ -568,7 +549,7 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
                                       <p
                                         className={`text-sm mt-2 ${themeClasses.description} line-clamp-2`}
                                       >
-                                        {highlightMatch(post.description)}
+                                        {highlightMatch(post.description || "")}
                                       </p>
                                     </Link>
                                   </motion.div>
@@ -581,7 +562,6 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
                   )}
                 </AnimatePresence>
 
-                {/* 无结果提示 */}
                 <AnimatePresence mode="wait">
                   {query && query.trim() !== "" && results.length === 0 && (
                     <motion.div
@@ -612,7 +592,6 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
                   )}
                 </AnimatePresence>
 
-                {/* 底部快捷键提示区域 - 重新设计 */}
                 <div
                   className={`p-4 border-t ${themeClasses.footer} flex flex-wrap items-center justify-center gap-4 text-sm`}
                 >
@@ -623,7 +602,6 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
                           if (results.length > 0) {
                             setSelectedIndex((prev) => {
                               const newIndex = prev > 0 ? prev - 1 : 0;
-                              // 使用虚拟列表的scrollToIndex方法，与键盘导航保持一致
                               if (newIndex >= 0 && rowVirtualizer) {
                                 rowVirtualizer.scrollToIndex(newIndex, {
                                   align: "center",
@@ -644,7 +622,6 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
                             setSelectedIndex((prev) => {
                               const newIndex =
                                 prev < results.length - 1 ? prev + 1 : prev;
-                              // 使用虚拟列表的scrollToIndex方法，与键盘导航保持一致
                               if (newIndex >= 0 && rowVirtualizer) {
                                 rowVirtualizer.scrollToIndex(newIndex, {
                                   align: "center",
@@ -666,9 +643,7 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
                   <button
                     onClick={() => {
                       if (selectedIndex >= 0 && results[selectedIndex]) {
-                        router.push(
-                          `/blog/${results[selectedIndex]._raw.flattenedPath}`
-                        );
+                        router.push(results[selectedIndex].url);
                         setIsOpen(false);
                       }
                     }}

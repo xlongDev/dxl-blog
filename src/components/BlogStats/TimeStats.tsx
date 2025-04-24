@@ -126,18 +126,21 @@ const TimeStats = ({ latestUpdate, avgReadingTime }: TimeStatsProps) => {
   const hoverBgClass = getHoverBgClass();
   const shadowEffect = getShadowEffect();
   return (
-    <div className="space-y-8">
-      <div className="flex items-center gap-4 mb-8">
-        <div
-          className={`p-3 rounded-xl bg-gradient-to-r ${iconGradient} text-white shadow-lg transform transition-all duration-500 hover:scale-125 hover:animate-pulse ${shadowEffect}`}
-        >
-          <Clock className="w-6 h-6" />
+    <div className="w-full">
+      {/* 标题区域 */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div
+            className={`p-2 rounded-lg bg-gradient-to-r ${iconGradient} text-white transform transition-all duration-300 hover:rotate-45`}
+          >
+            <Clock size={20} />
+          </div>
+          <h3
+            className={`text-xl font-bold bg-gradient-to-r ${textGradient} bg-clip-text text-transparent`}
+          >
+            时间统计
+          </h3>
         </div>
-        <h3
-          className={`text-2xl font-bold bg-gradient-to-r ${textGradient} bg-clip-text text-transparent`}
-        >
-          时间统计
-        </h3>
       </div>
       <div className="space-y-8">
         <div
@@ -146,7 +149,7 @@ const TimeStats = ({ latestUpdate, avgReadingTime }: TimeStatsProps) => {
           <div className="flex items-center gap-4 mb-3">
             <Calendar
               size={24}
-              className={`${iconColor} transition-colors duration-300`}
+              className={`${iconColor} transition-all duration-300 transform group-hover/item:rotate-12 group-hover/item:scale-110`}
             />
             <span className="text-lg text-gray-700 dark:text-gray-300 font-medium">
               最近更新
@@ -166,7 +169,7 @@ const TimeStats = ({ latestUpdate, avgReadingTime }: TimeStatsProps) => {
           <div className="flex items-center gap-4 mb-3">
             <Clock
               size={24}
-              className={`${iconColor} transition-colors duration-300`}
+              className={`${iconColor} transition-all duration-300 transform group-hover/item:rotate-45`}
             />
             <span className="text-lg text-gray-700 dark:text-gray-300 font-medium">
               平均阅读时长

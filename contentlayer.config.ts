@@ -4,62 +4,33 @@ import remarkGfm from "remark-gfm";
 
 export const Post = defineDocumentType(() => ({
   name: "Post",
-  filePathPattern: `**/*.mdx`,
+  filePathPattern: `*/**/*.mdx`,
   contentType: "mdx",
+  // 移除fields中的category定义
   fields: {
-    title: {
-      type: "string",
-      required: true,
-    },
-    series: {
-      type: "string",
-      required: false,
-    },
-    date: {
-      type: "date",
-      required: true,
-    },
-    description: {
-      type: "string",
-      required: true,
-    },
-    keywords: {
-      type: "string",
-      required: false,
-    },
-    author: {
-      type: "string",
-      required: false,
-      default: "晓龙",
-    },
-    image: {
-      type: "string",
-      required: false,
-    },
-    tags: {
-      type: "list",
-      of: { type: "string" },
-      required: false,
-    },
-    views: {
-      type: "number",
-      required: false,
-      default: 0,
-    },
-    likes: {
-      type: "number",
-      required: false,
-      default: 0,
-    },
-    category: {
-      type: "string",
-      required: true, // category 是必需字段，确保类型为 string
-    },
+    title: { type: "string", required: true },
+    series: { type: "string", required: false },
+    date: { type: "date", required: true },
+    description: { type: "string", required: true },
+    keywords: { type: "string", required: false },
+    author: { type: "string", required: false, default: "晓龙" },
+    image: { type: "string", required: false },
+    tags: { type: "list", of: { type: "string" }, required: false },
+    views: { type: "number", required: false, default: 0 },
+    likes: { type: "number", required: false, default: 0 },
+    // 移除这一行: category: { type: "string", required: false },
   },
   computedFields: {
     url: {
       type: "string",
       resolve: (post) => `/blog/${encodeURIComponent(post._raw.flattenedPath)}`,
+    },
+    category: {
+      type: "string",
+      resolve: (post) => {
+        const pathSegments = post._raw.flattenedPath.split("/");
+        return pathSegments[0]; // 基于文件目录的分类
+      },
     },
     subcategory: {
       type: "string",
@@ -75,9 +46,7 @@ export default makeSource({
   contentDirPath: "content",
   documentTypes: [Post],
   mdx: {
-    remarkPlugins: [
-      remarkGfm,
-    ],
+    remarkPlugins: [remarkGfm],
     rehypePlugins: [
       [
         rehypePrettyCode as any,
@@ -89,7 +58,10 @@ export default makeSource({
             }
           },
           onVisitHighlightedLine(node: any) {
-            node.properties.className = [...(node.properties.className || []), "line--highlighted"];
+            node.properties.className = [
+              ...(node.properties.className || []),
+              "line--highlighted",
+            ];
           },
           onVisitHighlightedWord(node: any) {
             node.properties.className = ["word--highlighted"];

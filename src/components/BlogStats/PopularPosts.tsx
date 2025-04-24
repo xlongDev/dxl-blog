@@ -148,18 +148,21 @@ const PopularPosts = ({ topPosts }: PopularPostsProps) => {
   const numberBgClass = getNumberBgClass();
   const titleHoverClass = getTitleHoverClass();
   return (
-    <div className="space-y-8">
-      <div className="flex items-center gap-4 mb-8">
-        <div
-          className={`p-3 rounded-xl bg-gradient-to-r ${iconGradient} text-white shadow-lg transform transition-all duration-500 hover:-translate-y-2 ${shadowEffect}`}
-        >
-          <TrendingUp className="w-6 h-6" />
+    <div className="w-full">
+      {/* 标题区域 */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div
+            className={`p-2 rounded-lg bg-gradient-to-r ${iconGradient} text-white transform transition-all duration-300 hover:translate-y-[-5px]`}
+          >
+            <TrendingUp size={20} />
+          </div>
+          <h3
+            className={`text-xl font-bold bg-gradient-to-r ${textGradient} bg-clip-text text-transparent`}
+          >
+            热门文章
+          </h3>
         </div>
-        <h3
-          className={`text-2xl font-bold bg-gradient-to-r ${textGradient} bg-clip-text text-transparent`}
-        >
-          热门文章
-        </h3>
       </div>
       <div className="grid grid-cols-1 gap-4">
         {topPosts.map((post, index) => (

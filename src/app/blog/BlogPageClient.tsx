@@ -26,6 +26,7 @@ const LoadingSpinner = () => (
 export default function BlogPageClient({ posts }: BlogPageClientProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(true);
+  const [pageInput, setPageInput] = useState(""); // 页码输入
   const { getThemeColor, theme } = useThemeUtils();
   const {
     paginatedPosts,
@@ -34,7 +35,7 @@ export default function BlogPageClient({ posts }: BlogPageClientProps) {
     goToNextPage,
     goToPreviousPage,
     goToPage,
-  } = usePaginatedPosts({ posts, postsPerPage: isMobile ? 10 : 24 });
+  } = usePaginatedPosts({ posts, postsPerPage: isMobile ? 8 : 12 });
 
   useEffect(() => {
     const checkIsMobile = () => {
@@ -46,6 +47,11 @@ export default function BlogPageClient({ posts }: BlogPageClientProps) {
 
     return () => window.removeEventListener("resize", checkIsMobile);
   }, []);
+
+  // 同步输入框与当前页码
+  useEffect(() => {
+    setPageInput(currentPage.toString());
+  }, [currentPage]);
 
   // 根据主题获取背景色和边框色
   const getBgClass = () => {
@@ -105,6 +111,35 @@ export default function BlogPageClient({ posts }: BlogPageClientProps) {
   const borderClass = getBorderClass();
   const buttonClass = getButtonClass();
 
+  // 处理页码输入变化
+  const handlePageInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPageInput(e.target.value);
+  };
+
+  // 处理跳转逻辑
+  const handlePageJump = () => {
+    const pageNumber = parseInt(pageInput, 10);
+    if (!isNaN(pageNumber) && pageNumber >= 1 && pageNumber <= totalPages) {
+      setIsLoading(true);
+      goToPage(pageNumber);
+      setTimeout(() => setIsLoading(false), 300); // 模拟加载
+    } else {
+      setPageInput(currentPage.toString()); // 恢复当前页码
+    }
+  };
+
+  // 处理回车键触发
+  const handlePageInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handlePageJump();
+    }
+  };
+
+  // 处理输入框失焦
+  const handlePageInputBlur = () => {
+    handlePageJump();
+  };
+
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-background text-foreground">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -133,23 +168,66 @@ export default function BlogPageClient({ posts }: BlogPageClientProps) {
             <Suspense fallback={<LoadingSpinner />}>
               <BlogFilter posts={paginatedPosts} />
             </Suspense>
-            <div className="mt-8 flex justify-center items-center space-x-4">
+            <div className="mt-8 flex justify-center items-center gap-3">
               <button
                 onClick={goToPreviousPage}
                 disabled={currentPage === 1 || isLoading}
-                className={`px-4 py-2 ${buttonClass} text-white rounded-lg disabled:opacity-50 transition-colors`}
+                className={`w-10 h-10 flex items-center justify-center rounded-full ${buttonClass} text-white disabled:opacity-50 transition-all duration-300`}
+                aria-label="上一页"
               >
-                上一页
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
               </button>
-              <span className="text-sm">
-                第 {currentPage} 页，共 {totalPages} 页
-              </span>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={pageInput}
+                  onChange={handlePageInputChange}
+                  onKeyDown={handlePageInputKeyDown}
+                  onBlur={handlePageInputBlur}
+                  className={`w-12 h-10 text-center rounded-full border ${borderClass} bg-transparent focus:ring-2 focus:ring-opacity-50 focus:outline-none ${
+                    theme && theme !== "light" && theme !== "dark"
+                      ? `focus:ring-${theme}-500/50`
+                      : "focus:ring-blue-500/50"
+                  } transition-all duration-300`}
+                  aria-label="当前页码"
+                />
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  / {totalPages}
+                </span>
+              </div>
               <button
                 onClick={goToNextPage}
                 disabled={currentPage === totalPages || isLoading}
-                className={`px-4 py-2 ${buttonClass} text-white rounded-lg disabled:opacity-50 transition-colors`}
+                className={`w-10 h-10 flex items-center justify-center rounded-full ${buttonClass} text-white disabled:opacity-50 transition-all duration-300`}
+                aria-label="下一页"
               >
-                下一页
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
               </button>
             </div>
             {isLoading && (

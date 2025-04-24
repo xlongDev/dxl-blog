@@ -27,7 +27,7 @@ function PopularPostCard({ post }: { post: any }) {
   const heatScore = useMemo(() => {
     const views = stats?.views || 0;
     const likes = stats?.likes || 0;
-    const favorites = 0; // 暂时保持为0，因为还没有收藏功能
+    const favorites = 0;
     const score = views * 1 + likes * 2 + favorites * 3;
     return { views, likes, favorites, score };
   }, [stats]);
@@ -43,62 +43,56 @@ function PopularPostCard({ post }: { post: any }) {
 export default function PopularPosts() {
   const { theme, getThemeValue } = useThemeUtils();
 
-  // 获取热门文章
-  const popularPosts = allPosts.slice(0, 3); // 暂时只显示最新的3篇文章，因为需要实时计算热度
+  const popularPosts = allPosts.slice(0, 3);
 
-  // 根据主题获取图标背景渐变
+  // 更新为热门的红色系配色方案
   const getIconGradient = () => {
     return getThemeValue(
       {
-        light: "from-orange-500 to-red-500",
-        dark: "from-orange-400 to-red-400",
-        green: "from-green-500 to-emerald-500",
+        light: "from-rose-500 to-pink-600", // 明亮模式: 玫瑰红到粉红
+        dark: "from-rose-400 to-pink-500",  // 暗黑模式: 稍柔和的色调
+        green: "from-emerald-500 to-teal-500",
         purple: "from-purple-500 to-violet-500",
         orange: "from-orange-500 to-red-500",
         blue: "from-blue-500 to-indigo-500",
         pink: "from-pink-500 to-fuchsia-500",
         brown: "from-amber-500 to-orange-500",
       },
-      "from-orange-500 to-red-500"
+      "from-rose-500 to-pink-600" // 默认使用明亮的红色系
     );
   };
 
-  // 根据主题获取标题文字渐变
+  // 标题文字渐变更新
   const getTitleGradient = () => {
     return getThemeValue(
       {
-        light: "from-orange-600 to-red-600",
-        dark: "from-orange-400 to-red-400",
-        green: "from-green-600 to-emerald-600",
+        light: "from-rose-600 to-pink-700", // 更深的红色系
+        dark: "from-rose-400 to-pink-500",  // 暗黑模式保持柔和
+        green: "from-emerald-600 to-teal-600",
         purple: "from-purple-600 to-violet-600",
         orange: "from-orange-600 to-red-600",
         blue: "from-blue-600 to-indigo-600",
         pink: "from-pink-600 to-fuchsia-600",
         brown: "from-amber-600 to-orange-600",
       },
-      "from-orange-600 to-red-600"
+      "from-rose-600 to-pink-700"
     );
   };
 
-  // 根据主题获取按钮背景渐变
+  // 按钮背景渐变更新
   const getButtonGradient = () => {
     return getThemeValue(
       {
-        light:
-          "from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600",
-        dark: "from-orange-400 to-red-400 hover:from-orange-500 hover:to-red-500",
-        green:
-          "from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600",
-        purple:
-          "from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600",
-        orange:
-          "from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600",
+        light: "from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700",
+        dark: "from-rose-400 to-pink-500 hover:from-rose-500 hover:to-pink-600",
+        green: "from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600",
+        purple: "from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600",
+        orange: "from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600",
         blue: "from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600",
         pink: "from-pink-500 to-fuchsia-500 hover:from-pink-600 hover:to-fuchsia-600",
-        brown:
-          "from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600",
+        brown: "from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600",
       },
-      "from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+      "from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700"
     );
   };
 
@@ -121,14 +115,14 @@ export default function PopularPosts() {
           <PopularPostCard key={post._id} post={post} />
         ))}
       </div>
-      <div className="text-center">
+      {/* <div className="text-center">
         <Link
           href="/blog"
           className={`inline-block px-6 py-3 rounded-full bg-gradient-to-r ${getButtonGradient()} text-white transition-all duration-300 hover:shadow-lg`}
         >
           查看所有文章
         </Link>
-      </div>
+      </div> */}
     </section>
   );
 }

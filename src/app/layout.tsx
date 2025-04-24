@@ -10,7 +10,7 @@ import BackToTop from "@/components/BackToTop";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "段晓龙的博客 | 前端技术分享",
+  title: "晓龙的blog | 前端技术分享",
   description: "分享前端开发技术、经验和见解",
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"

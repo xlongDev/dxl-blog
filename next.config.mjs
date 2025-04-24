@@ -28,9 +28,13 @@ const nextConfig = {
   // 优化大型页面数据处理
   experimental: {
     largePageDataBytes: 128 * 1000, // 128KB
-    optimizePackageImports: ["contentlayer/source-files", "rehype-pretty-code", "remark-gfm"], // 优化第三方包导入
+    optimizePackageImports: [
+      "contentlayer/source-files",
+      "rehype-pretty-code",
+      "remark-gfm",
+    ], // 优化第三方包导入
     workerThreads: true, // 启用 worker threads 加速构建
-    isrMemoryCacheSize: 50, // ISR 内存缓存大小（MB）
+    isrMemoryCacheSize: 19, // ISR 内存缓存大小（MB）
   },
 
   // 启用 React 严格模式（开发时）
