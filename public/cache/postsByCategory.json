@@ -1,30 +1,4 @@
 {
-  "totalPosts": 670,
-  "postsByCategory": {
-    "Browser": 14,
-    "Bun.js": 1,
-    "Build-Tools": 20,
-    "Container": 3,
-    "DB": 2,
-    "DSA": 6,
-    "CSS": 55,
-    "Deno": 1,
-    "Flutter": 2,
-    "HTML": 6,
-    "Nest.js": 1,
-    "Next.js": 5,
-    "Network": 22,
-    "JavaScript": 77,
-    "Node.js": 15,
-    "Nuxt.js": 5,
-    "React": 42,
-    "React-Native": 2,
-    "TypeScript": 11,
-    "Visualization": 18,
-    "Vue.js": 64,
-    "Web3": 2,
-    "前端工程化": 65,
-    "前端技术": 208,
-    "小程序": 23
-  }
+  "totalPosts": 0,
+  "postsByCategory": {}
 }
