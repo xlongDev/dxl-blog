@@ -299,16 +299,21 @@ const FeaturedPosts = ({ featuredPosts }: FeaturedPostsProps) => {
         </p>
 
         {post.tags && post.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 justify-center mt-2 mb-2 relative z-10">
-            {post.tags.map((tag) => (
+          <div className="flex items-center gap-1 justify-center mt-2 mb-2 relative z-10 overflow-hidden whitespace-nowrap">
+            {post.tags.slice(0, 2).map((tag) => (
               <motion.span
                 key={tag}
-                className={`text-xs px-2 py-0.5 rounded-full ${tagClass}`}
+                className={`text-xs px-2 py-0.5 rounded-full ${tagClass} shrink-0`}
                 whileHover={{ scale: 1.05 }}
               >
                 {tag}
               </motion.span>
             ))}
+            {post.tags.length > 2 && (
+              <span className="text-xs opacity-70">
+                +{post.tags.length - 2}
+              </span>
+            )}
           </div>
         )}
 

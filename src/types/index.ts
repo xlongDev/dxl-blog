@@ -3,7 +3,7 @@ export interface MinimalPost {
   title: string;
   date: string;
   description: string;
-  category: string;
+  category?: string;
   tags?: string[];
   views?: number;
   likes?: number;

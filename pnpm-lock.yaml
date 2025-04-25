@@ -108,10 +108,10 @@ importers:
         specifier: ^1.30.0
         version: 1.30.0
       react:
-        specifier: ^18.2.0
+        specifier: ^18
         version: 18.3.1
       react-dom:
-        specifier: ^18.2.0
+        specifier: ^18
         version: 18.3.1(react@18.3.1)
       react-intersection-observer:
         specifier: ^9.16.0

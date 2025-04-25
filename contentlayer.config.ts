@@ -15,6 +15,9 @@ export const Post = defineDocumentType(() => ({
     image: { type: "string", required: false },
     tags: { type: "list", of: { type: "string" }, required: false },
     category: { type: "string", required: false },
+    series: { type: "string", required: false },
+    views: { type: "number", required: false, default: 0 },
+    likes: { type: "number", required: false, default: 0 },
   },
   computedFields: {
     url: {
@@ -29,13 +32,6 @@ export default makeSource({
   documentTypes: [Post],
   mdx: {
     remarkPlugins: [remarkGfm],
-    rehypePlugins: [
-      [
-        rehypePrettyCode as any,
-        {
-          theme: "github-dark",
-        },
-      ],
-    ],
+    rehypePlugins: [[rehypePrettyCode as any, { theme: "github-dark" }]],
   },
 });
