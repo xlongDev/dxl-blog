@@ -4,7 +4,7 @@ const nextConfig = {
   distDir: ".next",
   generateBuildId: () => "build",
   generateEtags: true,
-  staticPageGenerationTimeout: 600,
+  staticPageGenerationTimeout: 180,
 
   // 启用增量静态再生（ISR），优化动态页面
   async rewrites() {
@@ -34,7 +34,7 @@ const nextConfig = {
       "remark-gfm",
     ], // 优化第三方包导入
     workerThreads: true, // 启用 worker threads 加速构建
-    isrMemoryCacheSize: 18, // ISR 内存缓存大小（MB）
+    isrMemoryCacheSize: 19, // ISR 内存缓存大小（MB）
   },
 
   // 启用 React 严格模式（开发时）
@@ -88,7 +88,7 @@ const nextConfig = {
         splitChunks: {
           chunks: "all",
           minSize: 20000,
-          maxSize: 200000,
+          maxSize: 200000, // 减小 maxSize，提升加载速度
           minChunks: 1,
           maxAsyncRequests: 30,
           maxInitialRequests: 30,

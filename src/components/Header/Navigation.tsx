@@ -12,8 +12,8 @@ type NavigationProps = {
 
 export default function Navigation({ onNavigate }: NavigationProps) {
   const categories = Array.from(
-    new Set(allPosts.map((post) => post.category).filter(Boolean))
-  ).sort() as string[];
+    new Set(allPosts.map((post) => post.category))
+  ).sort();
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const { theme, getThemeValue } = useThemeUtils();
   const [mounted, setMounted] = useState(false);
@@ -57,7 +57,7 @@ export default function Navigation({ onNavigate }: NavigationProps) {
   const linkGradient = mounted
     ? getLinkGradient()
     : "after:from-blue-600 after:to-purple-600";
-
+  
   const panelGradient = mounted
     ? getPanelGradient()
     : "from-blue-500/5 via-purple-500/5 to-pink-500/5";
@@ -108,9 +108,7 @@ export default function Navigation({ onNavigate }: NavigationProps) {
                 : "opacity-0 invisible translate-y-2 h-0 md:h-auto"
             }`}
         >
-          <div
-            className={`absolute inset-0 bg-gradient-to-br ${panelGradient} pointer-events-none`}
-          />
+          <div className={`absolute inset-0 bg-gradient-to-br ${panelGradient} pointer-events-none`} />
           <div className="grid grid-cols-2 gap-1 relative z-10">
             {categories.map((category) => (
               <Link

@@ -52,8 +52,8 @@ CategoryLink.displayName = "CategoryLink";
 export default function MobileCategories({ posts }: MobileCategoriesProps) {
   const { allCategories, postsByCategory } = useMemo(() => {
     const categories = Array.from(
-      new Set(posts.map((post) => post.category).filter(Boolean))
-    ).sort() as string[];
+      new Set(posts.map((post) => post.category))
+    ).sort();
     const postsMap = categories.reduce((acc, category) => {
       acc[category] = posts.filter((post) => post.category === category);
       return acc;

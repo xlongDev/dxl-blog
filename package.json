@@ -4,12 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "node scripts/generateCache.js && next dev --turbo",
-    "build": "NODE_OPTIONS='--max-old-space-size=8192' contentlayer build && node scripts/generateCache.js && NODE_OPTIONS='--max-old-space-size=8192' next build",
+    "build": "next build",
+    "prebuild": "contentlayer build && node scripts/generateCache.js",
     "start": "next start",
     "lint": "next lint",
-    "contentlayer": "contentlayer build",
-    "build:incremental": "NODE_OPTIONS='--max-old-space-size=8192' contentlayer build --incremental && node scripts/generateCache.js && NODE_OPTIONS='--max-old-space-size=8192' next build",
-    "build:clean": "rm -rf .next .contentlayer public/cache && pnpm run build"
+    "contentlayer": "contentlayer build"
   },
   "dependencies": {
     "@codemirror/basic-setup": "^0.20.0",
@@ -81,10 +80,14 @@
       "esbuild",
       "parse-entities",
       "protobufjs",
-      "sharp"
+      "sharp",
+      "next",
+      "react",
+      "react-dom"
     ],
     "ignoredBuiltDependencies": [
-      "@swc/core"
+      "@swc/core",
+      "unrs-resolver"
     ]
   },
   "packageManager": "pnpm@10.9.0+sha512.0486e394640d3c1fb3c9d43d49cf92879ff74f8516959c235308f5a8f62e2e19528a65cdc2a3058f587cde71eba3d5b56327c8c33a97e4c4051ca48a10ca2d5f"
