@@ -7,7 +7,9 @@
     "build": "NODE_OPTIONS='--max-old-space-size=8192' contentlayer build && node scripts/generateCache.js && NODE_OPTIONS='--max-old-space-size=8192' next build",
     "start": "next start",
     "lint": "next lint",
-    "contentlayer": "contentlayer build"
+    "contentlayer": "contentlayer build",
+    "build:incremental": "NODE_OPTIONS='--max-old-space-size=8192' contentlayer build --incremental && node scripts/generateCache.js && NODE_OPTIONS='--max-old-space-size=8192' next build",
+    "build:clean": "rm -rf .next .contentlayer public/cache && pnpm run build"
   },
   "dependencies": {
     "@codemirror/basic-setup": "^0.20.0",

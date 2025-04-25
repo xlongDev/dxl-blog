@@ -27,11 +27,24 @@ export const Post = defineDocumentType(() => ({
   },
 }));
 
-export default makeSource({
+const config = makeSource({
   contentDirPath: "content",
   documentTypes: [Post],
   mdx: {
     remarkPlugins: [remarkGfm],
-    rehypePlugins: [[rehypePrettyCode as any, { theme: "github-dark" }]],
+    rehypePlugins: [
+      [
+        rehypePrettyCode as any,
+        {
+          theme: "github-dark",
+          keepBackground: false,
+          defaultLang: "text",
+          filterMetaString: (str: string) =>
+            str.replace(/filename="[^"]*"/, ""),
+        },
+      ],
+    ],
   },
 });
+
+export default config;

@@ -82,37 +82,37 @@ const nextConfig = {
     }
 
     // 优化客户端构建性能
-    // if (!isServer) {
-    //   config.optimization = {
-    //     ...config.optimization,
-    //     splitChunks: {
-    //       chunks: "all",
-    //       minSize: 20000,
-    //       maxSize: 200000, // 减小 maxSize，提升加载速度
-    //       minChunks: 1,
-    //       maxAsyncRequests: 30,
-    //       maxInitialRequests: 30,
-    //       cacheGroups: {
-    //         defaultVendors: {
-    //           test: /[\\/]node_modules[\\/]/,
-    //           priority: -10,
-    //           reuseExistingChunk: true,
-    //         },
-    //         default: {
-    //           minChunks: 2,
-    //           priority: -20,
-    //           reuseExistingChunk: true,
-    //         },
-    //         contentlayer: {
-    //           test: /[\\/]node_modules[\\/](contentlayer|rehype-pretty-code|remark-gfm)[\\/]/,
-    //           name: "contentlayer",
-    //           priority: -5,
-    //           reuseExistingChunk: true,
-    //         },
-    //       },
-    //     },
-    //   };
-    // }
+    if (!isServer) {
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          chunks: "all",
+          minSize: 20000,
+          maxSize: 200000,
+          minChunks: 1,
+          maxAsyncRequests: 30,
+          maxInitialRequests: 30,
+          cacheGroups: {
+            defaultVendors: {
+              test: /[\\/]node_modules[\\/]/,
+              priority: -10,
+              reuseExistingChunk: true,
+            },
+            default: {
+              minChunks: 2,
+              priority: -20,
+              reuseExistingChunk: true,
+            },
+            contentlayer: {
+              test: /[\\/]node_modules[\\/](contentlayer|rehype-pretty-code|remark-gfm)[\\/]/,
+              name: "contentlayer",
+              priority: -5,
+              reuseExistingChunk: true,
+            },
+          },
+        },
+      };
+    }
 
     // 启用 SWC 编译器加速 MDX 处理
     config.module.rules.push({
