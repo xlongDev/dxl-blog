@@ -1,0 +1,437 @@
+---
+type: "Post"
+title: "50个 Vue 高频面试题：从入门到精通的硬核指南"
+date: "2023-06-15"
+description: "全面解析 Vue.js 高频面试题，深入原理，结合实例，带你从基础到进阶，轻松应对前端面试。"
+keywords: "Vue.js, 面试题, 前端开发, 响应式原理, Vue 3, Composition API, 虚拟 DOM, 组件化"
+author: "晓龙"
+image: "/images/hero/vue-interview.jpg"
+tags: ["精选", "面试", "Vue.js", "JavaScript"]
+category: "Vue.js"
+---
+
+Hey，前端小伙伴们 👋！准备好迎接 Vue.js 面试的“狂轰滥炸”了吗？Vue 是前端开发者的“瑞士军刀”，简单易上手，却又深藏不露。今天，我为你准备了 **50 个高频面试题**，从基础到进阶，从“是什么”到“怎么用得更好”，带你全面掌握 Vue 的精髓。无论你是新手还是老司机，这篇硬核指南都能让你有所收获 🚀。
+
+我尽量让内容接地气，少点“AI味儿”，多点人情味儿，偶尔抖个机灵，但绝不失专业性。每个问题都会有**代码示例**、**原理剖析**和**最佳实践**，还有类比和 emoji 助你秒懂。Let’s dive in!
+
+---
+
+## 一、基础篇：打好地基，才能盖高楼
+
+### 1. Vue.js 是什么？它和 React、Angular 有啥区别？
+Vue.js 是一个渐进式 JS 框架，核心聚焦视图层，轻量到可以用 `<script>` 引入，却能扩展支持复杂应用。
+- **React**：自由度高，但得自己组装生态。
+- **Angular**：全家桶齐全，学习曲线陡。
+- **Vue**：平衡点，内置 Vuex 和 Vue Router。
+**类比**：React 是乐高，Vue 是宜家家具，Angular 是装修队。
+
+---
+
+### 2. Vue 的响应式原理是什么？Vue 2 和 Vue 3 有啥不同？
+Vue 的响应式让数据变化自动更新视图。
+- **Vue 2**：`Object.defineProperty` 劫持属性。
+  ```javascript
+  Object.defineProperty(obj, "key", { set(val) { console.log("更新"); } });
+  ```
+  **缺点**：新增属性无响应。
+- **Vue 3**：`Proxy` 代理对象。
+  ```javascript
+  const proxy = new Proxy({ key: 0 }, { set(target, key, val) { target[key] = val; return true; } });
+  ```
+  **优势**：支持动态属性。
+**类比**：Vue 2 是“逐个检查”，Vue 3 是“全局监控”。
+
+---
+
+### 3. v-bind 和 v-model 的区别是什么？
+- `v-bind`：单向绑定，数据 → DOM。
+- `v-model`：双向绑定，数据 ↔ DOM。
+  ```javascript
+  // v-model 等价于
+  <input :value="text" @input="text = $event.target.value">
+  ```
+**最佳实践**：表单用 `v-model`，属性用 `v-bind`。
+
+---
+
+### 4. Vue 的生命周期有哪些？每个阶段能干啥？
+8 个钩子：
+1. **beforeCreate**：啥都不可用。
+2. **created**：发请求。
+3. **beforeMount**：模板编译好。
+4. **mounted**：操作 DOM。
+5. **beforeUpdate**：数据更新前。
+6. **updated**：DOM 更新后。
+7. **beforeUnmount**：清理资源。
+8. **unmounted**：销毁完成。
+**示例**：
+```javascript
+mounted() { this.$refs.div.style.color = "red"; }
+```
+
+---
+
+### 5. 什么是 MVVM？Vue 怎么体现？
+MVVM = Model（数据） + View（视图） + ViewModel（连接层）。Vue 用响应式和指令实现。
+**类比**：Model 是“食材”，View 是“盘子”，ViewModel 是“厨师”。
+
+---
+
+## 二、进阶篇：从“会用”到“玩转”
+
+### 6. Vue 的虚拟 DOM 是怎么回事？为啥要用它？
+虚拟 DOM 是真实 DOM 的 JS 镜像。
+**流程**：数据变 → 新虚拟 DOM → diff → 更新。
+```javascript
+const vnode = { tag: "div", children: [{ tag: "p", text: "hi" }] };
+```
+**为啥用**：批量更新比直接操作 DOM 高效。
+
+---
+
+### 7. Composition API 和 Options API 有什么区别？
+- **Options**：按类型组织。
+  ```javascript
+  data() { return { count: 0 }; }
+  ```
+- **Composition**：按功能组织。
+  ```javascript
+  import { ref } from "vue";
+  setup() { const count = ref(0); return { count }; }
+  ```
+**类比**：Options 是“按房间分”，Composition 是“按用途打包”。
+
+---
+
+### 8. 如何实现一个自定义指令？
+```javascript
+app.directive("focus", { mounted(el) { el.focus(); } });
+```
+```html
+<input v-focus />
+```
+**进阶**：带参数。
+```javascript
+app.directive("pin", { mounted(el, binding) { el.style.top = binding.value + "px"; } });
+```
+
+---
+
+### 9. nextTick 是干嘛用的？原理是什么？
+确保 DOM 更新后执行。
+```javascript
+this.text = "新值";
+this.$nextTick(() => console.log(this.$refs.text.innerText));
+```
+**原理**：用微任务（如 `Promise`）延迟执行。
+
+---
+
+### 10. Vue 的组件通信有哪些方式？
+1. **Props/$emit**：
+   ```javascript
+   <Child :msg="msg" @update="msg = $event" />
+   ```
+2. **$refs**：
+   ```javascript
+   this.$refs.child.method();
+   ```
+3. **Event Bus**。
+4. **Vuex/Pinia**。
+
+---
+
+### 11. watch 和 computed 的区别是什么？
+- **computed**：有缓存。
+  ```javascript
+  computed: { total() { return this.a + this.b; } }
+  ```
+- **watch**：适合异步。
+  ```javascript
+  watch: { a(val) { console.log(val); } }
+  ```
+
+---
+
+### 12. 如何实现动态组件？
+```html
+<component :is="currentComp"></component>
+```
+```javascript
+data() { return { currentComp: "CompA" }; }
+```
+
+---
+
+### 13. Vue 的 slot 是怎么工作的？
+```html
+<MyComp><p>插槽内容</p></MyComp>
+<template><slot></slot></template>
+```
+**具名插槽**：
+```html
+<slot name="header"></slot>
+```
+
+---
+
+### 14. Vue 3 的 reactive 和 ref 有什么不同？
+- **ref**：需 `.value`。
+  ```javascript
+  const count = ref(0); count.value++;
+  ```
+- **reactive**：自动解包。
+  ```javascript
+  const obj = reactive({ count: 0 }); obj.count++;
+  ```
+
+---
+
+### 15. 如何处理 Vue 项目中的 SEO？
+1. **SSR**：用 Nuxt。
+2. **预渲染**。
+3. **动态元标签**：
+   ```javascript
+   useHead({ title: "页面" });
+   ```
+
+---
+
+## 三、实战篇：面试官爱问的“坑”
+
+### 16. v-if 和 v-show 的区别？
+- `v-if`：不渲染。
+- `v-show`：隐藏。
+
+---
+
+### 17. key 在 v-for 中有什么作用？
+优化 diff。
+```html
+<li v-for="item in list" :key="item.id">{{ item }}</li>
+```
+
+---
+
+### 18. 如何避免内存泄漏？
+```javascript
+beforeUnmount() { clearInterval(this.timer); }
+```
+
+---
+
+### 19. Vue Router 的导航守卫有哪些？
+```javascript
+router.beforeEach((to, from, next) => { next(); });
+```
+
+---
+
+### 20. Vuex 的核心概念是什么？
+State、Getters、Mutations、Actions、Modules。
+
+---
+
+### 21. Pinia 和 Vuex 的区别？
+Pinia 更轻量，无 Mutations。
+```javascript
+defineStore("store", { state: () => ({ count: 0 }) });
+```
+
+---
+
+### 22. 如何实现 Vue 的 SSR？
+用 Nuxt 或 `vue/server-renderer`。
+
+---
+
+### 23. Teleport 在 Vue 3 中怎么用？
+```html
+<teleport to="body"><div>弹窗</div></teleport>
+```
+
+---
+
+### 24. Suspense 是干嘛的？
+处理异步组件。
+```html
+<Suspense><MyAsyncComp /></Suspense>
+```
+
+---
+
+### 25. Vue 的混入（Mixin）有什么优缺点？
+**优点**：复用逻辑。
+**缺点**：命名冲突。
+```javascript
+const mixin = { methods: { log() { console.log("hi"); } } };
+```
+
+---
+
+### 26. 如何调试 Vue 组件？
+用 Vue Devtools。
+
+---
+
+### 27. Vue 的依赖注入怎么用？
+```javascript
+provide("key", "value");
+inject("key");
+```
+
+---
+
+### 28. 如何实现按需加载？
+```javascript
+const Comp = () => import("./Comp.vue");
+```
+
+---
+
+### 29. Vue 的 keep-alive 怎么用？
+缓存组件。
+```html
+<keep-alive><Comp /></keep-alive>
+```
+
+---
+
+### 30. 如何处理表单验证？
+用 Vuelidate 或自定义。
+```javascript
+if (!this.form.name) this.errors.name = "必填";
+```
+
+---
+
+### 31. Vue 的指令修饰符有哪些？
+如 `.prevent`、`stop`。
+
+---
+
+### 32. 如何优化大型列表渲染？
+用 `v-for` + 分页或虚拟滚动。
+
+---
+
+### 33. Vue 的 diff 算法原理？
+比较新旧虚拟 DOM，找最小更新。
+
+---
+
+### 34. 如何实现一个插件？
+```javascript
+const plugin = { install(app) { app.config.globalProperties.$say = () => "hi"; } };
+```
+
+---
+
+### 35. Vue 的错误处理怎么做？
+```javascript
+app.config.errorHandler = (err) => console.error(err);
+```
+
+---
+
+### 36. 如何实现多语言支持？
+用 vue-i18n。
+```javascript
+i18n.t("hello");
+```
+
+---
+
+### 37. Vue 的性能监控怎么做？
+用 Performance API 或 Vue Devtools。
+
+---
+
+### 38. 如何处理图片懒加载？
+用 `v-lazy` 或 IntersectionObserver。
+
+---
+
+### 39. Vue 的过渡动画怎么写？
+```html
+<transition name="fade"><div v-if="show"></div></transition>
+```
+
+---
+
+### 40. 如何实现组件缓存？
+用 `<keep-alive>`。
+
+---
+
+### 41. Vue 的作用域插槽是什么？
+```html
+<slot :data="data"></slot>
+<template v-slot="{ data }">{{ data }}</template>
+```
+
+---
+
+### 42. 如何处理跨域请求？
+用代理：
+```javascript
+devServer: { proxy: { "/api": "http://localhost:3000" } }
+```
+
+---
+
+### 43. Vue 的单元测试怎么写？
+用 Jest + Vue Test Utils。
+```javascript
+test("renders", () => { expect(wrapper.text()).toBe("hi"); });
+```
+
+---
+
+### 44. 如何实现自定义 v-model？
+```javascript
+model: { prop: "value", event: "update:value" }
+```
+
+---
+
+### 45. Vue 的编译过程是怎样的？
+模板 → AST → 渲染函数。
+
+---
+
+### 46. 如何避免 XSS 攻击？
+用 `v-html` 时过滤：
+```javascript
+import sanitizeHtml from "sanitize-html";
+```
+
+---
+
+### 47. Vue 的 Tree Shaking 怎么用？
+用 ES Module，确保打包工具支持。
+
+---
+
+### 48. 如何实现动态路由？
+```javascript
+{ path: "/user/:id", component: User }
+```
+
+---
+
+### 49. Vue 的 hydrate 是什么？
+SSR 后客户端激活。
+
+---
+
+### 50. 如何优化首屏加载？
+懒加载、压缩资源、用 CDN。
+
+---
+
+## 结语
+50 个问题，从基础到实战，涵盖 Vue 的方方面面。希望你能从中找到面试的“通关秘籍”！有想深入的，留言告诉我，我再给你“开小灶” 😎。
+
+
+---

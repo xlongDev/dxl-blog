@@ -1,0 +1,437 @@
+---
+type: "Post"
+title: "从零搭建一个 Vue3 + TS + Vite 脚手架：从混沌到优雅的开发体验"
+date: "2024-01-08"
+description: "手把手带你从零搭建一个现代化的 Vue3 + TypeScript + Vite 脚手架，深入原理，分享最佳实践，打造一个高效、优雅的前端开发环境。"
+keywords: "Vue3, TypeScript, Vite, 脚手架, 前端开发, 构建工具, 开发体验, 最佳实践"
+author: "晓龙"
+image: "/images/hero/vue3-vite-ts.jpg"
+tags: ["Vue.js", "TypeScript", "Vite", "前端工程化"]
+category: "前端工程化"
+
+---
+
+嗨，前端小伙伴们 👋！今天我们要一起干一件大事——从零搭建一个 Vue3 + TypeScript + Vite 的脚手架！这不是那种“npm create vue@latest”一键搞定的流水线操作，而是带你深入到每一个配置的灵魂深处，像个手艺人一样打磨出一个属于你自己的开发环境。为什么要这么做？因为理解原理比盲目复制粘贴更重要，而且，谁不想在面试官问“你的项目是怎么搭建的”时，甩出一堆硬核细节让他目瞪口呆呢？😎
+
+这篇文章会很长（毕竟要榨干我的 token 量），但我会尽量让它有趣、实用、有深度。准备好了吗？让我们从混沌中杀出一条优雅的路！
+
+## 为什么选择 Vue3 + TS + Vite？
+
+在动手之前，先聊聊为什么选这三位“天皇巨星”组成我们的梦幻阵容：
+
+- **Vue3**：响应式系统的全面升级（Proxy 取代 Object.defineProperty），Composition API 的灵活性，Tree-shaking 的优化，简直是“新手友好，老手爱不释手”。
+- **TypeScript**：静态类型检查，代码补全，减少运行时 bug，尤其是项目变大时，TS 就像你的私人助理，帮你把错误扼杀在摇篮里。
+- **Vite**：基于 ES Modules 的极速构建工具，开发时几乎零等待，生产环境 Rollup 打包，效率和体验双杀 Webpack。
+
+类比一下：Vue3 是“灵活的厨师”，TS 是“严谨的营养师”，Vite 是“闪电般的服务员”，三者合作开了一家米其林三星餐厅——我们的项目。
+
+## 动手前的准备
+
+### 工具清单
+- Node.js（建议 v16+，因为 Vite 对低版本支持不太友好）
+- npm 或 pnpm（我用 pnpm，因为它更快、更节省磁盘空间）
+- 一颗好奇心和一杯咖啡 ☕
+
+### 初始化项目
+打开终端，敲下这行命令：
+
+```bash
+pnpm init
+```
+
+这会生成一个 `package.json`，我们项目的起点。别急着装依赖，先规划一下我们要干啥：
+
+1. 安装核心依赖（Vue3、Vite）
+2. 配置 TS 支持
+3. 设置目录结构
+4. 加入 ESLint 和 Prettier（代码规范不能少）
+5. 配置路径别名、代理等实用功能
+
+## 第一步：安装核心依赖
+
+### 安装 Vite 和 Vue3
+
+运行以下命令：
+
+```bash
+pnpm add vue vite -D
+pnpm add vue -S
+```
+
+`-D` 是开发依赖，`-S` 是生产依赖。Vite 只需要在开发时用，所以是 `-D`，而 Vue 是运行时的核心，放进 `-S`。
+
+### 创建入口文件
+
+新建 `index.html`：
+
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vue3 + TS + Vite</title>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
+```
+
+注意 `type="module"`，这是 Vite 的魔法所在，利用浏览器原生 ES Modules 加载文件。
+
+接着创建 `src/main.ts`：
+
+```ts
+import { createApp } from 'vue'
+import App from './App.vue'
+
+createApp(App).mount('#app')
+```
+
+再来一个 `src/App.vue`：
+
+```vue
+<template>
+  <div>
+    <h1>欢迎来到 Vue3 + TS + Vite 的世界！🚀</h1>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'App'
+}
+</script>
+
+<style scoped>
+h1 {
+  color: #42b983;
+}
+</style>
+```
+
+### 配置 Vite
+
+新建 `vite.config.ts`：
+
+```ts
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+
+export default defineConfig({
+  plugins: [vue()]
+})
+```
+
+这里我们用到了 `@vitejs/plugin-vue`，它让 Vite 能解析 `.vue` 文件。运行以下命令安装：
+
+```bash
+pnpm add @vitejs/plugin-vue -D
+```
+
+### 启动项目
+
+在 `package.json` 加个脚本：
+
+```json
+"scripts": {
+  "dev": "vite",
+  "build": "vite build",
+  "preview": "vite preview"
+}
+```
+
+敲下 `pnpm dev`，浏览器打开 `http://localhost:5173`，看到绿色的大标题了吗？恭喜，第一步成功！🎉
+
+**Tips**: 如果端口被占用了，别慌，Vite 默认会递增端口，或者在 `vite.config.ts` 里加 `server: { port: 3000 }` 指定端口。
+
+## 第二步：引入 TypeScript
+
+### 安装 TS
+
+```bash
+pnpm add typescript -D
+```
+
+初始化 TS 配置文件：
+
+```bash
+npx tsc --init
+```
+
+这会生成一个 `tsconfig.json`，我们稍微调整一下：
+
+```json
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "strict": true,
+    "jsx": "preserve",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
+}
+```
+
+- `strict: true`：开启严格模式，TS 的精髓，不能偷懒！
+- `paths`：配置路径别名，后面会用到。
+
+### 修改文件后缀
+
+把 `src/main.ts` 重命名为 `src/main.ts`，其实已经是对的（笑）。但 `App.vue` 需要改成 TS 风格：
+
+```vue
+<template>
+  <div>
+    <h1>欢迎来到 Vue3 + TS + Vite 的世界！🚀</h1>
+  </div>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+  name: 'App'
+})
+</script>
+
+<style scoped>
+h1 {
+  color: #42b983;
+}
+</style>
+```
+
+加上 `lang="ts"` 和 `defineComponent`，TS 就能识别了。
+
+**Tips**: `defineComponent` 不仅是为了 TS 类型推导，还能让 IDE 提供更好的代码补全，别小看它！
+
+## 第三步：优化目录结构
+
+一个好的脚手架，目录结构得清晰。推荐这样组织：
+
+```
+├── public/           # 静态资源
+├── src/
+│   ├── assets/       # 图片、样式等静态资源
+│   ├── components/   # 公共组件
+│   ├── views/        # 页面组件
+│   ├── router/       # 路由配置
+│   ├── store/        # 状态管理
+│   ├── api/          # 接口请求
+│   ├── utils/        # 工具函数
+│   ├── types/        # TS 类型定义
+│   ├── App.vue       # 根组件
+│   └── main.ts       # 入口文件
+├── vite.config.ts    # Vite 配置
+├── tsconfig.json     # TS 配置
+└── package.json
+```
+
+**Tips**: 按功能模块分目录，比如 `api/user.ts`、`api/order.ts`，比一股脑塞进 `services` 更直观。
+
+## 第四步：添加路由（Vue Router）
+
+### 安装 Vue Router
+
+```bash
+pnpm add vue-router@4
+```
+
+新建 `src/router/index.ts`：
+
+```ts
+import { createRouter, createWebHistory } from 'vue-router'
+import Home from '@/views/Home.vue'
+
+const routes = [
+  {
+    path: '/',
+    name: 'Home',
+    component: Home
+  },
+  {
+    path: '/about',
+    name: 'About',
+    component: () => import('@/views/About.vue')
+  }
+]
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes
+})
+
+export default router
+```
+
+修改 `src/main.ts`：
+
+```ts
+import { createApp } from 'vue'
+import App from './App.vue'
+import router from './router'
+
+createApp(App).use(router).mount('#app')
+```
+
+新建 `src/views/Home.vue` 和 `src/views/About.vue`，内容随意，比如：
+
+```vue
+<!-- Home.vue -->
+<template>
+  <h2>Home Page</h2>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+export default defineComponent({
+  name: 'Home'
+})
+</script>
+```
+
+**Tips**: 用 `@` 别名引用路径，既简洁又避免相对路径的麻烦。懒加载（`import()`）能提升首屏速度，记得多用！
+
+## 第五步：代码规范与格式化
+
+### 安装 ESLint 和 Prettier
+
+```bash
+pnpm add eslint eslint-plugin-vue @typescript-eslint/parser @typescript-eslint/eslint-plugin prettier eslint-config-prettier eslint-plugin-prettier -D
+```
+
+配置 `.eslintrc.js`：
+
+```js
+module.exports = {
+  env: {
+    browser: true,
+    es2021: true,
+    node: true
+  },
+  extends: [
+    'eslint:recommended',
+    'plugin:vue/vue3-recommended',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:prettier/recommended'
+  ],
+  parserOptions: {
+    parser: '@typescript-eslint/parser',
+    sourceType: 'module'
+  },
+  plugins: ['vue', '@typescript-eslint'],
+  rules: {
+    'prettier/prettier': 'error',
+    '@typescript-eslint/no-unused-vars': ['error']
+  }
+}
+```
+
+配置 `.prettierrc`：
+
+```json
+{
+  "semi": false,
+  "singleQuote": true,
+  "trailingComma": "es5"
+}
+```
+
+**Tips**: 在 VSCode 装上 ESLint 和 Prettier 插件，保存时自动格式化，省心又规范。
+
+## 第六步：高级配置与最佳实践
+
+### 配置路径别名
+
+在 `vite.config.ts` 中加：
+
+```ts
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import path from 'path'
+
+export default defineConfig({
+  plugins: [vue()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src')
+    }
+  }
+})
+```
+
+别忘了装 `path`：`pnpm add @types/node -D`。
+
+### 配置代理
+
+开发时跨域怎么办？加个代理：
+
+```ts
+export default defineConfig({
+  // ...
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://your-api.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
+  }
+})
+```
+
+**Tips**: 代理路径用 `/api` 开头是个好习惯，和后端约定一致，避免混乱。
+
+### 环境变量
+
+新建 `.env.development` 和 `.env.production`：
+
+```
+# .env.development
+VITE_API_BASE_URL=http://dev-api.com
+```
+
+```
+# .env.production
+VITE_API_BASE_URL=https://prod-api.com
+```
+
+在 `vite.config.ts` 中读取：
+
+```ts
+export default defineConfig({
+  // ...
+  define: {
+    'process.env': {}
+  }
+})
+```
+
+使用时：
+
+```ts
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
+```
+
+**Tips**: 环境变量用 `VITE_` 前缀，Vite 会自动暴露给客户端，别用 `NODE_ENV`，那是 Node 的专属。
+
+## 写在最后
+
+从零搭建一个 Vue3 + TS + Vite 脚手架，就像搭积木，既要稳（规范），又要快（效率）。我们走了很长的路，从核心依赖到路由、代码规范，再到高级配置，每一步都在为更好的开发体验铺路。希望你能感受到其中的乐趣，也能从中找到属于自己的“脚手架哲学”。
+
+有啥问题，随时留言，咱们一起搞定！下次见，保持热爱，保持 coding！✌️
+
+--- 

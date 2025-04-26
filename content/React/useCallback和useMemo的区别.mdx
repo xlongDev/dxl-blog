@@ -1,0 +1,314 @@
+---
+type: "Post"
+title: "useCallback 和 useMemo 的区别？"
+date: "2023-10-02"
+description: "深入探讨 React 中的 useCallback 和 useMemo 钩子，了解它们的区别、应用场景和最佳实践，助你写出更高效的代码。"
+keywords: "React, useCallback, useMemo, 性能优化, 钩子, 记忆化, 函数式组件, 前端开发"
+author: "晓龙"
+image: "/images/hero/react-hooks.jpg"
+tags: ["React", "前端开发", "JavaScript"]
+category: "React"
+---
+
+React 是前端开发中的“老大哥”，而它的 Hooks 系统就像给开发者递上了一把趁手的瑞士军刀。其中，`useCallback` 和 `useMemo` 是两把特别锋利的“刀”，都能帮我们优化性能，但用法和场景却大不相同。写这篇博客时，我的目标是把这两者的区别讲得透彻、实用又有意思，适合从 React 新手到老司机的前端开发者。咱们会从基本概念聊到深入原理，配上例子、类比和最佳实践，还会带点小幽默（毕竟代码太枯燥谁受得了）。准备好了吗？让我们开始这场“记忆化”之旅吧！🚀
+
+---
+
+## 什么是 useCallback 和 useMemo？
+
+在搞清楚区别之前，先得弄明白这两兄弟是干啥的。简单来说，它们都是 React 的“记忆大师”，帮我们在组件渲染时记住东西，避免不必要的重复工作。
+
+### **useCallback：函数的“记忆胶囊”**
+
+`useCallback` 是一个专门用来记忆化函数的钩子。它的签名长这样：
+
+```jsx
+const memoizedCallback = useCallback(() => {
+  // 你想记住的函数逻辑
+}, [dependency1, dependency2]);
+```
+
+- **输入**：一个回调函数 + 一个依赖数组。
+- **输出**：一个被“冻结”的函数实例。
+- **特点**：只要依赖数组没变，它返回的函数引用就保持不变。
+
+类比一下，`useCallback` 就像给函数包了个“时间胶囊”，除非依赖变了，不然里面的函数永远是“年轻时的模样”。
+
+### **useMemo：值的“缓存保险箱”**
+
+`useMemo` 则是用来记忆化值的钩子，签名是这样的：
+
+```jsx
+const memoizedValue = useMemo(() => computeExpensiveValue(a, b), [a, b]);
+```
+
+- **输入**：一个计算函数 + 一个依赖数组。
+- **输出**：计算出来的值（可以是任何类型：对象、数组、数字啥都行）。
+- **特点**：依赖不变，值就不重新计算。
+
+把它想象成一个“保险箱”，里面锁着昂贵的值，只有当钥匙（依赖）转动时，才会打开重新装东西。
+
+---
+
+## 核心区别：一图胜千言
+
+先来个直观的对比：
+
+| 特性            | useCallback                  | useMemo                    |
+|-----------------|------------------------------|----------------------------|
+| **返回值**      | 函数                        | 值（任意类型）             |
+| **主要用途**    | 优化函数引用稳定性          | 避免昂贵的值计算           |
+| **典型场景**    | 传递函数给子组件            | 缓存复杂计算结果           |
+| **依赖数组作用**| 决定函数是否重新创建        | 决定值是否重新计算         |
+
+一句话总结：**`useCallback` 管函数，`useMemo` 管值**。这就像是家里分工明确：哥哥管跑腿（函数），弟弟管存钱（值）。
+
+---
+
+## 深入 useCallback：函数的“稳定器”
+
+### **为什么需要 useCallback？**
+
+React 的函数式组件有个“坏习惯”：每次渲染都重新创建所有函数。这听起来没啥，但问题来了——如果这些函数被当作 props 传给子组件，而子组件又用了 `React.memo`（一个阻止不必要渲染的“门卫”），新函数引用会导致子组件误以为“有变化”，从而白白重新渲染。
+
+来看个例子：
+
+```jsx
+function Parent() {
+  const [count, setCount] = useState(0);
+
+  const handleClick = () => {
+    console.log('按钮被点了！');
+  };
+
+  return (
+    <div>
+      <button onClick={() => setCount(count + 1)}>加一</button>
+      <Child onClick={handleClick} />
+    </div>
+  );
+}
+
+const Child = React.memo(({ onClick }) => {
+  console.log('Child 渲染了');
+  return <button onClick={onClick}>点我</button>;
+});
+```
+
+点击“加一”按钮，`Parent` 重新渲染，`handleClick` 变成新函数，`Child` 跟着渲染，尽管 `onClick` 的逻辑没变。这就是性能浪费！
+
+用 `useCallback` 改一下：
+
+```jsx
+const handleClick = useCallback(() => {
+  console.log('按钮被点了！');
+}, []);
+```
+
+现在 `handleClick` 的引用稳定了，`Child` 不会瞎渲染。🎉
+
+**小贴士**：依赖数组为空时，函数只在首次渲染时创建。如果函数里用了外部变量（比如 `count`），记得加进依赖数组，不然会抓到“过期数据”的 bug。
+
+---
+
+## 深入 useMemo：计算的“省力神器”
+
+### **为什么需要 useMemo？**
+
+有些值的计算很“贵”，比如过滤大数据、排序复杂数组。如果每次渲染都重算一遍，性能直接“跪”。`useMemo` 就像个聪明管家，只在需要时干活。
+
+例子来了：
+
+```jsx
+function ExpensiveComponent({ data }) {
+  const processedData = processData(data); // 假设这是个超耗时的操作
+  return <div>{processedData}</div>;
+}
+```
+
+每次渲染都跑 `processData`，太浪费！加个 `useMemo`：
+
+```jsx
+const processedData = useMemo(() => processData(data), [data]);
+```
+
+现在只有 `data` 变时才重新计算，平时直接拿缓存，多省心！
+
+**小贴士**：`useMemo` 的计算函数要尽量纯（pure），别偷偷改外部状态，不然缓存就失去意义了。
+
+---
+
+## 实际案例：列表组件优化
+
+假设我们要写一个列表组件，数据需要过滤和排序，还要处理点击事件：
+
+```jsx
+function List({ items }) {
+  const filteredItems = useMemo(() => {
+    console.log('过滤中...');
+    return items.filter(item => item.active);
+  }, [items]);
+
+  const sortedItems = useMemo(() => {
+    console.log('排序中...');
+    return [...filteredItems].sort((a, b) => a.name.localeCompare(b.name));
+  }, [filteredItems]);
+
+  const handleClick = useCallback((item) => {
+    console.log(`点了 ${item.name}`);
+  }, []);
+
+  return (
+    <ul>
+      {sortedItems.map(item => (
+        <li key={item.id} onClick={() => handleClick(item)}>
+          {item.name}
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+- **`useMemo`**：缓存 `filteredItems` 和 `sortedItems`，避免重复计算。
+- **`useCallback`**：稳定 `handleClick`，让每个 `<li>` 的 `onClick` 不触发多余渲染。
+
+运行一下，点击列表项只打印点击日志，过滤和排序不会重复执行。效率满分！💪
+
+---
+
+## 原理揭秘：它们是怎么记住东西的？
+
+想更 geek 一点？咱们聊聊内部机制（伪代码警告⚠️）。
+
+### **useMemo 的秘密**
+
+```javascript
+function useMemo(factory, deps) {
+  const memoized = useRef();
+
+  if (!memoized.current || !shallowEqual(memoized.current.deps, deps)) {
+    memoized.current = { value: factory(), deps };
+  }
+
+  return memoized.current.value;
+}
+```
+
+- 检查依赖是否变了，没变就返回缓存，变了就重新算。
+- 用 `useRef` 存着上一次的结果，持久又高效。
+
+### **useCallback 的真相**
+
+```javascript
+function useCallback(callback, deps) {
+  return useMemo(() => callback, deps);
+}
+```
+
+看到了吗？`useCallback` 其实是 `useMemo` 的“马甲”，只不过它返回的是函数。这也解释了为啥它们的依赖数组用法一样。
+
+**小贴士**：理解原理能帮你更自信地用它们，但别被源码吓到，React 的封装已经很友好啦。
+
+---
+
+## 最佳实践与常见坑
+
+### **1. 别滥用：记忆化不是免费的**
+
+`useCallback` 和 `useMemo` 本身有开销（内存+检查依赖），用多了反而拖慢速度。
+
+**最佳实践**：只在“真需要”时用，比如子组件渲染优化或计算量大时。
+
+**小贴士**：用 React DevTools 看看渲染频率，确认优化效果，别凭感觉乱加。
+
+### **2. 依赖数组：别漏也别多**
+
+漏了依赖会导致 bug（用旧值），多加无用依赖会频繁重算。
+
+**最佳实践**：装个 ESLint 插件 `react-hooks/exhaustive-deps`，它会提醒你。
+
+**小贴士**：写代码时问自己：“这变量变了，函数/值需要变吗？”答案是“是”就加进去。
+
+### **3. useCallback 不是万能药**
+
+不是所有函数都需要 `useCallback`，没传给子组件的函数加了反而多此一举。
+
+**最佳实践**：只给影响子组件渲染的函数用 `useCallback`。
+
+**小贴士**：想想“这个函数不稳定会咋样”，没影响就别管它。
+
+### **4. useMemo 要“值”得用**
+
+如果计算成本低（比如简单加减），`useMemo` 的缓存开销可能比直接算还高。
+
+**最佳实践**：用在复杂操作上，比如大数据处理、深层对象比较。
+
+**小贴士**：可以用 `console.time` 测试一下计算时间，量化一下值不值。
+
+---
+
+## 进阶场景：复杂例子
+
+假设我们要做个实时搜索的输入框，带高亮匹配：
+
+```jsx
+function SearchBox({ items }) {
+  const [query, setQuery] = useState('');
+
+  const filteredItems = useMemo(() => {
+    const regex = new RegExp(query, 'i');
+    return items.filter(item => regex.test(item.name));
+  }, [items, query]);
+
+  const highlightedItems = useMemo(() => {
+    return filteredItems.map(item => ({
+      ...item,
+      highlightedName: item.name.replace(
+        new RegExp(query, 'i'),
+        match => `<mark>${match}</mark>`
+      ),
+    }));
+  }, [filteredItems, query]);
+
+  const handleSelect = useCallback((item) => {
+    setQuery(item.name);
+  }, []);
+
+  return (
+    <div>
+      <input value={query} onChange={e => setQuery(e.target.value)} />
+      <ul>
+        {highlightedItems.map(item => (
+          <li
+            key={item.id}
+            onClick={() => handleSelect(item)}
+            dangerouslySetInnerHTML={{ __html: item.highlightedName }}
+          />
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+- **`useMemo`**：`filteredItems` 和 `highlightedItems` 缓存过滤和高亮结果，避免输入时重复算。
+- **`useCallback`**：`handleSelect` 保持稳定，列表项点击不触发多余渲染。
+
+输入时只有 `query` 变的部分重新计算，体验流畅，性能拉满！
+
+---
+
+## 总结：选择你的“记忆大师”
+
+- **需要稳定函数？** 用 `useCallback`，让子组件安心。
+- **需要缓存值？** 用 `useMemo`，省下计算力气。
+- **都不确定？** 先分析瓶颈，别乱加“魔法”。
+
+这两兄弟就像代码里的“记忆助理”，但别指望它们包治百病。合理使用，结合工具调试，你的 React 应用会又快又稳。
+
+**幽默彩蛋**：`useCallback` 和 `useMemo` 是 React 的“健脑丸”，但别吃太多，小心“记忆过载”——毕竟，连程序员自己都记不住昨天写的代码！😜
+
+---
+
+希望这篇博客能让你对 `useCallback` 和 `useMemo` 了如指掌！有啥疑问或想法，欢迎留言，咱们一起聊聊 React 的“优化秘籍”！✨

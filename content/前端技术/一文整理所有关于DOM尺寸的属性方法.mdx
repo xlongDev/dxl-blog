@@ -1,0 +1,328 @@
+---
+type: "Post"
+title: "一文整理所有关于 DOM 尺寸的属性、方法"
+date: "2023-01-22"
+description: "深入剖析 DOM 尺寸相关的所有属性和方法，带你从表象到原理，配上表格、示例和最佳实践，助你成为尺寸操控大师。"
+keywords: "DOM, JavaScript, 前端开发, offsetWidth, clientHeight, getBoundingClientRect, 尺寸计算, 浏览器渲染, 性能优化"
+author: "晓龙"
+image: "/images/hero/dom-size-guide.jpg"
+tags: ["JavaScript", "DOM", "前端开发"]
+category: "前端技术"
+---
+
+尺寸，是前端开发者的宿命。从“这个按钮为什么比设计稿小 2px”到“为什么这个 div 撑爆了容器”，DOM 尺寸问题就像生活中的 Wi-Fi 信号——你以为一切正常，直到它突然崩了。作为一个饱经风霜的前端人，我决定把所有跟 DOM 尺寸沾边的属性和方法整理成一篇“尺寸圣经”，带你从表象深入原理，配上表格、代码示例和最佳实践，让你下次遇到尺寸问题时能淡定地说：“哦，这个啊，我熟。”
+
+这篇文章不仅是一份技术清单，更是一场关于 DOM 尺寸的冒险。我们会聊聊耳熟能详的属性（比如 `offsetWidth` 和 `clientHeight`），也会挖掘冷门但超实用的方法（比如 `ResizeObserver` 和 `getComputedStyle`）。我会尽量把内容塞满，像打包行李箱一样撑到爆，但保证逻辑清晰不乱套。准备好了吗？让我们一起跳进 DOM 尺寸的兔子洞 🐇！
+
+## 为什么要关心 DOM 尺寸？
+
+在前端世界里，尺寸不仅仅是数字，它是用户体验的基石。一个按钮太小，点不到；一个弹窗太大，挡住视线——这些都可能是尺寸计算失误的“杰作”。更别提现代 Web 的复杂布局：Flexbox、Grid、响应式设计，每一个像素都可能是成败的关键。尺寸属性和方法是浏览器提供给我们的“尺子”，帮我们测量、调整、优化。但这些尺子各有脾气，有的带边框，有的忽略滚动条，有的还得考虑缩放。要用好它们，得先搞清楚它们的“性格”。
+
+本文将从属性、方法、工具三个维度展开，最后附上性能优化和实战场景。别眨眼，干货多到你想喊“停”！
+
+## DOM 尺寸属性全家福：一张表格看懂
+
+先上个总览表格，方便你快速定位每个属性的用途和特点。后面我会逐一展开，带上代码、“晓龙独家 tips”和一些“防坑指南”。
+
+| 属性/方法                   | 返回值类型 | 包含内容                      | 是否包含边框 | 是否包含滚动条 | 是否包含 margin | 典型场景                          |
+|-----------------------------|------------|-------------------------------|--------------|----------------|-----------------|-----------------------------------|
+| `offsetWidth`              | Number     | 内容 + padding + border      | 是           | 否             | 否              | 获取元素完整宽度                  |
+| `offsetHeight`             | Number     | 内容 + padding + border      | 是           | 否             | 否              | 获取元素完整高度                  |
+| `clientWidth`              | Number     | 内容 + padding               | 否           | 否             | 否              | 获取可视区域宽度（不含滚动条）    |
+| `clientHeight`             | Number     | 内容 + padding               | 否           | 否             | 否              | 获取可视区域高度                  |
+| `scrollWidth`              | Number     | 完整内容宽度                 | 否           | 是             | 否              | 计算滚动内容总宽度                |
+| `scrollHeight`             | Number     | 完整内容高度                 | 否           | 是             | 否              | 计算滚动内容总高度                |
+| `getBoundingClientRect()`  | Object     | 元素相对视口的矩形信息       | 是           | 否             | 否              | 动态定位、碰撞检测                |
+| `window.innerWidth`        | Number     | 视口宽度                     | 否           | 是（滚动条）   | 否              | 响应式设计                        |
+| `window.innerHeight`       | Number     | 视口高度                     | 否           | 是（滚动条）   | 否              | 响应式设计                        |
+| `scrollTop`                | Number     | 滚动距离（顶部）             | -            | -              | -               | 滚动监听                          |
+| `scrollLeft`               | Number     | 滚动距离（左侧）             | -            | -              | -               | 滚动监听                          |
+| `offsetLeft`               | Number     | 元素左边缘到父级偏移         | 是           | 否             | 否              | 定位计算                          |
+| `offsetTop`                | Number     | 元素顶边缘到父级偏移         | 是           | 否             | 否              | 定位计算                          |
+| `getComputedStyle()`       | Object     | 计算后的样式（含尺寸）       | 可选         | 可选           | 可选            | 获取动态样式                      |
+| `ResizeObserver`           | Object     | 尺寸变化监听                 | -            | -              | -               | 实时监控元素尺寸变化              |
+| `document.documentElement` | Object     | 页面根元素（html）的尺寸     | 否           | 否             | 否              | 获取页面整体尺寸                  |
+
+这表格已经有点“撑棚”了，但别急，接下来我会把每个家伙拆开来细聊，带你看看它们的“前世今生”。
+
+## 核心尺寸属性详解
+
+### 1. `offsetWidth` 和 `offsetHeight`：元素的“身份证尺寸”
+
+**是什么？**  
+`offsetWidth` 和 `offsetHeight` 是元素的“全家福尺寸”，包含内容（content）、内边距（padding）和边框（border），但不包括外边距（margin）。它是你问元素“你占多大地方”时，最直观的答案。
+
+**代码示例：**
+```javascript
+const div = document.querySelector('.box');
+console.log(div.offsetWidth);  // 比如返回 220
+console.log(div.offsetHeight); // 比如返回 150
+```
+
+**假设 CSS 是这样的：**
+```css
+.box {
+  width: 200px;
+  padding: 10px;
+  border: 5px solid #000;
+  margin: 20px; /* margin 不算在内 */
+}
+```
+计算过程：`200 (width) + 10×2 (padding) + 5×2 (border) = 220px`。
+
+**深入原理：**  
+这两个属性是只读的，由浏览器基于盒模型计算。它们受 CSS 缩放（`transform: scale()`）影响，但返回的是布局像素（layout pixels），不受设备像素比（DPR）干扰。注意，它们的值是四舍五入后的整数，可能在小数像素场景下有点“钝”。
+
+**边缘案例：**  
+- 元素有 `box-sizing: border-box` 时，`width` 包含 padding 和 border，但 `offsetWidth` 依然老老实实汇报完整尺寸。
+- SVG 元素用它时，返回的是边界框尺寸，可能跟 `viewBox` 不完全一致。
+
+**Tips：**  
+- 如果元素被 `display: none` 隐藏，返回 0。想测隐藏元素尺寸？临时改成 `position: absolute; visibility: hidden`，测完再藏。
+- 在高频动画中，别频繁读它，会触发重排，性能堪比“跑步机上的乌龟”。
+
+### 2. `clientWidth` 和 `clientHeight`：可视区域的“内功”
+
+**是什么？**  
+`clientWidth` 和 `clientHeight` 是元素的可视区域尺寸，只包含内容和内边距，不含边框和滚动条。想象成“能看到的那块地盘”，对外面的花边（border）和杂物（scrollbar）视而不见。
+
+**代码示例：**
+```javascript
+const container = document.querySelector('.container');
+console.log(container.clientWidth);  // 比如 180
+console.log(container.clientHeight); // 比如 120
+```
+
+**假设 CSS：**
+```css
+.container {
+  width: 200px;
+  height: 150px;
+  padding: 10px;
+  border: 5px solid #000;
+  overflow: auto;
+}
+```
+结果：`200 (width) + 10×2 (padding) = 220px`，但如果有滚动条，`clientWidth` 会减去滚动条宽度（通常 17px），比如 203px。
+
+**深入原理：**  
+`clientWidth` 是渲染后的结果，受滚动条影响。如果没滚动条，它等于内容加内边距；有滚动条时，浏览器会“偷”走滚动条的空间。它的值也是整数，可能在亚像素布局中不够精确。
+
+**边缘案例：**  
+- 在 `overflow: hidden` 时，`clientWidth` 不受溢出内容影响。
+- 对 `body` 或 `html` 元素用时，可能受视口和文档高度干扰。
+
+**Tips：**  
+- 判断溢出：`clientHeight < scrollHeight` 时，说明有内容被藏起来了。
+- 在移动端，滚动条可能是透明的，但仍会占空间，记得调试时留个心眼。
+
+### 3. `scrollWidth` 和 `scrollHeight`：隐藏内容的“全景图”
+
+**是什么？**  
+`scrollWidth` 和 `scrollHeight` 是元素内容的完整尺寸，哪怕超出了可视区域也能测到。不含边框，但包括溢出部分，是滚动条的“灵魂伴侣”。
+
+**代码示例：**
+```javascript
+const scrollBox = document.querySelector('.scroll-box');
+console.log(scrollBox.scrollWidth);  // 比如 300
+console.log(scrollBox.scrollHeight); // 比如 500
+```
+
+**假设 HTML 和 CSS：**
+```html
+<div class="scroll-box">
+  <div style="width: 300px; height: 500px;"></div>
+</div>
+```
+```css
+.scroll-box {
+  width: 200px;
+  height: 150px;
+  overflow: auto;
+}
+```
+
+**深入原理：**  
+`scrollHeight` 是内容撑开的总高度，哪怕你设置了 `height: 150px`，只要子元素更高，它就如实汇报。浏览器会遍历所有子节点，算出最大边界，受动态内容（如图片加载）影响。
+
+**边缘案例：**  
+- 如果子元素有 `position: absolute`，可能不计入 `scrollHeight`，得看具体布局。
+- 在 `direction: rtl` 的场景下，`scrollWidth` 的计算方向会反转。
+
+**Tips：**  
+- 判断滚动到底：`scrollTop + clientHeight >= scrollHeight`。
+- 动态内容加载后（如字体或图片），用 `requestAnimationFrame` 确保尺寸更新。
+
+### 4. `offsetLeft` 和 `offsetTop`：定位的“导航仪”
+
+**是什么？**  
+`offsetLeft` 和 `offsetTop` 是元素左边缘和顶边缘相对于其 `offsetParent` 的距离。它们不直接给尺寸，但对定位计算至关重要。
+
+**代码示例：**
+```javascript
+const el = document.querySelector('.child');
+console.log(el.offsetLeft);  // 比如 30
+console.log(el.offsetTop);   // 比如 50
+```
+
+**假设 HTML 和 CSS：**
+```html
+<div class="parent" style="position: relative; padding: 20px;">
+  <div class="child" style="position: absolute; left: 10px; top: 30px;"></div>
+</div>
+```
+结果：`offsetLeft = 30px`（padding 20px + left 10px），`offsetTop = 50px`。
+
+**深入原理：**  
+`offsetParent` 通常是最近的 `position: relative/absolute/fixed` 祖先元素，若无则是 `body`。值受父级 padding 和自身定位影响。
+
+**Tips：**  
+- 如果父级有 `transform`，`offsetParent` 会变成 `null`，值可能不准，改用 `getBoundingClientRect()`。
+- 在嵌套布局中，手动累加 `offsetLeft` 算绝对位置时，注意边界情况。
+
+## 神级方法大赏
+
+### 1. `getBoundingClientRect()`：尺寸与位置的“无人机航拍”
+
+**是什么？**  
+`getBoundingClientRect()` 返回一个 DOMRect 对象，包含元素相对于视口的完整位置和尺寸信息（`top`、`right`、`bottom`、`left`、`width`、`height`）。它是动态定位的“瑞士军刀”。
+
+**代码示例：**
+```javascript
+const el = document.querySelector('.target');
+const rect = el.getBoundingClientRect();
+console.log(rect.width);  // 比如 220
+console.log(rect.top);    // 距离视口顶部，比如 100
+console.log(rect.left);   // 距离视口左侧，比如 50
+```
+
+**深入原理：**  
+`width` 和 `height` 类似 `offsetWidth`/`offsetHeight`，但受 `transform` 和页面缩放影响，返回视口坐标系下的值。每次调用触发重排，性能敏感时要小心。
+
+**边缘案例：**  
+- 元素被滚动出视口时，`top` 可能为负值。
+- 在高 DPR 屏幕上，值可能是小数，精确度更高。
+
+**Tips：**  
+- 碰撞检测：比较两个 `rect` 的交叉，简单又高效。
+- 缓存结果，别在 `scroll` 事件里狂调，浏览器会“喘不过气”。
+
+### 2. `getComputedStyle()`：样式尺寸的“显微镜”
+
+**是什么？**  
+`getComputedStyle()` 返回元素的计算后样式，包括尺寸相关属性（`width`、`padding` 等），单位通常是 `px`。
+
+**代码示例：**
+```javascript
+const el = document.querySelector('.fancy');
+const styles = window.getComputedStyle(el);
+console.log(styles.width);       // "200px"
+console.log(styles.paddingTop);  // "10px"
+```
+
+**深入原理：**  
+它是 CSS 最终值的“真相机”，考虑了继承、伪类和浏览器默认样式。返回的是字符串，需用 `parseFloat` 转数字。
+
+**Tips：**  
+- 获取伪元素尺寸：`getComputedStyle(el, '::before')`。
+- 性能稍逊于直接属性，批量读取时合并调用。
+
+### 3. `ResizeObserver`：尺寸变化的“哨兵”
+
+**是什么？**  
+`ResizeObserver` 是现代 API，能实时监听元素尺寸变化，比 `window.resize` 更精准，直接针对 DOM 元素。
+
+**代码示例：**
+```javascript
+const box = document.querySelector('.dynamic-box');
+const observer = new ResizeObserver(entries => {
+  for (let entry of entries) {
+    console.log(`新尺寸: ${entry.contentRect.width}x${entry.contentRect.height}`);
+  }
+});
+observer.observe(box);
+```
+
+**深入原理：**  
+它监听的是 `content-box` 尺寸变化，受内容、padding 或布局调整触发，不含边框。
+
+**Tips：**  
+- 替代轮询，性能更优，尤其适合动态组件。
+- 组件卸载时调用 `observer.disconnect()`，别让内存“漏水”。
+
+## 视口与全局尺寸
+
+### 1. `window.innerWidth` 和 `innerHeight`：视口的“窗口”
+
+**是什么？**  
+`window.innerWidth` 和 `innerHeight` 是视口尺寸，包含滚动条但不含浏览器 UI。
+
+**代码示例：**
+```javascript
+console.log(window.innerWidth);  // 比如 1440
+console.log(window.innerHeight); // 比如 900
+```
+
+**Tips：**  
+- 移动端虚拟键盘弹出时，值会变，响应式设计要留心。
+- 对比 `document.documentElement.clientWidth`，后者不含滚动条。
+
+### 2. `document.documentElement`：页面根的“全家桶”
+
+**是什么？**  
+`document.documentElement` 是 `<html>` 元素，可用 `clientWidth` 等获取页面尺寸。
+
+**代码示例：**
+```javascript
+console.log(document.documentElement.clientWidth);  // 视口宽度，不含滚动条
+console.log(document.documentElement.scrollHeight); // 页面总高度
+```
+
+**Tips：**  
+- 判断页面是否滚动到底：`scrollTop + clientHeight >= scrollHeight`。
+- 注意根元素可能受 `margin` 或 `overflow` 影响。
+
+## 性能优化：别让尺寸计算拖后腿
+
+1. **缓存尺寸值**  
+   频繁读取 `offsetWidth` 或 `getBoundingClientRect()` 会触发重排，批量操作时先存变量。
+
+2. **防抖与节流**  
+   在 `resize` 或 `scroll` 事件中，用防抖（debounce）或节流（throttle）减少计算频率。
+
+3. **异步测量**  
+   用 `requestAnimationFrame` 确保尺寸在渲染后读取，避免“半成品”数据。
+
+**代码示例：**
+```javascript
+function debounce(fn, delay) {
+  let timer;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+
+window.addEventListener('resize', debounce(() => {
+  console.log(document.querySelector('.box').offsetWidth);
+}, 200));
+```
+
+## 实战场景与“晓龙式”吐槽
+
+1. **粘性导航**  
+   用 `getBoundingClientRect().top` 判断元素是否到顶，优雅又精准。PM 问“为啥导航抖了”，答：“它只是想跳个舞，别紧张。”
+
+2. **无限滚动**  
+   `scrollHeight - scrollTop - clientHeight < 100` 时加载下一页，丝滑如奶茶。
+
+3. **拖拽调整**  
+   `ResizeObserver` 监听拖拽后的尺寸变化，比轮询省心，堪称“懒人福音”。
+
+## 结语：尺寸虽小，乾坤大
+
+DOM 尺寸的世界就像一场精密的舞蹈，每一个属性和方法都有它的节奏。掌握它们，不仅能解决 bug，还能写出优雅的代码。希望这篇“尺寸圣经”能成为你的随身工具书，下次遇到尺寸问题时，翻开它，嘴角微微上扬——“哦，这个啊，我熟。”
+
+如果你有更多尺寸相关的奇技淫巧，欢迎在评论区分享。毕竟，前端路上，尺寸无小事，代码有大爱 💖！
+
+---

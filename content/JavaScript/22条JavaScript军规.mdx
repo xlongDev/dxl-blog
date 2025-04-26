@@ -1,0 +1,571 @@
+---
+type: "Post"
+title: "22 条 JavaScript 军规：从新手到老司机的终极指南"
+date: "2024-09-13"
+description: "深入探讨 22 条 JavaScript 核心军规，带你从原理到实践全面提升代码质量，面向前端开发者，包含大量实例和实用技巧。"
+keywords: "JavaScript, 前端开发, 代码规范, 最佳实践, JS 性能优化, 闭包, 原型链, 异步编程, 函数式编程, 模块化"
+author: "晓龙"
+image: "/images/hero/js-rules-extended.jpg"
+tags: ["JavaScript", "前端开发", "编程规范"]
+category: "JavaScript"
+---
+
+JavaScript 就像一辆万能跑车：新手能开，老司机能飙。但想开得又稳又快，还得摸透它的“脾气”。作为前端开发者，JS 是我们的日常“饭票”，但你是否真的把它玩得炉火纯青？今天，我要献上的不是 10 条，而是整整 **22 条军规**，从基础到进阶，从原理到实战，带你全面升级代码功力。
+
+这篇文章面向所有前端开发者，不管你是刚摸键盘的小白，还是能在代码里“飞檐走壁”的老手，总有收获。咱们不搞枯燥的说教，用实例、类比、一点小幽默，甚至几个 emoji，把 JS 的“灵魂”剖析给你看。每条军规后面还有个小 Tips，算是我的独家私货。准备好了吗？油门踩到底，咱们冲！🚗💨
+
+---
+
+## 军规 1：敬畏作用域，别让变量“越狱”
+
+JavaScript 的作用域是个“监狱”，管好变量，别让它们随便跑出去。从 `var` 的函数作用域，到 `let` 和 `const` 的块级作用域，搞不清区别就像让囚犯越狱。
+
+### 原理深入
+`var` 的变量提升（hoisting）是个老坑，声明会被提升，但赋值不会：
+
+```javascript
+console.log(a); // undefined
+var a = 42;
+```
+
+而 `let` 和 `const` 有“暂时性死区”（TDZ），提前访问直接报错：
+
+```javascript
+console.log(b); // ReferenceError
+let b = 42;
+```
+
+### 实战举例
+循环计数器是个经典场景：
+
+```javascript
+for (var i = 0; i < 3; i++) {
+  setTimeout(() => console.log(i), 1000);
+}
+// 输出: 3, 3, 3
+
+for (let i = 0; i < 3; i++) {
+  setTimeout(() => console.log(i), 1000);
+}
+// 输出: 0, 1, 2
+```
+
+### 小 Tips
+优先级：`const` > `let` > `var`。`const` 不是“不可变”，只是“不可重新赋值”，对象属性随便改：
+
+```javascript
+const obj = { name: "晓龙" };
+obj.name = "小龙"; // ✅
+```
+
+---
+
+## 军规 2：闭包不是魔法，是“记忆大师”
+
+闭包（Closure）是 JS 的灵魂，别怕它，它只是个记性超好的助手。
+
+### 原理深入
+闭包的核心：**函数能记住定义时作用域的变量**。这靠的是词法作用域：
+
+```javascript
+function createCounter() {
+  let count = 0;
+  return () => count++;
+}
+const counter = createCounter();
+console.log(counter()); // 0
+console.log(counter()); // 1
+```
+
+### 实战举例
+事件监听里闭包很常见：
+
+```javascript
+const buttons = document.querySelectorAll(".btn");
+buttons.forEach((btn, index) => {
+  btn.addEventListener("click", () => console.log(`Button ${index} clicked!`));
+});
+```
+
+### 小 Tips
+小心内存泄漏！闭包持有大对象时，及时释放：
+
+```javascript
+let bigData = { size: "huge" };
+const fn = () => console.log(bigData);
+bigData = null; // 释放
+```
+
+---
+
+## 军规 3：原型链是“家谱”，别乱认亲戚
+
+原型链（Prototype Chain）是 JS 面向对象的根基，像家族“家谱”，理清关系很重要。
+
+### 原理深入
+每个对象通过 `__proto__` 链接到构造函数的 `prototype`，属性查找会顺着链条走：
+
+```javascript
+function Person(name) {
+  this.name = name;
+}
+Person.prototype.sayHi = function () {
+  console.log(`Hi, I'm ${this.name}`);
+};
+const me = new Person("晓龙");
+me.sayHi(); // Hi, I'm 晓龙
+```
+
+### 实战举例
+自定义数组方法：
+
+```javascript
+Array.prototype.last = function () {
+  return this[this.length - 1];
+};
+console.log([1, 2, 3].last()); // 3
+```
+
+### 小 Tips
+别随便改内置原型（如 `Object.prototype`），不然全村人都跟你“沾亲带故”了。
+
+---
+
+## 军规 4：异步是“排队大师”，别让回调地狱埋了你
+
+异步编程从回调到 `async/await`，就像从“步行”到“高铁”。
+
+### 原理深入
+JS 单线程靠事件循环处理异步，微任务（Promise）和宏任务（setTimeout）排队不同：
+
+```javascript
+console.log("Start");
+setTimeout(() => console.log("Timeout"), 0);
+Promise.resolve().then(() => console.log("Promise"));
+console.log("End");
+// 输出: Start -> End -> Promise -> Timeout
+```
+
+### 实战举例
+优雅的 fetch：
+
+```javascript
+async function fetchData() {
+  try {
+    const res = await fetch("https://api.example.com/data");
+    return await res.json();
+  } catch (err) {
+    console.error("Oops:", err);
+  }
+}
+```
+
+### 小 Tips
+用 `Promise.all` 批量异步：
+
+```javascript
+const results = await Promise.all([fetch(url1), fetch(url2)]);
+```
+
+---
+
+## 军规 5：`this` 是“变色龙”，绑定要看清
+
+`this` 是 JS 的“变色龙”，调用方式决定一切。
+
+### 原理深入
+绑定规则：默认（全局）、隐式（对象）、显式（`call`/`bind`）、`new`：
+
+```javascript
+const obj = { name: "晓龙", say: function () { console.log(this.name); } };
+obj.say(); // 晓龙
+const fn = obj.say;
+fn(); // undefined（严格模式）
+```
+
+### 实战举例
+箭头函数绑定定义时的 `this`：
+
+```javascript
+const obj = { name: "晓龙", say: () => console.log(this.name) };
+obj.say(); // undefined
+```
+
+### 小 Tips
+用 `console.log(this)` 确认，别靠猜。
+
+---
+
+## 军规 6：严格模式是“纠察队”，别怕它
+
+`"use strict";` 是代码的“纪律委员”，能揪出隐藏问题。
+
+### 原理深入
+严格模式下，未声明变量赋值会报错：
+
+```javascript
+"use strict";
+x = 42; // ReferenceError
+```
+
+### 小 Tips
+文件顶部加 `"use strict";`，防患于未然。
+
+---
+
+## 军规 7：类型检查是“门卫”，别让怪东西进来
+
+JS 动态类型不代表随便乱来，类型检查是“门卫”。
+
+### 实战举例
+```javascript
+function add(a, b) {
+  if (typeof a !== "number" || typeof b !== "number") {
+    throw new Error("参数必须是数字！");
+  }
+  return a + b;
+}
+```
+
+### 小 Tips
+用 TypeScript 或至少 `typeof` 检查。
+
+---
+
+## 军规 8：性能优化是“减肥计划”，别让代码臃肿
+
+代码慢如“胖子”，优化是“减肥”。
+
+### 实战举例
+循环缓存长度：
+
+```javascript
+// ❌ 慢
+for (let i = 0; i < arr.length; i++) {}
+// ✅ 快
+for (let i = 0, len = arr.length; i < len; i++) {}
+```
+
+### 小 Tips
+去重用 `Set`：
+
+```javascript
+const unique = [...new Set(arr)];
+```
+
+---
+
+## 军规 9：错误处理是“救生圈”，别裸泳
+
+不处理错误就像游泳不带救生圈。
+
+### 实战举例
+```javascript
+try {
+  JSON.parse("invalid json");
+} catch (e) {
+  console.error("解析失败:", e.message);
+}
+```
+
+### 小 Tips
+自定义错误类：
+
+```javascript
+class CustomError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "CustomError";
+  }
+}
+```
+
+---
+
+## 军规 10：代码复用是“杠杆”，别重复造轮子
+
+复用是杠杆，省力又高效。
+
+### 实战举例
+防抖函数：
+
+```javascript
+const debounce = (fn, delay) => {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+};
+```
+
+### 小 Tips
+抽离逻辑到 utils，别写“意大利面”。
+
+---
+
+## 军规 11：函数式编程是“清流”，少点副作用
+
+函数式编程（FP）像一股清流，减少副作用，让代码更可预测。
+
+### 原理深入
+纯函数：输入相同，输出相同，无副作用：
+
+```javascript
+const add = (a, b) => a + b; // 纯函数
+let total = 0;
+const impureAdd = (x) => (total += x); // 有副作用
+```
+
+### 实战举例
+数组操作用 `map`、`filter`：
+
+```javascript
+const nums = [1, 2, 3];
+const doubled = nums.map((n) => n * 2); // [2, 4, 6]
+```
+
+### 小 Tips
+尽量用 `reduce` 代替复杂循环，简洁又强大。
+
+---
+
+## 军规 12：模块化是“收纳箱”，别让代码散乱
+
+模块化就像“收纳箱”，让代码井井有条。
+
+### 原理深入
+ES6 的 `import/export`：
+
+```javascript
+// util.js
+export const sum = (a, b) => a + b;
+
+// main.js
+import { sum } from "./util.js";
+console.log(sum(2, 3)); // 5
+```
+
+### 小 Tips
+用默认导出（`export default`）给主要功能，别一股脑儿全暴露。
+
+---
+
+## 军规 13：事件监听是“耳目”，别忘了摘掉
+
+事件监听像“耳目”，用完要清理。
+
+### 实战举例
+组件卸载时移除：
+
+```javascript
+function setupListener() {
+  const handler = () => console.log("Clicked!");
+  button.addEventListener("click", handler);
+  return () => button.removeEventListener("click", handler);
+}
+```
+
+### 小 Tips
+用 React 的 `useEffect` 自动清理：
+
+```javascript
+useEffect(() => {
+  const handler = () => {};
+  window.addEventListener("resize", handler);
+  return () => window.removeEventListener("resize", handler);
+}, []);
+```
+
+---
+
+## 军规 14：深浅拷贝是“克隆术”，别弄混
+
+深浅拷贝是 JS 的“克隆术”，用错后果很严重。
+
+### 原理深入
+浅拷贝只复制一层，深拷贝递归复制：
+
+```javascript
+const obj = { a: { b: 1 } };
+const shallow = { ...obj };
+shallow.a.b = 2;
+console.log(obj.a.b); // 2（影响原对象）
+
+const deep = JSON.parse(JSON.stringify(obj));
+deep.a.b = 3;
+console.log(obj.a.b); // 2（不影响原对象）
+```
+
+### 小 Tips
+用 `structuredClone`（现代浏览器支持）做深拷贝，更靠谱。
+
+---
+
+## 军规 15：正则是“瑞士军刀”，别只会 `.*`
+
+正则表达式（RegExp）是 JS 的“瑞士军刀”，威力无穷。
+
+### 实战举例
+提取邮箱：
+
+```javascript
+const email = "xiaolong@example.com";
+const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+console.log(regex.test(email)); // true
+```
+
+### 小 Tips
+用命名捕获组提高可读性：
+
+```javascript
+const date = "2025-03-30";
+const { year } = date.match(/(?<year>\d{4})-\d{2}-\d{2}/).groups;
+console.log(year); // 2025
+```
+
+---
+
+## 军规 16：代理（Proxy）は“门童”，拦截要精准
+
+`Proxy` 是 JS 的“门童”，能拦截对象操作。
+
+### 实战举例
+只读对象：
+
+```javascript
+const obj = new Proxy({ a: 1 }, {
+  set: () => {
+    throw new Error("只读！");
+  },
+});
+obj.a = 2; // Error: 只读！
+```
+
+### 小 Tips
+结合 `Reflect` 用，API 更一致。
+
+---
+
+## 军规 17：迭代器是“传送带”，别手推车
+
+迭代器（Iterator）和生成器（Generator）是“传送带”，简化循环。
+
+### 实战举例
+自定义迭代器：
+
+```javascript
+const range = {
+  from: 1,
+  to: 3,
+  *[Symbol.iterator]() {
+    for (let i = this.from; i <= this.to; i++) yield i;
+  },
+};
+console.log([...range]); // [1, 2, 3]
+```
+
+### 小 Tips
+用 `for...of` 遍历，比 `forEach` 更灵活。
+
+---
+
+## 军规 18：WeakMap 是“隐秘角落”，别滥用
+
+`WeakMap` 是“隐秘角落”，键是弱引用，适合临时存储。
+
+### 实战举例
+缓存 DOM：
+
+```javascript
+const cache = new WeakMap();
+function getSize(el) {
+  if (!cache.has(el)) cache.set(el, el.offsetWidth);
+  return cache.get(el);
+}
+```
+
+### 小 Tips
+别用 `WeakMap` 存长期数据，垃圾回收会“偷走”它。
+
+---
+
+## 军规 19：Symbol 是“身份证”，独一无二
+
+`Symbol` 是 JS 的“身份证”，保证唯一性。
+
+### 实战举例
+私有属性：
+
+```javascript
+const SECRET = Symbol("secret");
+class MyClass {
+  [SECRET] = "hidden";
+}
+console.log(new MyClass()[SECRET]); // hidden
+```
+
+### 小 Tips
+用 `Symbol.for` 创建全局共享 Symbol。
+
+---
+
+## 军规 20：位操作是“黑魔法”，偶尔耍耍
+
+位操作（Bitwise）是“黑魔法”，速度快但可读性差。
+
+### 实战举例
+判断奇偶：
+
+```javascript
+const isOdd = (n) => n & 1; // 奇数返回 1，偶数返回 0
+```
+
+### 小 Tips
+除非性能瓶颈，别用，同事会“感谢”你的可读性。
+
+---
+
+## 军规 21：Intl 是“翻译官”，别手写格式化
+
+`Intl` 是内置的“翻译官”，处理国际化超方便。
+
+### 实战举例
+格式化日期：
+
+```javascript
+const date = new Date();
+console.log(new Intl.DateTimeFormat("zh-CN").format(date)); // 2025年3月30日
+```
+
+### 小 Tips
+货币格式化用 `Intl.NumberFormat`，省心。
+
+---
+
+## 军规 22：调试是“侦探”，工具要用好
+
+调试是“侦探工作”，善用工具事半功倍。
+
+### 实战举例
+条件断点：
+
+```javascript
+for (let i = 0; i < 100; i++) {
+  debugger; // 浏览器里加条件 i === 42
+  console.log(i);
+}
+```
+
+### 小 Tips
+用 `console.table` 打印对象数组，美观又清晰。
+
+---
+
+## 结语
+
+这 22 条军规，涵盖了 JS 的方方面面，从基础到高级，从性能到调试。它们不是让你死记硬背，而是希望你在实战中慢慢消化。JavaScript 像个老朋友，脾气古怪但值得深交。写代码如泡茶，功夫到了，自然香气四溢。🍵
+
+有啥想聊的？留言区见，咱们一起“解锁” JS 的更多姿势！
+
+---
