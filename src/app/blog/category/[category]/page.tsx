@@ -105,7 +105,8 @@ export default async function CategoryPage({
           postCategory.toLowerCase() === decodedCategory.toLowerCase())
       );
     })
-    .sort((a, b) => compareDesc(new Date(a.date), new Date(b.date)));
+    .sort((a, b) => compareDesc(new Date(a.date), new Date(b.date)))
+    .slice(0, 20); // 限制每页显示的文章数量
 
   // 获取所有分类（基于文件目录）
   const categories = Array.from(

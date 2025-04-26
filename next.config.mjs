@@ -34,6 +34,9 @@ const nextConfig = {
       "remark-gfm",
     ], // 优化第三方包导入
     workerThreads: true, // 启用 worker threads 加速构建
+    serverActions: {
+      bodySizeLimit: "2mb",
+    },
   },
 
   // 启用 React 严格模式（开发时）
