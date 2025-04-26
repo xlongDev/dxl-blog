@@ -12,6 +12,10 @@ const rehypePrettyCodeOptions = {
       node.children = [{ type: "text", value: " " }];
     }
   },
+  keepBackground: false,
+  defaultLang: "text",
+  filterMetaString: (str: string) => str,
+  tokensMap: {},
 };
 
 export const Post = defineDocumentType(() => ({

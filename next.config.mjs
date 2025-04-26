@@ -27,16 +27,18 @@ const nextConfig = {
 
   // 优化大型页面数据处理
   experimental: {
-    largePageDataBytes: 128 * 1000, // 128KB
+    largePageDataBytes: 64 * 1000, // 减小到 64KB
     optimizePackageImports: [
       "contentlayer/source-files",
       "rehype-pretty-code",
       "remark-gfm",
-    ], // 优化第三方包导入
-    workerThreads: true, // 启用 worker threads 加速构建
+    ],
+    workerThreads: true,
     serverActions: {
-      bodySizeLimit: "2mb",
+      bodySizeLimit: "1mb", // 减小到 1MB
     },
+    optimizeCss: true, // 启用 CSS 优化
+    scrollRestoration: true, // 启用滚动恢复
   },
 
   // 启用 React 严格模式（开发时）

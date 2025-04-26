@@ -1,0 +1,25 @@
+{
+  "env": {
+    "VERCEL_BYPASS_FALLBACK_OVERSIZED_ERROR": "1",
+    "NEXT_PUBLIC_SERVER_URL": "${NEXT_PUBLIC_SERVER_URL}",
+    "NEXT_PUBLIC_API_URL": "${NEXT_PUBLIC_API_URL}",
+    "NEXT_PUBLIC_VERCEL_URL": "${VERCEL_URL}",
+    "NEXT_PUBLIC_VERCEL_ENV": "${VERCEL_ENV}"
+  },
+  "build": {
+    "env": {
+      "VERCEL_BYPASS_FALLBACK_OVERSIZED_ERROR": "1"
+    }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, stale-while-revalidate=86400"
+        }
+      ]
+    }
+  ]
+}
