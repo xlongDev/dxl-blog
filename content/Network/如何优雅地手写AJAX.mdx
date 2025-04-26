@@ -1,0 +1,348 @@
+---
+
+type: "Post"
+title: "如何优雅地手写 AJAX?"
+date: "2023-05-24"
+description: "深入剖析 AJAX 的原理，手写实现一个优雅且实用的 AJAX 请求工具，带你从 XMLHttpRequest 到现代封装的最佳实践。"
+keywords: "AJAX, XMLHttpRequest, 前端开发, JavaScript, 异步请求, 网络请求, 最佳实践"
+author: "晓龙"
+image: "/images/hero/ajax-handwriting.jpg"
+tags: ["JavaScript", "前端开发", "网络请求"]
+category: "Network"
+---
+
+嗨，前端朋友们！今天我们来聊聊一个听起来有点“复古”，但其实依然是前端开发基石的技术——AJAX。提到 AJAX，你可能脑海里会浮现出 jQuery 的 `$.ajax`，或者现代的 `fetch` API，甚至是 Axios 这样的明星库。但你有没有想过，手写一个属于自己的 AJAX 工具，既能深入理解它的原理，又能在某些场景下“秀”一把骚操作？别急，这篇文章将带你从零开始，优雅地手写 AJAX，剖析它的灵魂，还会附上一些实用技巧和幽默吐槽。准备好了吗？Let's dive in! 🚀
+
+## AJAX 是个啥？从“灵魂拷问”开始
+
+AJAX 全称是 **Asynchronous JavaScript and XML**（异步 JavaScript 和 XML），但别被名字骗了，现在我们几乎不用 XML 了，JSON 才是主角。它本质上是通过 JavaScript 在浏览器中发起异步网络请求，不刷新页面就能和服务器“聊聊天”。这就像你偷偷给朋友发微信，不用当面喊话，整个过程悄无声息。
+
+核心工具是 `XMLHttpRequest`（简称 XHR），一个浏览器内置的对象，虽然名字有点长得像上世纪的产物，但它依然是 AJAX 的心脏。现代的 `fetch` API 虽然更简洁，但底层还是依赖类似的机制。所以，搞懂 XHR，就等于抓住了 AJAX 的命脉。
+
+类比一下：XHR 就像你家里的老式座机，虽然不如智能手机花哨，但只要线路通，就能打遍天下。而手写 AJAX，就是让我们从头打造一台“座机”，既复古又实用。
+
+## 手写 AJAX：从最简版开始
+
+好了，废话不多说，我们先写一个最基础的 AJAX 请求，看看它长啥样：
+
+```javascript
+function simpleAjax(url, callback) {
+  const xhr = new XMLHttpRequest();
+  xhr.open("GET", url, true); // true 表示异步
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4 && xhr.status === 200) {
+      callback(xhr.responseText);
+    }
+  };
+  xhr.send();
+}
+
+// 用法
+simpleAjax("https://api.example.com/data", (data) => {
+  console.log("收到数据啦：", data);
+});
+```
+
+这段代码简单得像个“hello world”，但已经能跑了！我们创建了一个 XHR 对象，告诉它用 GET 方法去请求一个 URL，等状态变成 `readyState === 4`（请求完成）且 `status === 200`（成功）时，把数据丢给回调函数。
+
+**小 Tips**: `readyState` 有 0 到 4 五个状态，分别是未初始化、已打开、已发送、接收中和完成。记不住？没事，想成一场快递旅程：0 是还没下单，4 是快递到手。
+
+### 加点料：支持 POST 和参数
+
+光会 GET 可不行，咱们得支持 POST 和传参。假设我们要发个表单数据给服务器：
+
+```javascript
+function ajax({ url, method = "GET", data = null, success }) {
+  const xhr = new XMLHttpRequest();
+  xhr.open(method, url, true);
+
+  // 如果是 POST，设置请求头
+  if (method.toUpperCase() === "POST") {
+    xhr.setRequestHeader("Content-Type", "application/json");
+  }
+
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4) {
+      if (xhr.status === 200) {
+        success(xhr.responseText);
+      } else {
+        console.error(`请求挂了，状态码：${xhr.status}`);
+      }
+    }
+  };
+
+  // 发送数据
+  xhr.send(data ? JSON.stringify(data) : null);
+}
+
+// 用法
+ajax({
+  url: "https://api.example.com/submit",
+  method: "POST",
+  data: { name: "晓龙", age: 25 },
+  success: (res) => console.log("成功啦：", res),
+});
+```
+
+升级版来了！我们用对象参数解构，让调用更灵活。POST 请求还加了请求头，数据也转成了 JSON 格式。这就像从拨号座机升级成了带短信功能的按键机，功能更齐全了。
+
+**小 Tips**: 别忘了 `setRequestHeader` 要在 `open` 之后、`send` 之前调用，不然会报错。这就像你得先接通电话，才能告诉对方“你好，我要点外卖”。
+
+## 优雅进阶：错误处理和超时
+
+现实世界里，网络请求可不是永远风平浪静。服务器可能会抽风，网络可能会断线，咱们得加点“防摔”功能：
+
+```javascript
+function elegantAjax({
+  url,
+  method = "GET",
+  data = null,
+  success,
+  error,
+  timeout = 5000,
+}) {
+  const xhr = new XMLHttpRequest();
+  xhr.open(method, url, true);
+
+  if (method.toUpperCase() === "POST") {
+    xhr.setRequestHeader("Content-Type", "application/json");
+  }
+
+  // 超时处理
+  xhr.timeout = timeout;
+  xhr.ontimeout = () => error?.("请求超时啦，别等了！");
+
+  // 状态变化监听
+  xhr.onreadystatechange = () => {
+    if (xhr.readyState === 4) {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        success(xhr.responseText);
+      } else {
+        error?.(`请求失败，状态码：${xhr.status}`);
+      }
+    }
+  };
+
+  // 网络错误
+  xhr.onerror = () => error?.("网络炸了，检查下WiFi吧！");
+
+  xhr.send(data ? JSON.stringify(data) : null);
+}
+
+// 用法
+elegantAjax({
+  url: "https://api.example.com/data",
+  method: "GET",
+  success: (res) => console.log("数据到手：", res),
+  error: (msg) => console.error("出问题了：", msg),
+  timeout: 3000,
+});
+```
+
+现在我们的 AJAX 多了超时和错误处理，像个有备胎的靠谱朋友。`ontimeout` 会在请求超时时触发，`onerror` 会在网络断开时救场。状态码也用了更宽松的范围（200-299），兼容更多成功响应。
+
+**小 Tips**: 超时时间别设太短，不然服务器还没来得及喘气就被你判了“死刑”。5秒到10秒是个不错的默认值。
+
+## Promise 化：跟上现代潮流
+
+回调函数虽然经典，但用多了容易陷入“回调地狱”，就像俄罗斯套娃一样让人头晕。咱们给它套上 Promise 的“新皮肤”：
+
+```javascript
+function promiseAjax({ url, method = "GET", data = null, timeout = 5000 }) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url, true);
+
+    if (method.toUpperCase() === "POST") {
+      xhr.setRequestHeader("Content-Type", "application/json");
+    }
+
+    xhr.timeout = timeout;
+    xhr.ontimeout = () => reject(new Error("请求超时，服务器可能在打盹"));
+
+    xhr.onreadystatechange = () => {
+      if (xhr.readyState === 4) {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(xhr.responseText);
+        } else {
+          reject(new Error(`请求失败，状态码：${xhr.status}`));
+        }
+      }
+    };
+
+    xhr.onerror = () => reject(new Error("网络挂了，赶紧找网管！"));
+
+    xhr.send(data ? JSON.stringify(data) : null);
+  });
+}
+
+// 用法
+promiseAjax({
+  url: "https://api.example.com/data",
+  method: "GET",
+})
+  .then((res) => console.log("成功：", res))
+  .catch((err) => console.error("失败：", err.message));
+```
+
+Promise 版的 AJAX 是不是看起来更清爽？它就像把老式座机改成了触屏手机，用法更现代化，还能愉快地跟 `async/await` 玩耍：
+
+```javascript
+async function fetchData() {
+  try {
+    const res = await promiseAjax({ url: "https://api.example.com/data" });
+    console.log("数据来啦：", res);
+  } catch (err) {
+    console.error("出错啦：", err.message);
+  }
+}
+fetchData();
+```
+
+**小 Tips**: 如果你想让返回的数据自动解析成 JSON，可以在 `resolve` 时加个 `JSON.parse(xhr.responseText)`，但记得用 `try-catch` 包一下，免得 JSON 格式不对时翻车。
+
+## 终极版：加点“花活儿”
+
+到这里，我们已经有了个挺靠谱的 AJAX 工具，但作为前端开发者，怎么能不追求极致呢？咱们再加点高级功能，比如请求取消、拦截器和进度监听：
+
+```javascript
+class AjaxMaster {
+  constructor() {
+    this.interceptors = {
+      request: [],
+      response: [],
+    };
+  }
+
+  // 添加请求拦截器
+  interceptRequest(fn) {
+    this.interceptors.request.push(fn);
+  }
+
+  // 添加响应拦截器
+  interceptResponse(fn) {
+    this.interceptors.response.push(fn);
+  }
+
+  request({ url, method = "GET", data = null, timeout = 5000, onProgress }) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+
+      // 应用请求拦截器
+      let config = { url, method, data, timeout };
+      this.interceptors.request.forEach((fn) => {
+        config = fn(config) || config;
+      });
+
+      xhr.open(config.method, config.url, true);
+      if (config.method.toUpperCase() === "POST") {
+        xhr.setRequestHeader("Content-Type", "application/json");
+      }
+
+      xhr.timeout = config.timeout;
+      xhr.ontimeout = () => reject(new Error("超时啦，服务器睡过头了"));
+
+      // 进度监听
+      if (onProgress) {
+        xhr.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percent = (event.loaded / event.total) * 100;
+            onProgress(percent);
+          }
+        };
+      }
+
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4) {
+          let response = { data: xhr.responseText, status: xhr.status };
+          // 应用响应拦截器
+          this.interceptors.response.forEach((fn) => {
+            response = fn(response) || response;
+          });
+
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(response.data);
+          } else {
+            reject(new Error(`失败，状态码：${xhr.status}`));
+          }
+        }
+      };
+
+      xhr.onerror = () => reject(new Error("网络崩了，赶紧重启路由器！"));
+
+      // 支持取消请求
+      xhr.send(config.data ? JSON.stringify(config.data) : null);
+      return () => xhr.abort(); // 返回取消函数
+    });
+  }
+}
+
+// 用法
+const ajax = new AjaxMaster();
+
+// 加个请求拦截器，偷偷加个 token
+ajax.interceptRequest((config) => {
+  config.url += "?token=secret123";
+  return config;
+});
+
+// 加个响应拦截器，自动解析 JSON
+ajax.interceptResponse((response) => {
+  try {
+    response.data = JSON.parse(response.data);
+  } catch (e) {
+    console.warn("JSON 解析失败，服务器可能在逗你玩");
+  }
+  return response;
+});
+
+// 发送请求
+const cancel = ajax.request({
+  url: "https://api.example.com/data",
+  method: "GET",
+  onProgress: (percent) => console.log(`下载进度：${percent}%`),
+})
+  .then((res) => console.log("结果：", res))
+  .catch((err) => console.error("错误：", err.message));
+
+// 半路取消
+setTimeout(() => cancel(), 2000); // 2秒后取消请求
+```
+
+这版 `AjaxMaster` 简直是 AJAX 的“变形金刚”！它支持拦截器（像 Axios 那样优雅）、进度监听（上传下载时特别香）、请求取消（不想等就直接喊停）。你可以用它打造一个完全自定义的请求工具，满足各种奇葩需求。
+
+**小 Tips**: 拦截器是个神器，可以用来统一加请求头、日志记录甚至 mock 数据。但别滥用，不然代码会变成“拦截器迷宫”，维护起来想哭。
+
+## 最佳实践：让 AJAX 更香
+
+手写 AJAX 不是为了炫技，而是为了在特定场景下更灵活。以下是一些实战经验：
+
+1. **总是处理错误**  
+   别指望服务器永远正常，`try-catch` 和 `error` 回调是你的护身符。  
+   **小 Tips**: 加个默认错误提示，比如“服务器开小差了，稍后再试”，用户体验会好很多。
+
+2. **合理设置超时**  
+   超时时间因业务而异，文件上传可以长点（30s），普通接口短点（5s）。  
+   **小 Tips**: 可以根据网络环境动态调整，比如用 `navigator.onLine` 判断。
+
+3. **善用拦截器**  
+   把通用的逻辑（比如认证、日志）丢到拦截器里，保持请求代码简洁。  
+   **小 Tips**: 拦截器里别干太重的活，不然性能会打折。
+
+4. **支持取消请求**  
+   在 SPA 里，用户切换页面时取消未完成的请求，能省流量还能防内存泄漏。  
+   **小 Tips**: 用一个 Map 存所有 xhr 对象，页面卸载时批量 abort。
+
+5. **调试友好**  
+   加点日志，比如请求开始时间、耗时，开发时能快速定位问题。  
+   **小 Tips**: 用 `console.group` 把请求信息分组，调试时清爽又高级。
+
+## 写在最后：AJAX 的“哲学”
+
+手写 AJAX 就像自己动手做饭，虽然外面有外卖（fetch、Axios），但亲手炒个菜，能让你更懂食材和火候。XHR 虽然老，却依然是浏览器网络请求的基石，理解它的原理，能让你在面对复杂需求时更有底气。
+
+下次面试官问你“AJAX 怎么实现”，你就可以掏出这篇文章里的代码，优雅地甩他一脸“手写版”。当然，别忘了加一句：“我平时还是用 Axios 的，毕竟懒是第一生产力。” 😜
+
+希望这篇博客能帮到你！有什么想法或者改进建议，欢迎留言，咱们一起把 AJAX 玩出花儿来！🌟
+
+--- 

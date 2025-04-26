@@ -1,0 +1,22 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Build outputs
+.next
+.contentlayer
+public/cache
+
+# Development files
+.git
+.env*
+*.log
+.DS_Store
+
+# Test files
+**/*.test.*
+**/*.spec.*
+
+# Documentation
+README.md
+LICENSE 

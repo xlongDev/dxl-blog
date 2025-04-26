@@ -1,0 +1,448 @@
+---
+type: "Post"
+title: "打造企业级 axios 二次封装"
+date: "2022-03-01"
+description: "深入探讨如何基于 axios 打造企业级 HTTP 请求库，包含设计思路、源码解析、错误处理、拦截器实现及实用示例。"
+keywords: "axios, HTTP 请求, 二次封装, 前端开发, JavaScript, TypeScript, 企业级开发, 请求拦截器, 响应拦截器"
+author: "晓龙"
+image: "/images/hero/axios-encapsulation.jpg"
+tags: ["axios", "JavaScript", "TypeScript", "前端开发"]
+category: "Network"
+
+---
+
+axios 作为前端最流行的 HTTP 请求库，以其简单易用和强大的功能深受开发者喜爱。然而，在企业级项目中，面对复杂的需求（如统一的错误处理、请求取消、超时管理、Token 刷新等），直接使用原始 axios 往往不够灵活。为此，我们需要对 axios 进行二次封装，打造一个高效、可维护的企业级请求库。本文将从设计思路到源码实现，带你一步步打造一个强大的 axios 封装库，并深入解析其内部原理。
+
+## 为什么需要二次封装 axios？
+
+在企业级项目中，HTTP 请求通常伴随着以下需求：
+- **统一配置**：如基础 URL、默认超时时间等。
+- **请求拦截**：添加认证 Token、请求头定制。
+- **响应处理**：统一处理状态码、错误提示。
+- **请求取消**：避免重复请求或页面切换时的冗余请求。
+- **类型安全**：结合 TypeScript 提供强类型支持。
+- **扩展性**：支持动态调整配置、添加新功能。
+
+直接使用 axios 虽然简单，但无法高效满足这些需求。通过二次封装，我们可以将这些通用逻辑抽象出来，提高代码复用性并降低维护成本。
+
+## 设计思路
+
+一个企业级的 axios 封装库应具备以下核心特性：
+1. **实例化管理**：支持创建多个 axios 实例，适应多域名场景。
+2. **拦截器**：实现请求和响应的全局拦截。
+3. **错误处理**：统一处理 HTTP 状态码和业务错误。
+4. **请求取消**：集成 CancelToken 管理请求。
+5. **类型支持**：使用 TypeScript 提供类型推导。
+6. **扩展功能**：如请求重试、缓存、文件上传等。
+
+接下来，我们将逐步实现这些功能，并从源码层面剖析其原理。
+
+## 实现步骤
+
+### 1. 基础封装与实例化
+
+首先，创建一个基础的请求类，基于 axios 创建实例。
+
+```typescript
+// src/http/index.ts
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+
+class HttpClient {
+  private instance: AxiosInstance;
+
+  constructor(config: AxiosRequestConfig = {}) {
+    // 默认配置
+    const defaultConfig: AxiosRequestConfig = {
+      baseURL: process.env.API_BASE_URL || 'https://api.example.com',
+      timeout: 10000, // 默认超时 10s
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    };
+
+    // 合并用户传入的配置
+    this.instance = axios.create({
+      ...defaultConfig,
+      ...config,
+    });
+
+    // 初始化拦截器
+    this.setupInterceptors();
+  }
+
+  // 获取实例方法
+  public getInstance(): AxiosInstance {
+    return this.instance;
+  }
+
+  // 设置拦截器（后续实现）
+  private setupInterceptors() {}
+}
+
+export default HttpClient;
+```
+
+**源码解析**：
+- `axios.create` 方法返回一个独立的 axios 实例，允许我们为不同的服务创建独立的配置。
+- 通过 `defaultConfig` 定义默认配置（如 `baseURL` 和 `timeout`），并与用户传入的 `config` 合并，确保灵活性。
+- `getInstance` 方法暴露实例，方便外部直接调用原始 axios 方法。
+
+**使用示例**：
+```typescript
+const http = new HttpClient();
+http.getInstance().get('/users').then((res) => console.log(res.data));
+```
+
+### 2. 请求与响应拦截器
+
+拦截器是 axios 的核心功能之一，用于在请求发送前或响应返回后执行自定义逻辑。
+
+```typescript
+// src/http/index.ts
+class HttpClient {
+  // ... 其他代码不变
+
+  private setupInterceptors() {
+    // 请求拦截器
+    this.instance.interceptors.request.use(
+      (config: AxiosRequestConfig) => {
+        // 添加认证 Token
+        const token = localStorage.getItem('token');
+        if (token) {
+          config.headers = {
+            ...config.headers,
+            Authorization: `Bearer ${token}`,
+          };
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    // 响应拦截器
+    this.instance.interceptors.response.use(
+      (response: AxiosResponse) => {
+        // 统一处理成功响应
+        return response.data; // 只返回 data 部分
+      },
+      (error) => {
+        // 统一错误处理
+        if (axios.isCancel(error)) {
+          console.log('请求已取消:', error.message);
+          return Promise.reject(error);
+        }
+        if (error.response) {
+          const { status, data } = error.response;
+          switch (status) {
+            case 401:
+              console.error('未授权，请重新登录');
+              break;
+            case 403:
+              console.error('权限不足');
+              break;
+            default:
+              console.error(data.message || '未知错误');
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
+  }
+}
+```
+
+**源码解析**：
+- **请求拦截器**：在请求发送前添加 Token，支持动态修改 `headers`。
+- **响应拦截器**：直接返回 `response.data` 简化调用；通过 `axios.isCancel` 判断是否为取消请求；根据 HTTP 状态码（如 401、403）统一处理错误。
+- `Promise.reject` 确保错误可以被调用方捕获。
+
+**使用示例**：
+```typescript
+const http = new HttpClient();
+http.getInstance().get('/users').catch((err) => console.error(err));
+```
+
+### 3. 封装请求方法
+
+为方便使用，我们封装常用的 HTTP 方法（如 GET、POST），并支持类型推导。
+
+```typescript
+// src/http/index.ts
+interface RequestConfig<T = any> extends AxiosRequestConfig {
+  data?: T; // 请求体类型
+}
+
+class HttpClient {
+  // ... 其他代码不变
+
+  public get<T = any>(url: string, config?: RequestConfig): Promise<T> {
+    return this.instance.get<T>(url, config).then((res) => res as T);
+  }
+
+  public post<T = any, D = any>(url: string, data?: D, config?: RequestConfig<D>): Promise<T> {
+    return this.instance.post<T>(url, data, config).then((res) => res as T);
+  }
+
+  public put<T = any, D = any>(url: string, data?: D, config?: RequestConfig<D>): Promise<T> {
+    return this.instance.put<T>(url, data, config).then((res) => res as T);
+  }
+
+  public delete<T = any>(url: string, config?: RequestConfig): Promise<T> {
+    return this.instance.delete<T>(url, config).then((res) => res as T);
+  }
+}
+
+// 类型定义示例
+interface User {
+  id: number;
+  name: string;
+}
+
+// 使用
+const http = new HttpClient();
+http.get<User[]>('/users').then((users) => console.log(users[0].name));
+http.post<User, { name: string }>('/users', { name: 'Alice' }).then((user) => console.log(user.id));
+```
+
+**源码解析**：
+- 使用泛型 `<T>` 定义响应数据类型，`<D>` 定义请求体类型，确保类型安全。
+- 直接调用 `this.instance` 的方法，并通过 `.then` 返回处理后的数据。
+
+### 4. 请求取消功能
+
+在 SPA 中，页面切换时取消未完成的请求非常重要。我们使用 `CancelToken` 实现。
+
+```typescript
+// src/http/index.ts
+import axios, { CancelTokenSource } from 'axios';
+
+class HttpClient {
+  private cancelTokenSources: Map<string, CancelTokenSource> = new Map();
+
+  // ... 其他代码不变
+
+  public requestWithCancel<T = any>(url: string, config: RequestConfig = {}): Promise<T> {
+    // 如果已有相同 URL 的请求，取消之前的
+    if (this.cancelTokenSources.has(url)) {
+      this.cancelTokenSources.get(url)?.cancel(`取消重复请求: ${url}`);
+    }
+
+    const source = axios.CancelToken.source();
+    this.cancelTokenSources.set(url, source);
+
+    const requestConfig: RequestConfig = {
+      ...config,
+      cancelToken: source.token,
+    };
+
+    return this.instance
+      .get<T>(url, requestConfig)
+      .then((res) => {
+        this.cancelTokenSources.delete(url);
+        return res as T;
+      })
+      .catch((err) => {
+        this.cancelTokenSources.delete(url);
+        throw err;
+      });
+  }
+
+  // 手动取消所有请求
+  public cancelAll() {
+    this.cancelTokenSources.forEach((source, url) => {
+      source.cancel(`手动取消请求: ${url}`);
+      this.cancelTokenSources.delete(url);
+    });
+  }
+}
+
+// 使用
+const http = new HttpClient();
+http.requestWithCancel('/users').then((data) => console.log(data));
+http.cancelAll(); // 取消所有请求
+```
+
+**源码解析**：
+- 使用 `Map` 存储每个请求的 `CancelTokenSource`，通过 URL 作为 key 管理。
+- 请求完成或失败后，清理对应的 `source`，避免内存泄漏。
+- `cancelAll` 方法遍历所有请求并取消，适用于页面卸载场景。
+
+### 5. 请求重试与扩展功能
+
+在网络不稳定的情况下，自动重试是企业级需求的常见功能。
+
+```typescript
+// src/http/index.ts
+interface RetryConfig extends AxiosRequestConfig {
+  retries?: number; // 重试次数
+  retryDelay?: number; // 重试间隔（ms）
+}
+
+class HttpClient {
+  // ... 其他代码不变
+
+  private async retryRequest<T>(
+    config: RetryConfig,
+    originalRequest: AxiosRequestConfig
+  ): Promise<T> {
+    const { retries = 3, retryDelay = 1000 } = config;
+    let attempt = 0;
+
+    while (attempt < retries) {
+      try {
+        return await this.instance.request<T>(originalRequest);
+      } catch (error) {
+        attempt++;
+        if (attempt === retries) throw error;
+        await new Promise((resolve) => setTimeout(resolve, retryDelay));
+      }
+    }
+    throw new Error('重试次数耗尽');
+  }
+
+  public getWithRetry<T = any>(url: string, config: RetryConfig = {}): Promise<T> {
+    const requestConfig: AxiosRequestConfig = { method: 'GET', url, ...config };
+    return this.retryRequest<T>(config, requestConfig);
+  }
+}
+
+// 使用
+const http = new HttpClient();
+http.getWithRetry('/users', { retries: 3, retryDelay: 2000 }).then((data) =>
+  console.log(data)
+);
+```
+
+**源码解析**：
+- `retryRequest` 通过循环实现重试逻辑，使用 `setTimeout` 控制间隔。
+- 如果所有重试失败，则抛出最终错误。
+
+## 完整代码
+
+以下是完整的 `HttpClient` 实现：
+
+```typescript
+// src/http/index.ts
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, CancelTokenSource } from 'axios';
+
+interface RequestConfig<T = any> extends AxiosRequestConfig {
+  data?: T;
+  retries?: number;
+  retryDelay?: number;
+}
+
+class HttpClient {
+  private instance: AxiosInstance;
+  private cancelTokenSources: Map<string, CancelTokenSource> = new Map();
+
+  constructor(config: AxiosRequestConfig = {}) {
+    const defaultConfig: AxiosRequestConfig = {
+      baseURL: process.env.API_BASE_URL || 'https://api.example.com',
+      timeout: 10000,
+      headers: { 'Content-Type': 'application/json' },
+    };
+    this.instance = axios.create({ ...defaultConfig, ...config });
+    this.setupInterceptors();
+  }
+
+  private setupInterceptors() {
+    this.instance.interceptors.request.use(
+      (config: AxiosRequestConfig) => {
+        const token = localStorage.getItem('token');
+        if (token) {
+          config.headers = { ...config.headers, Authorization: `Bearer ${token}` };
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    this.instance.interceptors.response.use(
+      (response: AxiosResponse) => response.data,
+      (error) => {
+        if (axios.isCancel(error)) {
+          console.log('请求已取消:', error.message);
+          return Promise.reject(error);
+        }
+        if (error.response) {
+          const { status, data } = error.response;
+          switch (status) {
+            case 401: console.error('未授权，请重新登录'); break;
+            case 403: console.error('权限不足'); break;
+            default: console.error(data.message || '未知错误');
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
+  }
+
+  public getInstance(): AxiosInstance {
+    return this.instance;
+  }
+
+  public get<T = any>(url: string, config?: RequestConfig): Promise<T> {
+    return this.instance.get<T>(url, config).then((res) => res as T);
+  }
+
+  public post<T = any, D = any>(url: string, data?: D, config?: RequestConfig<D>): Promise<T> {
+    return this.instance.post<T>(url, data, config).then((res) => res as T);
+  }
+
+  public requestWithCancel<T = any>(url: string, config: RequestConfig = {}): Promise<T> {
+    if (this.cancelTokenSources.has(url)) {
+      this.cancelTokenSources.get(url)?.cancel(`取消重复请求: ${url}`);
+    }
+    const source = axios.CancelToken.source();
+    this.cancelTokenSources.set(url, source);
+    const requestConfig: RequestConfig = { ...config, cancelToken: source.token };
+    return this.instance
+      .get<T>(url, requestConfig)
+      .then((res) => {
+        this.cancelTokenSources.delete(url);
+        return res as T;
+      })
+      .catch((err) => {
+        this.cancelTokenSources.delete(url);
+        throw err;
+      });
+  }
+
+  public cancelAll() {
+    this.cancelTokenSources.forEach((source, url) => {
+      source.cancel(`手动取消请求: ${url}`);
+      this.cancelTokenSources.delete(url);
+    });
+  }
+
+  private async retryRequest<T>(config: RequestConfig, originalRequest: AxiosRequestConfig): Promise<T> {
+    const { retries = 3, retryDelay = 1000 } = config;
+    let attempt = 0;
+    while (attempt < retries) {
+      try {
+        return await this.instance.request<T>(originalRequest);
+      } catch (error) {
+        attempt++;
+        if (attempt === retries) throw error;
+        await new Promise((resolve) => setTimeout(resolve, retryDelay));
+      }
+    }
+    throw new Error('重试次数耗尽');
+  }
+
+  public getWithRetry<T = any>(url: string, config: RequestConfig = {}): Promise<T> {
+    const requestConfig: AxiosRequestConfig = { method: 'GET', url, ...config };
+    return this.retryRequest<T>(config, requestConfig);
+  }
+}
+
+export default HttpClient;
+```
+
+## 总结
+
+通过对 axios 的二次封装，我们实现了一个功能强大且灵活的企业级请求库，支持拦截器、请求取消、重试机制和类型安全等特性。这些功能不仅提高了开发效率，还增强了代码的可维护性。在实际项目中，你可以根据具体需求进一步扩展，例如添加文件上传、进度监听或缓存功能。
+
+希望本文能为你的前端开发提供启发。如果你有其他需求或改进建议，欢迎留言讨论！
+
+---

@@ -1,0 +1,124 @@
+/* 全局滚动条样式 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+/* 滚动条轨道 */
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 滚动条滑块 */
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  transition: all 0.2s ease;
+}
+
+/* 滑块悬停效果 */
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+/* 暗色模式滚动条 */
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-thumb {
+    background: rgba(75, 85, 99, 0.3);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(75, 85, 99, 0.5);
+  }
+}
+
+/* 主题特定的滚动条样式 */
+[data-theme="green"] ::-webkit-scrollbar-thumb {
+  background: rgba(52, 211, 153, 0.2);
+}
+
+[data-theme="green"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(52, 211, 153, 0.4);
+}
+
+[data-theme="purple"] ::-webkit-scrollbar-thumb {
+  background: rgba(167, 139, 250, 0.2);
+}
+
+[data-theme="purple"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(167, 139, 250, 0.4);
+}
+
+[data-theme="orange"] ::-webkit-scrollbar-thumb {
+  background: rgba(251, 146, 60, 0.2);
+}
+
+[data-theme="orange"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(251, 146, 60, 0.4);
+}
+
+[data-theme="blue"] ::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+[data-theme="blue"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.4);
+}
+
+[data-theme="pink"] ::-webkit-scrollbar-thumb {
+  background: rgba(236, 72, 153, 0.2);
+}
+
+[data-theme="pink"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(236, 72, 153, 0.4);
+}
+
+[data-theme="brown"] ::-webkit-scrollbar-thumb {
+  background: rgba(217, 119, 6, 0.2);
+}
+
+[data-theme="brown"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(217, 119, 6, 0.4);
+}
+
+/* Firefox 滚动条样式 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+}
+
+/* Firefox 暗色模式滚动条 */
+@media (prefers-color-scheme: dark) {
+  * {
+    scrollbar-color: rgba(75, 85, 99, 0.3) transparent;
+  }
+}
+
+/* Firefox 主题特定的滚动条样式 */
+[data-theme="green"] * {
+  scrollbar-color: rgba(52, 211, 153, 0.2) transparent;
+}
+
+[data-theme="purple"] * {
+  scrollbar-color: rgba(167, 139, 250, 0.2) transparent;
+}
+
+[data-theme="orange"] * {
+  scrollbar-color: rgba(251, 146, 60, 0.2) transparent;
+}
+
+[data-theme="blue"] * {
+  scrollbar-color: rgba(59, 130, 246, 0.2) transparent;
+}
+
+[data-theme="pink"] * {
+  scrollbar-color: rgba(236, 72, 153, 0.2) transparent;
+}
+
+[data-theme="brown"] * {
+  scrollbar-color: rgba(217, 119, 6, 0.2) transparent;
+}

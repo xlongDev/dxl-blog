@@ -1,0 +1,343 @@
+---
+
+title: "Promise 必知必会（十道题）"
+date: "2023-02-02"
+description: "深入剖析 Promise 的核心原理与实战技巧，通过十道经典题目带你从入门到精通，附带最佳实践与小 Tips。"
+keywords: "Promise, JavaScript, 异步编程, 前端开发, ES6, 微任务, 事件循环"
+author: "晓龙"
+image: "/images/hero/promise-guide.jpg"
+tags: ["JavaScript", "异步编程", "前端开发"]
+category: "JavaScript"
+
+---
+
+嘿，前端小伙伴们！今天我们来聊聊 JavaScript 中绕不开的异步神器——Promise。🎉 自从 ES6 把 Promise 带到我们面前，它就像是异步编程界的“救世主”，拯救了我们于回调地狱的水深火热之中。但你真的了解 Promise 的每一块“肌肉”吗？它的状态机、微任务机制、错误捕获，甚至是那些让人头秃的边角 case，你都心里有数吗？
+
+这篇博客不是那种干巴巴的 API 说明书，而是通过 **十道经典题目**，带你从原理到实战，层层剥开 Promise 的神秘面纱。每个题目后面都有解析、示例、最佳实践，甚至还有点小幽默（保证不尬），让你不仅会用，还能用得漂亮！准备好了吗？让我们一起来“解锁” Promise 的硬核技能树吧！🚀
+
+---
+
+## 题目 1：Promise 的三种状态是什么？状态转换的规则是怎样的？
+
+### 解析
+
+Promise 有三种状态：`pending`（待定）、`fulfilled`（已完成）、`rejected`（已拒绝）。这就像人生三大阶段：单身（还在等）、恋爱（搞定了）、失恋（翻车了）。😂 一旦 Promise 从 `pending` 变成 `fulfilled` 或 `rejected`，状态就锁死了，绝不会再变——这叫“不可变性”，有点像你签了合同就不能反悔。
+
+状态转换的规则很简单：
+- `pending` -> `fulfilled`：通过 `resolve(value)` 触发。
+- `pending` -> `rejected`：通过 `reject(reason)` 触发。
+- 其他方向？不存在的，状态是单向箭头，绝不回头。
+
+### 示例
+
+```javascript
+const p = new Promise((resolve, reject) => {
+  console.log("状态：pending");
+  setTimeout(() => {
+    resolve("搞定了！"); // 状态变为 fulfilled
+    // reject("翻车了！"); // 如果这里触发，状态变为 rejected
+  }, 1000);
+});
+
+p.then(
+  (value) => console.log(value),
+  (reason) => console.log(reason)
+);
+```
+
+### 最佳实践
+
+- **明确状态转换的时机**：在实际项目中，确保 `resolve` 和 `reject` 只被调用一次，避免逻辑混乱。
+- **Tips**: 如果不确定异步操作会不会成功，别忘了加个 `try-catch`，不然 `reject` 可能会漏掉错误。
+
+---
+
+## 题目 2：Promise 是如何处理异步的？它跟 setTimeout 的区别在哪？
+
+### 解析
+
+Promise 本身并不是异步的，它只是一个状态容器。但它的 `then` 和 `catch` 方法会把回调塞进微任务队列（Microtask Queue），这比 `setTimeout`（宏任务）的优先级高。简单来说，Promise 就像是VIP客户，排队优先级更高，而 `setTimeout` 是普通用户，得等一等。
+
+事件循环（Event Loop）会先清空微任务，再处理宏任务。所以 Promise 的回调通常比 `setTimeout` 先执行。
+
+### 示例
+
+```javascript
+console.log("开始");
+
+setTimeout(() => console.log("setTimeout 来了"), 0);
+
+Promise.resolve().then(() => console.log("Promise 优先级更高"));
+
+console.log("结束");
+
+// 输出顺序：
+// 开始
+// 结束
+// Promise 优先级更高
+// setTimeout 来了
+```
+
+### 最佳实践
+
+- **优先使用 Promise**：需要快速响应的逻辑（比如 DOM 更新后处理），用 Promise 而不是 `setTimeout`。
+- **Tips**: 如果你需要延迟执行，又想用 Promise，可以包一层：`const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))`。
+
+---
+
+## 题目 3：Promise.then 的链式调用是怎么实现的？
+
+### 解析
+
+Promise 的链式调用是它的灵魂所在。每次调用 `then`，都会返回一个**新的 Promise**，而不是修改原来的。这有点像俄罗斯套娃，一个 Promise 套着另一个，层层传递。
+
+原理上，`then` 的返回值会通过 `resolve` 传给下一个 `then`，如果有错误，则跳到最近的 `catch`。这依赖于 Promise 的“值穿透”特性——如果 `then` 没返回值，默认传 `undefined`。
+
+### 示例
+
+```javascript
+Promise.resolve(1)
+  .then((num) => num + 1)
+  .then((num) => num * 2)
+  .then((num) => console.log(num)); // 输出：4
+```
+
+### 最佳实践
+
+- **保持链式简洁**：别把所有逻辑塞在一个 `then` 里，拆分成小块，代码更可读。
+- **Tips**: 如果需要调试链式调用，加个 `console.log` 在每个 `then` 里，看看数据怎么流动。
+
+---
+
+## 题目 4：Promise 能取消吗？如果不能，怎么模拟取消？
+
+### 解析
+
+坏消息：原生 Promise 没法取消。😢 一旦创建，它就像射出去的箭，只能等结果。好消息：我们可以用一些“曲线救国”的方法模拟取消，比如用一个标志位或者借助 `AbortController`。
+
+### 示例
+
+```javascript
+function cancellablePromise() {
+  let isCancelled = false;
+  const promise = new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (!isCancelled) resolve("成功啦");
+      else reject("被取消了");
+    }, 2000);
+  });
+
+  return {
+    promise,
+    cancel: () => (isCancelled = true),
+  };
+}
+
+const { promise, cancel } = cancellablePromise();
+promise.then(console.log).catch(console.log);
+setTimeout(cancel, 1000); // 1秒后取消
+```
+
+### 最佳实践
+
+- **用 AbortController**：现代 fetch 请求可以用它取消，结合 Promise 更优雅。
+- **Tips**: 自定义取消逻辑时，别忘了清理资源（比如定时器），避免内存泄漏。
+
+---
+
+## 题目 5：Promise.all 的作用是什么？如果有一个失败会怎样？
+
+### 解析
+
+`Promise.all` 是个“团队协作大师”，它接收一个 Promise 数组，等所有 Promise 都 `fulfilled` 后返回结果数组。如果有一个 `rejected`，它就立刻失败，抛出那个错误——有点像团队里有人掉链子，全队都得停下来。
+
+### 示例
+
+```javascript
+const p1 = Promise.resolve(1);
+const p2 = Promise.resolve(2);
+const p3 = Promise.reject("出错啦");
+
+Promise.all([p1, p2, p3])
+  .then((results) => console.log(results))
+  .catch((err) => console.log(err)); // 输出：出错啦
+```
+
+### 最佳实践
+
+- **处理部分失败**：如果想让其他 Promise 继续完成，可以用 `Promise.allSettled`。
+- **Tips**: 在 `Promise.all` 前检查输入数组，确保没传空值，不然会直接报错。
+
+---
+
+## 题目 6：Promise.race 是干嘛的？有什么实际应用？
+
+### 解析
+
+`Promise.race` 是“赛跑模式”，谁先完成（不管是成功还是失败），就用谁的结果。这就像跑步比赛，第一个冲过终点线的决定胜负。
+
+实际场景？比如设置超时机制，或者多个数据源竞争，看谁响应快。
+
+### 示例
+
+```javascript
+const slow = new Promise((resolve) => setTimeout(() => resolve("慢"), 2000));
+const fast = new Promise((resolve) => setTimeout(() => resolve("快"), 1000));
+
+Promise.race([slow, fast]).then((result) => console.log(result)); // 输出：快
+```
+
+### 最佳实践
+
+- **超时控制**：结合 `Promise.race` 和延时 Promise，实现请求超时。
+- **Tips**: `const timeout = (ms) => new Promise((_, reject) => setTimeout(() => reject("超时"), ms))`。
+
+---
+
+## 题目 7：Promise 的错误捕获机制是怎样的？
+
+### 解析
+
+Promise 的错误处理靠 `catch`，它能捕获链中任何一环的异常。未处理的 `rejected` 会触发全局 `unhandledrejection` 事件，所以别忘了兜底。
+
+### 示例
+
+```javascript
+Promise.resolve()
+  .then(() => {
+    throw new Error("炸了");
+  })
+  .then(() => console.log("这行不会执行"))
+  .catch((err) => console.log(err.message)); // 输出：炸了
+```
+
+### 最佳实践
+
+- **统一错误处理**：在链式调用末尾加个 `catch`，避免漏掉异常。
+- **Tips**: 调试时可以用 `console.error` 在 `catch` 里，方便定位问题。
+
+---
+
+## 题目 8：Promise.resolve 和 Promise.reject 的用法是什么？
+
+### 解析
+
+`Promise.resolve(value)` 直接返回一个 `fulfilled` 的 Promise，`Promise.reject(reason)` 返回一个 `rejected` 的。前者像给你个“速成成功”，后者是“速成失败”。
+
+### 示例
+
+```javascript
+Promise.resolve("马上成功").then(console.log); // 输出：马上成功
+Promise.reject("马上失败").catch(console.log); // 输出：马上失败
+```
+
+### 最佳实践
+
+- **统一返回值**：函数返回 Promise 时，用 `Promise.resolve` 包一下，确保一致性。
+- **Tips**: `Promise.resolve` 还能解析 thenable 对象，很有用！
+
+---
+
+## 题目 9：如何手写一个 Promise？
+
+### 解析
+
+手写 Promise 是理解其原理的最佳方式。核心是实现状态机和 `then` 的链式调用。别慌，我们一步步来。
+
+### 示例
+
+```javascript
+class MyPromise {
+  constructor(executor) {
+    this.state = "pending";
+    this.value = undefined;
+    this.callbacks = [];
+    const resolve = (value) => {
+      if (this.state !== "pending") return;
+      this.state = "fulfilled";
+      this.value = value;
+      this.callbacks.forEach((cb) => cb.onFulfilled(value));
+    };
+    const reject = (reason) => {
+      if (this.state !== "pending") return;
+      this.state = "rejected";
+      this.value = reason;
+      this.callbacks.forEach((cb) => cb.onRejected(reason));
+    };
+    try {
+      executor(resolve, reject);
+    } catch (err) {
+      reject(err);
+    }
+  }
+
+  then(onFulfilled, onRejected) {
+    return new MyPromise((resolve, reject) => {
+      const handle = (type, value) => {
+        try {
+          const result =
+            type === "fulfilled" ? onFulfilled(value) : onRejected(value);
+          resolve(result);
+        } catch (err) {
+          reject(err);
+        }
+      };
+      if (this.state === "pending") {
+        this.callbacks.push({
+          onFulfilled: (value) => handle("fulfilled", value),
+          onRejected: (reason) => handle("rejected", reason),
+        });
+      } else {
+        setTimeout(() =>
+          handle(this.state === "fulfilled" ? "fulfilled" : "rejected", this.value)
+        );
+      }
+    });
+  }
+}
+```
+
+### 最佳实践
+
+- **异步执行**：用 `setTimeout` 模拟微任务，确保回调异步。
+- **Tips**: 手写时先测简单 case，再加复杂逻辑，稳扎稳打。
+
+---
+
+## 题目 10：Promise 在项目中的常见坑有哪些？
+
+### 解析
+
+Promise 虽好，但坑也不少：
+1. **忘记捕获错误**：链式调用没加 `catch`，异常默默吞掉。
+2. **嵌套地狱**：Promise 里套 Promise，代码变“意大利面”。
+3. **微任务堆积**：过度使用 `then`，导致性能问题。
+
+### 示例（嵌套地狱）
+
+```javascript
+// 不好
+fetchUser().then((user) => {
+  fetchProfile(user.id).then((profile) => {
+    console.log(profile);
+  });
+});
+
+// 好
+fetchUser()
+  .then((user) => fetchProfile(user.id))
+  .then((profile) => console.log(profile));
+```
+
+### 最佳实践
+
+- **扁平化链式**：用 `return` 避免嵌套。
+- **Tips**: 项目中可以用 `async/await` 替代复杂 Promise，更直观。
+
+---
+
+## 总结
+
+Promise 是前端开发者的“老伙计”，从状态机到微任务，从链式调用到错误处理，每一块都值得我们细细品味。这十道题只是起点，真正的功夫在实战中磨。希望你看完这篇博客，不仅能答对面试题，还能在项目里写出优雅的异步代码。💪 下次写 Promise 时，别忘了这些小 Tips，让你的代码更香！有什么问题，欢迎留言，咱们一起聊聊！😎
+
+--- 
