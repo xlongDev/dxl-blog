@@ -125,6 +125,13 @@ const TimeStats = ({ latestUpdate, avgReadingTime }: TimeStatsProps) => {
   const cardGradient = getCardGradient();
   const hoverBgClass = getHoverBgClass();
   const shadowEffect = getShadowEffect();
+
+  const safeDate = (date?: string) => {
+    if (!date) return null;
+    const d = new Date(date);
+    return isNaN(d.getTime()) ? null : d;
+  };
+
   return (
     <div className="w-full">
       {/* 标题区域 */}
@@ -158,9 +165,10 @@ const TimeStats = ({ latestUpdate, avgReadingTime }: TimeStatsProps) => {
           <span
             className={`text-xl font-medium bg-gradient-to-r ${textGradient} bg-clip-text text-transparent`}
           >
-            {format(new Date(latestUpdate), "yyyy年MM月dd日", {
-              locale: zhCN,
-            })}
+            {(() => {
+              const d = safeDate(latestUpdate);
+              return d ? format(d, "yyyy年MM月dd日", { locale: zhCN }) : "无日期";
+            })()}
           </span>
         </div>
         <div

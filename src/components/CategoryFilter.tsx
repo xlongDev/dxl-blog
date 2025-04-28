@@ -7,6 +7,7 @@ import FadeIn from "@/components/FadeIn";
 import Categories from "./Categories";
 import { useThemeUtils } from "@/hooks/useThemeUtils";
 import { Post } from "contentlayer/generated";
+import Link from "next/link";
 
 interface CategoryFilterProps {
   posts: Post[];
@@ -14,6 +15,8 @@ interface CategoryFilterProps {
   currentCategory: string;
   categories: string[];
   postsByCategory: Record<string, number>;
+  currentPage: number;
+  totalPages: number;
 }
 
 export default function CategoryFilter({
@@ -22,6 +25,8 @@ export default function CategoryFilter({
   currentCategory,
   categories,
   postsByCategory,
+  currentPage,
+  totalPages,
 }: CategoryFilterProps) {
   const { getThemeClass } = useThemeUtils();
   const [visiblePosts, setVisiblePosts] = useState<Post[]>([]);
@@ -64,6 +69,17 @@ export default function CategoryFilter({
     brown: "bg-amber-50/10",
   });
 
+  const paginationClass = getThemeClass("text-gray-700 dark:text-gray-300", {
+    light: "text-gray-700 dark:text-gray-300",
+    dark: "text-gray-300",
+    green: "text-emerald-700 dark:text-emerald-300",
+    purple: "text-purple-700 dark:text-purple-300",
+    orange: "text-orange-700 dark:text-orange-300",
+    blue: "text-blue-700 dark:text-blue-300",
+    pink: "text-pink-700 dark:text-pink-300",
+    brown: "text-amber-700 dark:text-amber-300",
+  });
+
   return (
     <div className="space-y-8">
       <Categories
@@ -86,6 +102,37 @@ export default function CategoryFilter({
         {visiblePosts.length < posts.length && (
           <div ref={loadMoreRef} className="mt-8 text-center">
             <p className="text-gray-500">加载中...</p>
+          </div>
+        )}
+        
+        {/* 分页导航 */}
+        {totalPages > 1 && (
+          <div className={`mt-8 flex justify-center items-center space-x-4 ${paginationClass}`}>
+            <Link
+              href={`/blog/category/${currentCategory}?page=${currentPage - 1}`}
+              className={`px-4 py-2 rounded-lg ${
+                currentPage === 1
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-opacity-10 hover:bg-current"
+              }`}
+              onClick={(e) => currentPage === 1 && e.preventDefault()}
+            >
+              上一页
+            </Link>
+            <span>
+              第 {currentPage} 页 / 共 {totalPages} 页
+            </span>
+            <Link
+              href={`/blog/category/${currentCategory}?page=${currentPage + 1}`}
+              className={`px-4 py-2 rounded-lg ${
+                currentPage === totalPages
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-opacity-10 hover:bg-current"
+              }`}
+              onClick={(e) => currentPage === totalPages && e.preventDefault()}
+            >
+              下一页
+            </Link>
           </div>
         )}
       </div>

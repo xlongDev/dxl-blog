@@ -1,9 +1,9 @@
 "use client";
 
-import { Suspense, lazy, useState, useEffect } from "react";
+import { Suspense, lazy, useState, useEffect, memo } from "react";
 import { Post } from "contentlayer/generated";
-import { usePaginatedPosts } from "@/hooks/usePaginatedPosts";
 import { useThemeUtils } from "@/hooks/useThemeUtils";
+import Link from "next/link";
 
 // 懒加载组件
 const BlogStats = lazy(() => import("@/components/BlogStats"));
@@ -15,6 +15,9 @@ const TimelineView = lazy(() => import("@/components/TimelineView"));
 
 interface BlogPageClientProps {
   posts: Post[];
+  totalPosts: number;
+  currentPage: number;
+  totalPages: number;
 }
 
 const LoadingSpinner = () => (
@@ -23,19 +26,41 @@ const LoadingSpinner = () => (
   </div>
 );
 
-export default function BlogPageClient({ posts }: BlogPageClientProps) {
-  const [isLoading, setIsLoading] = useState(false);
+// 使用 memo 优化分页按钮组件
+const PaginationButton = memo(({ 
+  href, 
+  disabled, 
+  children, 
+  className 
+}: { 
+  href: string; 
+  disabled: boolean; 
+  children: React.ReactNode;
+  className: string;
+}) => (
+  <Link
+    href={href}
+    className={`px-4 py-2 rounded-lg ${
+      disabled
+        ? "opacity-50 cursor-not-allowed"
+        : "hover:bg-opacity-10 hover:bg-current"
+    } ${className}`}
+    onClick={(e) => disabled && e.preventDefault()}
+  >
+    {children}
+  </Link>
+));
+
+PaginationButton.displayName = "PaginationButton";
+
+export default function BlogPageClient({ 
+  posts, 
+  totalPosts, 
+  currentPage, 
+  totalPages 
+}: BlogPageClientProps) {
   const [isMobile, setIsMobile] = useState(true);
-  const [pageInput, setPageInput] = useState(""); // 页码输入
-  const { getThemeColor, theme } = useThemeUtils();
-  const {
-    paginatedPosts,
-    currentPage,
-    totalPages,
-    goToNextPage,
-    goToPreviousPage,
-    goToPage,
-  } = usePaginatedPosts({ posts, postsPerPage: isMobile ? 8 : 12 });
+  const { getThemeClass } = useThemeUtils();
 
   useEffect(() => {
     const checkIsMobile = () => {
@@ -48,207 +73,101 @@ export default function BlogPageClient({ posts }: BlogPageClientProps) {
     return () => window.removeEventListener("resize", checkIsMobile);
   }, []);
 
-  // 同步输入框与当前页码
-  useEffect(() => {
-    setPageInput(currentPage.toString());
-  }, [currentPage]);
+  // 修改后的代码
+  const containerClass = getThemeClass("bg-white/10", {
+    light: "bg-white/10",
+    dark: "bg-gray-80/10",
+    green: "bg-emerald-50/10",
+    purple: "bg-purple-50/10",
+    orange: "bg-orange-50/10",
+    blue: "bg-blue-50/10",
+    pink: "bg-pink-50/10",
+    brown: "bg-amber-50/10",
+  });
 
-  // 根据主题获取背景色和边框色
-  const getBgClass = () => {
-    const themeColors = {
-      light: "bg-white/80 dark:bg-gray-800/80",
-      dark: "bg-gray-800/80",
-      green:
-        "bg-green-50/80 dark:bg-green-900/20 hover:bg-green-50/90 dark:hover:bg-green-900/30",
-      purple:
-        "bg-purple-50/80 dark:bg-purple-900/20 hover:bg-purple-50/90 dark:hover:bg-purple-900/30",
-      orange:
-        "bg-orange-50/80 dark:bg-orange-900/20 hover:bg-orange-50/90 dark:hover:bg-orange-900/30",
-      blue: "bg-blue-50/80 dark:bg-blue-900/20 hover:bg-blue-50/90 dark:hover:bg-blue-900/30",
-      pink: "bg-pink-50/80 dark:bg-pink-900/20 hover:bg-pink-50/90 dark:hover:bg-pink-900/30",
-      brown:
-        "bg-amber-50/80 dark:bg-amber-900/20 hover:bg-amber-50/90 dark:hover:bg-amber-900/30",
-    };
-
-    return themeColors[theme as keyof typeof themeColors] || themeColors.light;
-  };
-
-  const getBorderClass = () => {
-    const themeColors = {
-      light: "border-gray-200/50 dark:border-gray-700/50",
-      dark: "border-gray-700/50",
-      green:
-        "border-green-200/50 dark:border-green-700/50 hover:border-green-300/70 dark:hover:border-green-600/70",
-      purple:
-        "border-purple-200/50 dark:border-purple-700/50 hover:border-purple-300/70 dark:hover:border-purple-600/70",
-      orange:
-        "border-orange-200/50 dark:border-orange-700/50 hover:border-orange-300/70 dark:hover:border-orange-600/70",
-      blue: "border-blue-200/50 dark:border-blue-700/50 hover:border-blue-300/70 dark:hover:border-blue-600/70",
-      pink: "border-pink-200/50 dark:border-pink-700/50 hover:border-pink-300/70 dark:hover:border-pink-600/70",
-      brown:
-        "border-amber-200/50 dark:border-amber-700/50 hover:border-amber-300/70 dark:hover:border-amber-600/70",
-    };
-
-    return themeColors[theme as keyof typeof themeColors] || themeColors.light;
-  };
-
-  const getButtonClass = () => {
-    const themeColors = {
-      light: "bg-blue-500 hover:bg-blue-600 shadow hover:shadow-md",
-      dark: "bg-blue-500 hover:bg-blue-600 shadow hover:shadow-md",
-      green: "bg-green-500 hover:bg-green-600 shadow hover:shadow-md",
-      purple: "bg-purple-500 hover:bg-purple-600 shadow hover:shadow-md",
-      orange: "bg-orange-500 hover:bg-orange-600 shadow hover:shadow-md",
-      blue: "bg-blue-500 hover:bg-blue-600 shadow hover:shadow-md",
-      pink: "bg-pink-500 hover:bg-pink-600 shadow hover:shadow-md",
-      brown: "bg-amber-500 hover:bg-amber-600 shadow hover:shadow-md",
-    };
-
-    return themeColors[theme as keyof typeof themeColors] || themeColors.light;
-  };
-
-  const bgClass = getBgClass();
-  const borderClass = getBorderClass();
-  const buttonClass = getButtonClass();
-
-  // 处理页码输入变化
-  const handlePageInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPageInput(e.target.value);
-  };
-
-  // 处理跳转逻辑
-  const handlePageJump = () => {
-    const pageNumber = parseInt(pageInput, 10);
-    if (!isNaN(pageNumber) && pageNumber >= 1 && pageNumber <= totalPages) {
-      setIsLoading(true);
-      goToPage(pageNumber);
-      setTimeout(() => setIsLoading(false), 300); // 模拟加载
-    } else {
-      setPageInput(currentPage.toString()); // 恢复当前页码
+  const paginationClass = getThemeClass(
+    "text-gray-700 dark:text-gray-300 hover:z-10 hover:bg-opacity-100", // 新增hover样式
+    {
+      light: "text-gray-700 dark:text-gray-300",
+      dark: "text-gray-300",
+      green: "text-emerald-700 dark:text-emerald-300",
+      purple: "text-purple-700 dark:text-purple-300",
+      orange: "text-orange-700 dark:text-orange-300",
+      blue: "text-blue-700 dark:text-blue-300",
+      pink: "text-pink-700 dark:text-pink-300",
+      brown: "text-amber-700 dark:text-amber-300",
     }
-  };
-
-  // 处理回车键触发
-  const handlePageInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handlePageJump();
-    }
-  };
-
-  // 处理输入框失焦
-  const handlePageInputBlur = () => {
-    handlePageJump();
-  };
+  );
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-background text-foreground">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 space-y-8" id="post-list-container">
           {!isMobile && (
             <div
-              className={`${bgClass} backdrop-blur-sm rounded-lg shadow p-4 border ${borderClass}`}
+              className={`${containerClass} backdrop-blur-sm rounded-lg shadow p-4`}
             >
               <Suspense fallback={<LoadingSpinner />}>
-                <BlogStats posts={posts} />
+                <BlogStats />
               </Suspense>
             </div>
           )}
           {isMobile && (
             <div
-              className={`${bgClass} backdrop-blur-sm rounded-lg shadow p-4 border ${borderClass} space-y-4 w-full relative z-20`}
+              className={`${containerClass} backdrop-blur-sm rounded-lg shadow p-4 border space-y-4 w-full relative z-20`}
             >
               <Suspense fallback={<LoadingSpinner />}>
-                <MobileCategories posts={posts} />
+                <MobileCategories />
               </Suspense>
             </div>
           )}
           <div
-            className={`${bgClass} backdrop-blur-sm rounded-lg shadow p-4 border ${borderClass}`}
+            className={`${containerClass} backdrop-blur-sm rounded-lg shadow p-4`}
           >
             <Suspense fallback={<LoadingSpinner />}>
-              <BlogFilter posts={paginatedPosts} />
+              <BlogFilter posts={posts} />
             </Suspense>
-            <div className="mt-8 flex justify-center items-center gap-3">
-              <button
-                onClick={goToPreviousPage}
-                disabled={currentPage === 1 || isLoading}
-                className={`w-10 h-10 flex items-center justify-center rounded-full ${buttonClass} text-white disabled:opacity-50 transition-all duration-300`}
-                aria-label="上一页"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-              </button>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={pageInput}
-                  onChange={handlePageInputChange}
-                  onKeyDown={handlePageInputKeyDown}
-                  onBlur={handlePageInputBlur}
-                  className={`w-12 h-10 text-center rounded-full border ${borderClass} bg-transparent focus:ring-2 focus:ring-opacity-50 focus:outline-none ${
-                    theme && theme !== "light" && theme !== "dark"
-                      ? `focus:ring-${theme}-500/50`
-                      : "focus:ring-blue-500/50"
-                  } transition-all duration-300`}
-                  aria-label="当前页码"
-                />
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  / {totalPages}
-                </span>
-              </div>
-              <button
-                onClick={goToNextPage}
-                disabled={currentPage === totalPages || isLoading}
-                className={`w-10 h-10 flex items-center justify-center rounded-full ${buttonClass} text-white disabled:opacity-50 transition-all duration-300`}
-                aria-label="下一页"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </button>
-            </div>
-            {isLoading && (
-              <div className="mt-4 text-center text-gray-500">加载中...</div>
-            )}
           </div>
+
+          {/* 分页导航 */}
+          {totalPages > 1 && (
+            <div className={`mt-8 flex justify-center items-center space-x-4 ${paginationClass}`}>
+              <PaginationButton
+                href={`/blog?page=${currentPage - 1}`}
+                disabled={currentPage === 1}
+                className={paginationClass}
+              >
+                上一页
+              </PaginationButton>
+              <span>
+                第 {currentPage} 页 / 共 {totalPages} 页
+              </span>
+              <PaginationButton
+                href={`/blog?page=${currentPage + 1}`}
+                disabled={currentPage === totalPages}
+                className={paginationClass}
+              >
+                下一页
+              </PaginationButton>
+            </div>
+          )}
         </div>
+
+        {/* 文章树和时间线 */}
         {!isMobile && (
           <div className="lg:col-span-4 space-y-8">
             <div
-              className={`${bgClass} backdrop-blur-sm rounded-lg shadow p-4 border ${borderClass}`}
+              className={`${containerClass} backdrop-blur-sm rounded-lg shadow p-4`}
             >
               <Suspense fallback={<LoadingSpinner />}>
-                <ArticleTree posts={posts} />
+                <ArticleTree />
               </Suspense>
             </div>
             <div
-              className={`${bgClass} backdrop-blur-sm rounded-lg shadow p-4 border ${borderClass}`}
+              className={`${containerClass} backdrop-blur-sm rounded-lg shadow p-4`}
             >
               <Suspense fallback={<LoadingSpinner />}>
-                <TimelineView posts={posts} />
+                <TimelineView />
               </Suspense>
             </div>
           </div>

@@ -78,21 +78,25 @@ export async function generateStaticParams() {
     .slice(0, 5)
     .map(({ category }) => category);
 
-  // 预生成热门分类和 "all" 页面
-  return [...popularCategories, "all"].map((category) => ({
+  // 只预生成热门分类页面
+  return popularCategories.map((category) => ({
     category: category.toLowerCase(),
   }));
 }
 
-export const revalidate = 60; // 每 60 秒重新验证
+export const revalidate = 60;
 
 export default async function CategoryPage({
   params,
+  searchParams,
 }: {
   params: { category: string };
+  searchParams: { page?: string };
 }) {
   const { category } = params;
   const decodedCategory = decodeURIComponent(category);
+  const page = Number(searchParams.page) || 1;
+  const postsPerPage = 9;
 
   // 仅加载当前分类的文章（基于文件目录）
   const filteredPosts: Post[] = allPosts
@@ -105,8 +109,14 @@ export default async function CategoryPage({
           postCategory.toLowerCase() === decodedCategory.toLowerCase())
       );
     })
-    .sort((a, b) => compareDesc(new Date(a.date), new Date(b.date)))
-    .slice(0, 20); // 限制每页显示的文章数量
+    .sort((a, b) => compareDesc(new Date(a.date), new Date(b.date)));
+
+  // 计算分页
+  const totalPosts = filteredPosts.length;
+  const totalPages = Math.ceil(totalPosts / postsPerPage);
+  const startIndex = (page - 1) * postsPerPage;
+  const endIndex = startIndex + postsPerPage;
+  const paginatedPosts = filteredPosts.slice(startIndex, endIndex);
 
   // 获取所有分类（基于文件目录）
   const categories = Array.from(
@@ -121,23 +131,18 @@ export default async function CategoryPage({
   );
 
   // 从缓存读取 postsByCategory 和 totalPosts
-  const { totalPosts, postsByCategory } = await getPostsByCategoryCache();
+  const { totalPosts: totalAllPosts, postsByCategory } = await getPostsByCategoryCache();
 
   return (
     <div className="space-y-8 container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      {/* <FadeIn>
-        <h1 className="text-3xl font-bold mb-8">
-          {decodedCategory === "all"
-            ? "所有文章"
-            : `${decodedCategory} 分类下的文章`}
-        </h1>
-      </FadeIn> */}
       <CategoryFilter
-        posts={filteredPosts}
-        totalPosts={totalPosts}
+        posts={paginatedPosts}
+        totalPosts={decodedCategory === "all" ? totalAllPosts : postsByCategory[decodedCategory] || 0}
         currentCategory={decodedCategory}
         categories={categories}
         postsByCategory={postsByCategory}
+        currentPage={page}
+        totalPages={totalPages}
       />
     </div>
   );

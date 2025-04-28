@@ -85,7 +85,7 @@ export default function TypewriterQuote({
         className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-4 tracking-wider leading-relaxed text-white"
         style={{
           textShadow: "2px 2px 8px rgba(0, 0, 0, 0.5)",
-          fontFamily: "var(--font-noto-serif-sc)",
+          // 移除Google字体引用
           letterSpacing: "0.1em",
           lineHeight: "1.5",
         }}

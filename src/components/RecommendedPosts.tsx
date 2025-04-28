@@ -14,8 +14,19 @@ import { useThemeUtils } from "@/hooks/useThemeUtils";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
+interface SimplePost {
+  title: string;
+  date: string;
+  url: string;
+  category: string;
+  tags?: string[];
+  views?: number;
+  likes?: number;
+  description?: string;
+}
+
 interface RecommendedPostsProps {
-  recommendedPosts: Post[];
+  recommendedPosts: SimplePost[];
 }
 
 const RecommendedPosts = ({ recommendedPosts }: RecommendedPostsProps) => {
@@ -163,13 +174,13 @@ const RecommendedPosts = ({ recommendedPosts }: RecommendedPostsProps) => {
   };
 
   // 渲染列表视图的文章
-  const renderListView = (post: Post, index: number) => (
+  const renderListView = (post: SimplePost, index: number) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.1 }}
-      key={post._id}
-      onHoverStart={() => setHoveredCard(post._id)}
+      key={post.title}
+      onHoverStart={() => setHoveredCard(post.title)}
       onHoverEnd={() => setHoveredCard(null)}
       whileHover="hover"
       whileTap="tap"
@@ -180,7 +191,7 @@ const RecommendedPosts = ({ recommendedPosts }: RecommendedPostsProps) => {
         className={`block p-4 rounded-xl border ${borderClass} bg-gradient-to-br ${cardGradient} ${shadowEffect} transition-all duration-300 relative overflow-hidden`}
       >
         {/* 背景动画效果 */}
-        {hoveredCard === post._id && (
+        {hoveredCard === post.title && (
           <motion.div
             className="absolute inset-0 opacity-10"
             initial={{ opacity: 0 }}
@@ -227,7 +238,7 @@ const RecommendedPosts = ({ recommendedPosts }: RecommendedPostsProps) => {
         )}
 
         {/* 悬停时显示的闪光效果 */}
-        {hoveredCard === post._id && (
+        {hoveredCard === post.title && (
           <motion.div
             className="absolute -inset-1 opacity-0"
             animate={{
@@ -247,16 +258,16 @@ const RecommendedPosts = ({ recommendedPosts }: RecommendedPostsProps) => {
   );
 
   // 渲染网格视图的文章
-  const renderGridView = (post: Post, index: number) => (
+  const renderGridView = (post: SimplePost, index: number) => (
     <motion.div
-      key={post._id}
+      key={post.title}
       custom={index}
       initial="hidden"
       animate="visible"
       whileHover="hover"
       whileTap="tap"
       variants={cardVariants}
-      onHoverStart={() => setHoveredCard(post._id)}
+      onHoverStart={() => setHoveredCard(post.title)}
       onHoverEnd={() => setHoveredCard(null)}
     >
       <Link
@@ -264,7 +275,7 @@ const RecommendedPosts = ({ recommendedPosts }: RecommendedPostsProps) => {
         className={`block p-5 rounded-xl border ${borderClass} bg-gradient-to-br ${cardGradient} ${shadowEffect} transition-all duration-300 h-full flex flex-col relative overflow-hidden`}
       >
         {/* 背景动画效果 */}
-        {hoveredCard === post._id && (
+        {hoveredCard === post.title && (
           <motion.div
             className="absolute inset-0 opacity-10"
             initial={{ opacity: 0 }}
@@ -320,7 +331,7 @@ const RecommendedPosts = ({ recommendedPosts }: RecommendedPostsProps) => {
         </div>
 
         {/* 悬停时显示的闪光效果 */}
-        {hoveredCard === post._id && (
+        {hoveredCard === post.title && (
           <motion.div
             className="absolute -inset-1 opacity-0"
             animate={{

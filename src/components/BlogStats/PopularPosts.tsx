@@ -6,9 +6,25 @@ import { TrendingUp } from "lucide-react";
 import { useThemeUtils } from "@/hooks/useThemeUtils";
 import Link from "next/link";
 
-interface PopularPostsProps {
-  topPosts: Post[];
+interface SimplePost {
+  title: string;
+  date: string;
+  url: string;
+  category: string;
+  tags?: string[];
+  views?: number;
+  likes?: number;
 }
+
+interface PopularPostsProps {
+  topPosts: SimplePost[];
+}
+
+const safeDate = (date?: string) => {
+  if (!date) return null;
+  const d = new Date(date);
+  return isNaN(d.getTime()) ? null : d;
+};
 
 const PopularPosts = ({ topPosts }: PopularPostsProps) => {
   const { theme, getThemeValue } = useThemeUtils();
@@ -167,7 +183,7 @@ const PopularPosts = ({ topPosts }: PopularPostsProps) => {
       <div className="grid grid-cols-1 gap-4">
         {topPosts.map((post, index) => (
           <Link
-            key={post._id}
+            key={post.title}
             href={post.url}
             className={`block p-4 rounded-xl bg-gradient-to-br ${cardGradient} shadow-md hover:shadow-xl transition-all duration-300 hover:transform hover:translate-y-[-0.25rem] border ${borderClass}`}
           >

@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import type { Viewport } from "next/types";
-import { Inter } from "next/font/google";
+// 移除Google字体引用
 import "./globals.css";
 import { Providers } from "./providers";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
 
-const inter = Inter({ subsets: ["latin"] });
+// 移除Inter字体配置
 
 export const metadata: Metadata = {
   title: "晓龙的blog | 前端技术分享",
@@ -43,7 +43,7 @@ export default function RootLayout({
       <head></head>
       <body
         suppressHydrationWarning
-        className={`${inter.className} bg-background text-foreground font-sans`}
+        className="bg-background text-foreground font-sans"
       >
         <Providers>
           <div className="min-h-screen flex flex-col">

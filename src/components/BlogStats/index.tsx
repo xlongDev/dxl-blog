@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { Post } from "contentlayer/generated";
+import useSWR from "swr";
 import BasicStats from "./BasicStats";
 import TimeStats from "./TimeStats";
 import PopularPosts from "./PopularPosts";
@@ -9,13 +9,22 @@ import FeaturedPosts from "./FeaturedPosts";
 import ExtendedStats from "./ExtendedStats";
 import { useThemeUtils } from "@/hooks/useThemeUtils";
 
-interface BlogStatsProps {
-  posts: Post[];
+interface SimplePost {
+  title: string;
+  date: string;
+  url: string;
+  category: string;
+  tags?: string[];
+  views?: number;
+  likes?: number;
 }
 
-const calculateWordCount = (text: string) => text.trim().split(/\s+/).length;
+const calculateWordCount = (text: string) => text?.trim().split(/\s+/).length || 0;
 
-const BlogStats = ({ posts }: BlogStatsProps) => {
+const fetcher = (url: string) => fetch(url).then(res => res.json());
+
+const BlogStats = () => {
+  const { data, isLoading } = useSWR<{ posts: SimplePost[] }>("/api/posts-simple", fetcher, { revalidateOnFocus: false });
   const { theme } = useThemeUtils();
 
   // 根据主题获取渐变背景色
@@ -76,18 +85,31 @@ const BlogStats = ({ posts }: BlogStatsProps) => {
   const borderClass = getBorderClass();
 
   const stats = useMemo(() => {
+    if (!data?.posts) return {
+      totalPosts: 0,
+      totalCategories: 0,
+      totalTags: 0,
+      latestUpdate: '',
+      topPosts: [],
+      featuredPosts: [],
+      avgReadingTime: 0,
+      totalViews: 0,
+      totalLikes: 0,
+      totalWords: 0,
+      readingTimeDistribution: {},
+    };
     // 预先计算所有文章的字数，避免重复计算
-    const wordCounts = posts.map((post) => calculateWordCount(post.body.raw));
+    const wordCounts = data.posts.map((post) => calculateWordCount((post as any).body?.raw || ""));
     const totalWords = wordCounts.reduce((sum, count) => sum + count, 0);
 
     // 使用 Set 来优化分类和标签的去重
-    const categories = new Set(posts.map((post) => post.category));
-    const tags = new Set(posts.flatMap((post) => post.tags || []));
+    const categories = new Set(data.posts.map((post) => post.category));
+    const tags = new Set(data.posts.flatMap((post) => post.tags || []));
 
     // 使用 reduce 一次遍历计算多个统计数据
-    const { totalViews, totalLikes, readingTimeDistribution } = posts.reduce(
+    const { totalViews, totalLikes, readingTimeDistribution } = data.posts.reduce(
       (acc, post, index) => {
-        const readingTime = Math.ceil(wordCounts[index] / 200);
+        const readingTime = Math.ceil((wordCounts[index] || 0) / 200);
         const category =
           readingTime <= 2
             ? "2分钟以下"
@@ -112,19 +134,19 @@ const BlogStats = ({ posts }: BlogStatsProps) => {
     );
 
     // 使用 slice 优化数组排序
-    const latestPost = posts
+    const latestPost = data.posts
       .slice()
       .sort(
         (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
       )[0];
 
-    const topPosts = posts
+    const topPosts = data.posts
       .slice()
       .sort((a, b) => (b.views || 0) - (a.views || 0))
       .slice(0, 3);
 
     // 获取精选文章（根据标签或阅读量筛选）
-    const featuredPosts = posts
+    const featuredPosts = data.posts
       .filter(
         (post) => post.tags?.includes("精选") || post.tags?.includes("推荐")
       )
@@ -132,22 +154,22 @@ const BlogStats = ({ posts }: BlogStatsProps) => {
 
     // 如果没有带特定标签的文章，则使用阅读量最高但不在热门文章中的文章
     if (featuredPosts.length === 0) {
-      const topPostIds = new Set(topPosts.map((post) => post._id));
+      const topPostIds = new Set(topPosts.map((post) => post.url));
       featuredPosts.push(
-        ...posts
-          .filter((post) => !topPostIds.has(post._id))
+        ...data.posts
+          .filter((post) => !topPostIds.has(post.url))
           .sort((a, b) => (b.views || 0) - (a.views || 0))
           .slice(0, 3)
       );
     }
 
-    const avgReadingTime = Math.ceil(totalWords / posts.length / 200);
+    const avgReadingTime = Math.ceil(totalWords / (data.posts.length || 1) / 200);
 
     return {
-      totalPosts: posts.length,
+      totalPosts: data.posts.length,
       totalCategories: categories.size,
       totalTags: tags.size,
-      latestUpdate: latestPost.date,
+      latestUpdate: latestPost?.date || '',
       topPosts,
       featuredPosts,
       avgReadingTime,
@@ -156,7 +178,7 @@ const BlogStats = ({ posts }: BlogStatsProps) => {
       totalWords,
       readingTimeDistribution,
     };
-  }, [posts]);
+  }, [data]);
 
   return (
     <div

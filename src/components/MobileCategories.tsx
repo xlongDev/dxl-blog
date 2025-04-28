@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import { useMemo, memo, forwardRef } from "react";
+import useSWR from "swr";
 
 interface MobileCategoriesProps {
   posts: Post[];
@@ -49,7 +50,11 @@ const CategoryLink = forwardRef<
 
 CategoryLink.displayName = "CategoryLink";
 
-export default function MobileCategories({ posts }: MobileCategoriesProps) {
+export default function MobileCategories() {
+  const fetcher = (url: string) => fetch(url).then(res => res.json());
+  const { data, isLoading } = useSWR<{ posts: any[] }>("/api/posts-simple", fetcher, { revalidateOnFocus: false });
+  const posts = data?.posts || [];
+
   const { allCategories, postsByCategory } = useMemo(() => {
     const categories = Array.from(
       new Set(

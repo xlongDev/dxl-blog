@@ -105,12 +105,30 @@ export default async function Home() {
 
         {/* 精选文章 */}
         <div className="mt-16">
-          <FeaturedPosts featuredPosts={featuredPosts} />
+          <FeaturedPosts featuredPosts={featuredPosts.map(post => ({
+            title: post.title,
+            date: post.date,
+            url: post.url,
+            category: post.category ?? "未分类",
+            tags: post.tags,
+            views: post.views,
+            likes: post.likes,
+            description: post.description ?? ""
+          }))} />
         </div>
 
         {/* 推荐阅读 */}
         <div className="mt-16">
-          <RecommendedPosts recommendedPosts={recommendedPosts} />
+          <RecommendedPosts recommendedPosts={recommendedPosts.map(post => ({
+            title: post.title,
+            date: post.date,
+            url: post.url,
+            category: post.category ?? "未分类",
+            tags: post.tags,
+            views: post.views,
+            likes: post.likes,
+            description: post.description ?? ""
+          }))} />
         </div>
 
         {/* 面试精华 */}

@@ -1,37 +1,43 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import useSWR from "swr";
 import { ChevronRight, ChevronDown, FileText } from "lucide-react";
 import { useThemeUtils } from "@/hooks/useThemeUtils";
 import Link from "next/link";
-import { Post } from "contentlayer/generated";
 import { motion, AnimatePresence } from "framer-motion";
+
+interface SimplePost {
+  title: string;
+  date: string;
+  url: string;
+  category: string;
+  tags?: string[];
+  views?: number;
+  likes?: number;
+}
 
 interface TreeNode {
   id: string;
   title: string;
   children: TreeNode[];
   isExpanded?: boolean;
-  posts?: Post[];
+  posts?: SimplePost[];
 }
 
-interface ArticleTreeProps {
-  posts: Post[];
-}
+const fetcher = (url: string) => fetch(url).then(res => res.json());
 
-interface CachedTreeData {
-  treeData: TreeNode[];
-}
-
-const ArticleTree = ({ posts }: ArticleTreeProps) => {
+const ArticleTree = () => {
+  const { data, isLoading } = useSWR<{ posts: SimplePost[] }>("/api/posts-simple", fetcher, { revalidateOnFocus: false });
   const [treeData, setTreeData] = useState<TreeNode[]>([]);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const { theme } = useThemeUtils();
 
   useEffect(() => {
-    const newTreeData = buildTree(posts);
-    setTreeData(newTreeData);
-  }, [posts]);
+    if (data?.posts) {
+      setTreeData(buildTree(data.posts));
+    }
+  }, [data]);
 
   const getAccentColor = () => {
     const themeColors = {
@@ -106,7 +112,7 @@ const ArticleTree = ({ posts }: ArticleTreeProps) => {
   const borderClass = getBorderClass();
   const hoverTextClass = getHoverTextClass();
 
-  function buildTree(posts: Post[]): TreeNode[] {
+  function buildTree(posts: SimplePost[]): TreeNode[] {
     const tree: { [key: string]: TreeNode } = {};
 
     posts.forEach((post) => {

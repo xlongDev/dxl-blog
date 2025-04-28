@@ -1,12 +1,9 @@
 import { allPosts } from "contentlayer/generated";
 import { compareDesc } from "date-fns";
-import dynamic from "next/dynamic";
+import BlogPageClient from "./BlogPageClient";
+import { Post } from "contentlayer/generated";
 
-const BlogPageClient = dynamic(() => import("./BlogPageClient"), {
-  loading: () => (
-    <div className="min-h-screen animate-pulse bg-gray-200 dark:bg-gray-700" />
-  ),
-});
+export const revalidate = 60;
 
 export async function generateMetadata() {
   return {
@@ -15,10 +12,31 @@ export async function generateMetadata() {
   };
 }
 
-export default function BlogPage() {
-  const sortedPosts = [...allPosts].sort((a, b) =>
-    compareDesc(new Date(a.date), new Date(b.date))
-  );
+export default async function BlogPage({
+  searchParams,
+}: {
+  searchParams: { page?: string };
+}) {
+  const page = Number(searchParams.page) || 1;
+  const postsPerPage = 12;
 
-  return <BlogPageClient posts={sortedPosts} />;
+  // 按日期排序所有文章
+  const sortedPosts = allPosts
+    .sort((a, b) => compareDesc(new Date(a.date), new Date(b.date)));
+
+  // 计算分页
+  const totalPosts = sortedPosts.length;
+  const totalPages = Math.ceil(totalPosts / postsPerPage);
+  const startIndex = (page - 1) * postsPerPage;
+  const endIndex = startIndex + postsPerPage;
+  const paginatedPosts = sortedPosts.slice(startIndex, endIndex);
+
+  return (
+    <BlogPageClient 
+      posts={paginatedPosts}
+      totalPosts={totalPosts}
+      currentPage={page}
+      totalPages={totalPages}
+    />
+  );
 }

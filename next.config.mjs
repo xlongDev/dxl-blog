@@ -25,7 +25,7 @@ const nextConfig = {
     };
   },
 
-  // 优化大型页面数据处理
+  // 优化大型页面数据处理与实验性功能配置
   experimental: {
     largePageDataBytes: 64 * 1000, // 减小到 64KB
     optimizePackageImports: [
@@ -39,6 +39,14 @@ const nextConfig = {
     },
     optimizeCss: true, // 启用 CSS 优化
     scrollRestoration: true, // 启用滚动恢复
+    
+    // Turbopack 配置
+    turbo: {
+      resolveExtensions: [".mdx", ".tsx", ".ts", ".jsx", ".js", ".mjs", ".json"],
+      rules: {
+        // 可以根据需要添加特定的 loader 配置
+      }
+    }
   },
 
   // 启用 React 严格模式（开发时）

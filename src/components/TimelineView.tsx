@@ -1,102 +1,57 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import useSWR from "swr";
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
 import { Calendar, ChevronRight } from "lucide-react";
 import { useThemeUtils } from "@/hooks/useThemeUtils";
-import { Post } from "contentlayer/generated";
 import { useInView } from "react-intersection-observer";
 import { motion, AnimatePresence } from "framer-motion";
 
-interface TimelineViewProps {
-  posts: Post[];
+interface SimplePost {
+  title: string;
+  date: string;
+  url: string;
+  category: string;
+  tags?: string[];
+  views?: number;
+  likes?: number;
 }
 
 interface TimelineItem {
   year: string;
-  posts: Post[];
+  posts: SimplePost[];
   isExpanded?: boolean;
 }
 
-interface CachedTimelineData {
-  timelineData: TimelineItem[];
-}
+const fetcher = (url: string) => fetch(url).then(res => res.json());
 
-const TimelinePost = ({
-  post,
-  accentColor,
-  hoverColorClass,
-}: {
-  post: Post;
-  accentColor: string;
-  hoverColorClass: string;
-}) => {
-  const { ref, inView } = useInView({
-    threshold: 0,
-    triggerOnce: true,
-  });
-
-  return (
-    <div
-      ref={ref}
-      className={`relative pl-4 border-l-2 transition-all duration-200`}
-    >
-      {inView ? (
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <motion.div
-            className={`absolute left-[-5px] top-2 w-2 h-2 rounded-full ${accentColor.replace(
-              "text-",
-              "bg-"
-            )}`}
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-          />
-          <a
-            href={post.url}
-            tabIndex={0}
-            className={`block ${hoverColorClass} transition-all duration-200 outline-none focus:ring-0`}
-          >
-            <time className="text-sm text-gray-500 dark:text-gray-400">
-              {format(new Date(post.date), "MM月dd日", { locale: zhCN })}
-            </time>
-            <h4 className="text-base font-medium mt-1">{post.title}</h4>
-          </a>
-        </motion.div>
-      ) : (
-        <div className="h-16" />
-      )}
-    </div>
-  );
-};
-
-const TimelineView = ({ posts }: TimelineViewProps) => {
+const TimelineView = () => {
+  const { data, isLoading } = useSWR<{ posts: SimplePost[] }>("/api/posts-simple", fetcher, { revalidateOnFocus: false });
   const [timelineData, setTimelineData] = useState<TimelineItem[]>([]);
   const [visibleYears, setVisibleYears] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const { theme, getThemeColor } = useThemeUtils();
-
-  const { ref: loadMoreRef, inView: loadMoreInView } = useInView({
-    threshold: 0.1,
-  });
+  const { ref: loadMoreRef, inView: loadMoreInView } = useInView({ threshold: 0.1 });
 
   useEffect(() => {
-    const newTimelineData = buildTimeline(posts);
-    setTimelineData(newTimelineData);
-  }, [posts]);
+    if (data?.posts) {
+      const built = buildTimeline(data.posts);
+      if (built.length > 0) {
+        built[0].isExpanded = true;
+      }
+      setTimelineData(built);
+    }
+  }, [data]);
 
-  const buildTimeline = (posts: Post[]): TimelineItem[] => {
+  const buildTimeline = (posts: SimplePost[]): TimelineItem[] => {
     const sortedPosts = [...posts].sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     );
 
-    const timeline: { [key: string]: Post[] } = {};
+    const timeline: { [key: string]: SimplePost[] } = {};
 
     sortedPosts.forEach((post) => {
       const year = new Date(post.date).getFullYear().toString();
@@ -117,10 +72,10 @@ const TimelineView = ({ posts }: TimelineViewProps) => {
 
   useEffect(() => {
     if (loadMoreInView && visibleYears < timelineData.length) {
-      setIsLoading(true);
+      setIsLoadingMore(true);
       const timeout = setTimeout(() => {
         setVisibleYears((prev) => prev + 1);
-        setIsLoading(false);
+        setIsLoadingMore(false);
       }, 100);
       return () => clearTimeout(timeout);
     }
@@ -235,6 +190,12 @@ const TimelineView = ({ posts }: TimelineViewProps) => {
     exit: { opacity: 0, scale: 0.8, transition: { duration: 0.2 } },
   };
 
+  const safeDate = (date?: string) => {
+    if (!date) return null;
+    const d = new Date(date);
+    return isNaN(d.getTime()) ? null : d;
+  };
+
   return (
     <div
       className={`w-full max-w-2xl ${bgClass} rounded-lg shadow-lg p-6 group transition-all duration-200 hover:shadow-xl border ${borderClass} backdrop-blur-sm`}
@@ -243,7 +204,7 @@ const TimelineView = ({ posts }: TimelineViewProps) => {
         <Calendar className={accentColor} />
         <h3 className={`text-lg font-semibold ${accentColor}`}>文章时间线</h3>
       </div>
-      <div className="space-y-8 overflow-y-auto max-h-[2100px]">
+      <div className="space-y-8 overflow-y-auto max-h-[1900px]">
         {displayData.map(({ year, posts, isExpanded }, index) => (
           <motion.div
             key={year}
@@ -269,19 +230,47 @@ const TimelineView = ({ posts }: TimelineViewProps) => {
             <AnimatePresence>
               {isExpanded && (
                 <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
+                  initial={{ height: 0, opacity: 0, y: -10 }}
+                  animate={{ height: 'auto', opacity: 1, y: 0 }}
+                  exit={{ height: 0, opacity: 0, y: -10 }}
+                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                   className="space-y-4 pl-4"
                 >
                   {posts.map((post) => (
-                    <TimelinePost
+                    <div
                       key={post.url}
-                      post={post}
-                      accentColor={accentColor}
-                      hoverColorClass={hoverColorClass}
-                    />
+                      className={`relative pl-4 border-l-2 transition-all duration-200`}
+                    >
+                      <motion.div
+                        initial={{ opacity: 0, x: -30 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -30 }}
+                        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                      >
+                        <motion.div
+                          className={`absolute left-[-5px] top-2 w-2 h-2 rounded-full ${accentColor.replace(
+                            "text-",
+                            "bg-"
+                          )}`}
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ duration: 0.3, ease: "easeOut" }}
+                        />
+                        <a
+                          href={post.url}
+                          tabIndex={0}
+                          className={`block ${hoverColorClass} transition-all duration-200 outline-none focus:ring-0`}
+                        >
+                          <time className="text-sm text-gray-500 dark:text-gray-400">
+                            {(() => {
+                              const d = safeDate(post.date);
+                              return d ? format(d, "MM月dd日", { locale: zhCN }) : "无日期";
+                            })()}
+                          </time>
+                          <h4 className="text-base font-medium mt-1">{post.title}</h4>
+                        </a>
+                      </motion.div>
+                    </div>
                   ))}
                 </motion.div>
               )}
@@ -295,7 +284,7 @@ const TimelineView = ({ posts }: TimelineViewProps) => {
             className="h-10 flex justify-center items-center"
           >
             <AnimatePresence>
-              {isLoading && (
+              {isLoadingMore && (
                 <motion.div
                   variants={loadingVariants}
                   initial="hidden"

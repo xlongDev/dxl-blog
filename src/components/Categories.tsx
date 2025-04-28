@@ -248,7 +248,7 @@ function Categories({
   categories,
   postsByCategory,
 }: CategoriesProps) {
-  const { getThemeClass } = useThemeUtils();
+  const { getThemeClass, theme } = useThemeUtils();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -277,7 +277,7 @@ function Categories({
     {
       light:
         "bg-white hover:bg-gradient-to-r hover:from-gray-50/50 hover:via-gray-100/50 hover:to-gray-50/50",
-      dark: "bg-gray-800 hover:bg-gradient-to-r hover:from-gray-700/50 hover:via-gray-600/50 hover:to-gray-700/50",
+      dark: "bg-gray-800 hover:bg-gradient-to-r hover:from-gray-800/80 hover:via-gray-700/80 hover:to-gray-800/80",
       green:
         "bg-emerald-50 hover:bg-gradient-to-r hover:from-emerald-100/50 hover:via-green-100/50 hover:to-emerald-100/50",
       purple:
@@ -296,7 +296,7 @@ function Categories({
     {
       light:
         "bg-white text-gray-700 hover:bg-gradient-to-r hover:from-gray-50/50 hover:via-gray-100/50 hover:to-gray-50/50",
-      dark: "bg-gray-800 text-gray-300 hover:bg-gradient-to-r hover:from-gray-700/50 hover:via-gray-600/50 hover:to-gray-700/50",
+      dark: "bg-gray-800 text-gray-300 hover:bg-gradient-to-r hover:from-gray-800/80 hover:via-gray-700/80 hover:to-gray-800/80",
       green:
         "bg-emerald-50 text-emerald-700 hover:bg-gradient-to-r hover:from-emerald-100/50 hover:via-green-100/50 hover:to-emerald-100/50",
       purple:
@@ -326,13 +326,13 @@ function Categories({
 
   return (
     <nav
-      className={`${navBgClass} rounded-2xl p-4 shadow-lg border transition-all duration-500 ease-in-out sticky top-0 z-10 w-full max-w-[calc(100%-2rem)] mx-auto`}
+      className={`${navBgClass} rounded-2xl p-4 shadow-lg ${theme === 'dark' ? '' : 'border'} hover:border-transparent transition-all duration-500 ease-in-out sticky top-0 z-10 w-full max-w-[calc(100%-2rem)] mx-auto`}
     >
       {/* 移动端显示下拉框（md 以下） */}
       <div className="md:hidden relative" ref={dropdownRef}>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className={`${dropdownButtonClass} flex items-center justify-between w-full px-4 py-2 rounded-xl shadow-sm border transition-all duration-300`}
+          className={`${dropdownButtonClass} flex items-center justify-between w-full px-4 py-2 rounded-xl shadow-sm ${theme === 'dark' ? '' : 'border'} hover:border-transparent transition-all duration-300`}
         >
           <span>{selectedCategory}</span>
           <ChevronDownIcon
@@ -342,7 +342,7 @@ function Categories({
           />
         </button>
         <div
-          className={`${dropdownMenuClass} absolute top-full left-0 right-0 mt-2 rounded-xl shadow-lg border z-20 max-h-60 overflow-y-auto transition-all duration-300 ease-in-out ${
+          className={`${dropdownMenuClass} absolute top-full left-0 right-0 mt-2 rounded-xl shadow-lg ${theme === 'dark' ? '' : 'border'} z-20 max-h-60 overflow-y-auto transition-all duration-300 ease-in-out ${
             isOpen
               ? "opacity-100 translate-y-0"
               : "opacity-0 -translate-y-2 pointer-events-none"
