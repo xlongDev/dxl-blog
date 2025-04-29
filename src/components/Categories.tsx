@@ -250,7 +250,13 @@ function Categories({
 }: CategoriesProps) {
   const { getThemeClass, theme } = useThemeUtils();
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // 确保组件挂载后再渲染，避免服务端渲染与客户端渲染不一致
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // 点击外部关闭下拉菜单
   useEffect(() => {
@@ -323,6 +329,16 @@ function Categories({
 
   const selectedCategory =
     currentCategory === "all" ? "全部文章" : currentCategory;
+
+  // 如果组件未挂载，返回一个占位符，避免闪烁
+  if (!mounted) {
+    return (
+      <nav className="rounded-2xl p-4 shadow-lg border hover:border-transparent transition-all duration-500 ease-in-out sticky top-0 z-10 w-full max-w-[calc(100%-2rem)] mx-auto bg-white">
+        <div className="md:hidden h-10"></div>
+        <div className="hidden md:flex flex-wrap gap-2"></div>
+      </nav>
+    );
+  }
 
   return (
     <nav

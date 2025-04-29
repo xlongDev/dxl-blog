@@ -28,7 +28,7 @@ interface TreeNode {
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 const ArticleTree = () => {
-  const { data, isLoading } = useSWR<{ posts: SimplePost[] }>("/api/posts-simple", fetcher, { revalidateOnFocus: false });
+  const { data, isLoading } = useSWR<{ posts: SimplePost[] }>("/api/posts-simple?all=1", fetcher, { revalidateOnFocus: false });
   const [treeData, setTreeData] = useState<TreeNode[]>([]);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const { theme } = useThemeUtils();

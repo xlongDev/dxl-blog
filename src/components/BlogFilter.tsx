@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Post } from "contentlayer/generated";
 import PostCard from "./PostCard";
 import { motion } from "framer-motion";
@@ -8,18 +8,23 @@ import { useThemeUtils } from "@/hooks/useThemeUtils";
 
 interface BlogFilterProps {
   posts: Post[];
+  allPosts: Post[];
 }
 
-export default function BlogFilter({ posts }: BlogFilterProps) {
+export default function BlogFilter({ posts, allPosts }: BlogFilterProps) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const { theme } = useThemeUtils();
 
+  // 标签和搜索统计基于当前页 posts
   const allTags = useMemo(
     () => Array.from(new Set(posts.flatMap((post) => post.tags || []))).sort(),
     [posts]
   );
 
+  // 当前页筛选
   const filteredPosts = useMemo(() => {
     return posts.filter((post) => {
       const matchesSearch =
@@ -84,6 +89,8 @@ export default function BlogFilter({ posts }: BlogFilterProps) {
       transition: { duration: 0.5, ease: "easeOut" },
     },
   };
+
+  if (!mounted) return null;
 
   return (
     <div className="space-y-8">

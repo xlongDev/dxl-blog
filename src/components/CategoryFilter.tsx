@@ -7,7 +7,7 @@ import FadeIn from "@/components/FadeIn";
 import Categories from "./Categories";
 import { useThemeUtils } from "@/hooks/useThemeUtils";
 import { Post } from "contentlayer/generated";
-import Link from "next/link";
+import PaginationBar from "./PaginationBar";
 
 interface CategoryFilterProps {
   posts: Post[];
@@ -80,6 +80,10 @@ export default function CategoryFilter({
     brown: "text-amber-700 dark:text-amber-300",
   });
 
+  const handlePageChange = (page: number) => {
+    window.location.href = `/blog/category/${currentCategory}?page=${page}`;
+  };
+
   return (
     <div className="space-y-8">
       <Categories
@@ -107,32 +111,13 @@ export default function CategoryFilter({
         
         {/* 分页导航 */}
         {totalPages > 1 && (
-          <div className={`mt-8 flex justify-center items-center space-x-4 ${paginationClass}`}>
-            <Link
-              href={`/blog/category/${currentCategory}?page=${currentPage - 1}`}
-              className={`px-4 py-2 rounded-lg ${
-                currentPage === 1
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:bg-opacity-10 hover:bg-current"
-              }`}
-              onClick={(e) => currentPage === 1 && e.preventDefault()}
-            >
-              上一页
-            </Link>
-            <span>
-              第 {currentPage} 页 / 共 {totalPages} 页
-            </span>
-            <Link
-              href={`/blog/category/${currentCategory}?page=${currentPage + 1}`}
-              className={`px-4 py-2 rounded-lg ${
-                currentPage === totalPages
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:bg-opacity-10 hover:bg-current"
-              }`}
-              onClick={(e) => currentPage === totalPages && e.preventDefault()}
-            >
-              下一页
-            </Link>
+          <div className="mt-8 flex justify-center items-center space-x-4">
+            <PaginationBar
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            className={paginationClass}
+          />
           </div>
         )}
       </div>

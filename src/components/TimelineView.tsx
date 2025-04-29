@@ -28,7 +28,7 @@ interface TimelineItem {
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 const TimelineView = () => {
-  const { data, isLoading } = useSWR<{ posts: SimplePost[] }>("/api/posts-simple", fetcher, { revalidateOnFocus: false });
+  const { data, isLoading } = useSWR<{ posts: SimplePost[] }>("/api/posts-simple?all=1", fetcher, { revalidateOnFocus: false });
   const [timelineData, setTimelineData] = useState<TimelineItem[]>([]);
   const [visibleYears, setVisibleYears] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);

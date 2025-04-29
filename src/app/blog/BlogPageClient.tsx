@@ -1,11 +1,10 @@
 "use client";
 
-import { Suspense, lazy, useState, useEffect, memo } from "react";
-import { Post } from "contentlayer/generated";
+import { Suspense, lazy, useState, useEffect, useRef, memo } from "react";
 import { useThemeUtils } from "@/hooks/useThemeUtils";
 import Link from "next/link";
+import PaginationBar from "@/components/PaginationBar";
 
-// 懒加载组件
 const BlogStats = lazy(() => import("@/components/BlogStats"));
 const Categories = lazy(() => import("@/components/Categories"));
 const MobileCategories = lazy(() => import("@/components/MobileCategories"));
@@ -14,10 +13,11 @@ const ArticleTree = lazy(() => import("@/components/ArticleTree"));
 const TimelineView = lazy(() => import("@/components/TimelineView"));
 
 interface BlogPageClientProps {
-  posts: Post[];
+  initialPosts: any[];
   totalPosts: number;
-  currentPage: number;
   totalPages: number;
+  currentPage: number;
+  postsPerPage: number;
 }
 
 const LoadingSpinner = () => (
@@ -26,57 +26,59 @@ const LoadingSpinner = () => (
   </div>
 );
 
-// 使用 memo 优化分页按钮组件
-const PaginationButton = memo(({ 
-  href, 
-  disabled, 
-  children, 
-  className 
-}: { 
-  href: string; 
-  disabled: boolean; 
-  children: React.ReactNode;
-  className: string;
-}) => (
-  <Link
-    href={href}
-    className={`px-4 py-2 rounded-lg ${
-      disabled
-        ? "opacity-50 cursor-not-allowed"
-        : "hover:bg-opacity-10 hover:bg-current"
-    } ${className}`}
-    onClick={(e) => disabled && e.preventDefault()}
-  >
-    {children}
-  </Link>
-));
-
-PaginationButton.displayName = "PaginationButton";
-
-export default function BlogPageClient({ 
-  posts, 
-  totalPosts, 
-  currentPage, 
-  totalPages 
-}: BlogPageClientProps) {
-  const [isMobile, setIsMobile] = useState(true);
+export default function BlogPageClient({ initialPosts, totalPosts, totalPages, currentPage, postsPerPage }: BlogPageClientProps) {
+  const [posts, setPosts] = useState<any[]>(initialPosts);
+  const [allPosts, setAllPosts] = useState<any[]>([]);
+  const [page, setPage] = useState(currentPage);
+  const [loading, setLoading] = useState(false);
+  const blogFilterRef = useRef<HTMLDivElement>(null);
   const { getThemeClass } = useThemeUtils();
+  const [isMobile, setIsMobile] = useState(true);
+
+  // 获取全部文章
+  useEffect(() => {
+    fetch('/api/posts-simple?all=1', { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => setAllPosts(data.posts));
+  }, []);
+
+  useEffect(() => {
+    setPage(currentPage);
+    setPosts(initialPosts);
+  }, [currentPage, initialPosts]);
+
+  useEffect(() => {
+    if (page === currentPage && posts === initialPosts) return; // SSR 首屏
+    setLoading(true);
+    fetch(`/api/posts-simple?page=${page}&pageSize=${postsPerPage}`)
+      .then(res => res.json())
+      .then(data => {
+        setPosts(data.posts);
+        setLoading(false);
+      });
+  }, [page, postsPerPage]);
 
   useEffect(() => {
     const checkIsMobile = () => {
       setIsMobile(window.innerWidth < 1024);
     };
-
     checkIsMobile();
     window.addEventListener("resize", checkIsMobile);
-
     return () => window.removeEventListener("resize", checkIsMobile);
   }, []);
 
-  // 修改后的代码
+  // 分页切换后自动滚动到 BlogFilter 区域
+  const handlePageChange = (p: number) => {
+    setPage(p);
+    setTimeout(() => {
+      blogFilterRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+  };
+
+  // 统一暗夜模式背景色
   const containerClass = getThemeClass("bg-white/10", {
     light: "bg-white/10",
-    dark: "bg-gray-80/10",
+    dark: "bg-gray-900/80",
     green: "bg-emerald-50/10",
     purple: "bg-purple-50/10",
     orange: "bg-orange-50/10",
@@ -86,7 +88,7 @@ export default function BlogPageClient({
   });
 
   const paginationClass = getThemeClass(
-    "text-gray-700 dark:text-gray-300 hover:z-10 hover:bg-opacity-100", // 新增hover样式
+    "text-gray-700 dark:text-gray-300",
     {
       light: "text-gray-700 dark:text-gray-300",
       dark: "text-gray-300",
@@ -104,68 +106,43 @@ export default function BlogPageClient({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 space-y-8" id="post-list-container">
           {!isMobile && (
-            <div
-              className={`${containerClass} backdrop-blur-sm rounded-lg shadow p-4`}
-            >
+            <div className={`${containerClass} backdrop-blur-sm rounded-lg shadow p-4`}>
               <Suspense fallback={<LoadingSpinner />}>
                 <BlogStats />
               </Suspense>
             </div>
           )}
           {isMobile && (
-            <div
-              className={`${containerClass} backdrop-blur-sm rounded-lg shadow p-4 border space-y-4 w-full relative z-20`}
-            >
+            <div className={`${containerClass} backdrop-blur-sm rounded-lg shadow p-4 border space-y-4 w-full relative z-20`}>
               <Suspense fallback={<LoadingSpinner />}>
                 <MobileCategories />
               </Suspense>
             </div>
           )}
-          <div
-            className={`${containerClass} backdrop-blur-sm rounded-lg shadow p-4`}
-          >
+          <div ref={blogFilterRef} className={`${containerClass} backdrop-blur-sm rounded-lg shadow p-4`}>
             <Suspense fallback={<LoadingSpinner />}>
-              <BlogFilter posts={posts} />
+              <BlogFilter posts={posts} allPosts={allPosts} />
             </Suspense>
           </div>
-
           {/* 分页导航 */}
           {totalPages > 1 && (
-            <div className={`mt-8 flex justify-center items-center space-x-4 ${paginationClass}`}>
-              <PaginationButton
-                href={`/blog?page=${currentPage - 1}`}
-                disabled={currentPage === 1}
-                className={paginationClass}
-              >
-                上一页
-              </PaginationButton>
-              <span>
-                第 {currentPage} 页 / 共 {totalPages} 页
-              </span>
-              <PaginationButton
-                href={`/blog?page=${currentPage + 1}`}
-                disabled={currentPage === totalPages}
-                className={paginationClass}
-              >
-                下一页
-              </PaginationButton>
-            </div>
+            <PaginationBar
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              className={paginationClass}
+            />
           )}
         </div>
-
         {/* 文章树和时间线 */}
         {!isMobile && (
           <div className="lg:col-span-4 space-y-8">
-            <div
-              className={`${containerClass} backdrop-blur-sm rounded-lg shadow p-4`}
-            >
+            <div className={`${containerClass} backdrop-blur-sm rounded-lg shadow p-4`}>
               <Suspense fallback={<LoadingSpinner />}>
                 <ArticleTree />
               </Suspense>
             </div>
-            <div
-              className={`${containerClass} backdrop-blur-sm rounded-lg shadow p-4`}
-            >
+            <div className={`${containerClass} backdrop-blur-sm rounded-lg shadow p-4`}>
               <Suspense fallback={<LoadingSpinner />}>
                 <TimelineView />
               </Suspense>
