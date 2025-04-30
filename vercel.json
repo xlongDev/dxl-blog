@@ -8,7 +8,9 @@
   },
   "build": {
     "env": {
-      "VERCEL_BYPASS_FALLBACK_OVERSIZED_ERROR": "1"
+      "VERCEL_BYPASS_FALLBACK_OVERSIZED_ERROR": "1",
+      "NODE_OPTIONS": "--max_old_space_size=4096 --no-warnings",
+      "NEXT_TELEMETRY_DISABLED": "1"
     }
   },
   "headers": [
@@ -20,6 +22,15 @@
           "value": "public, max-age=3600, stale-while-revalidate=86400"
         }
       ]
+    }
+  ],
+  "buildCommand": "NODE_ENV=production NEXT_DISABLE_SOURCEMAPS=1 pnpm run build",
+  "installCommand": "pnpm install --no-frozen-lockfile",
+  "framework": "nextjs",
+  "builds": [
+    {
+      "src": "next.config.js",
+      "use": "@vercel/next"
     }
   ]
 }
