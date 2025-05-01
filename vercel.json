@@ -9,8 +9,8 @@
   "build": {
     "env": {
       "VERCEL_BYPASS_FALLBACK_OVERSIZED_ERROR": "1",
-      "NODE_OPTIONS": "--max_old_space_size=4096 --no-warnings",
-      "NEXT_TELEMETRY_DISABLED": "1"
+      "NEXT_TELEMETRY_DISABLED": "1",
+      "NEXT_DISABLE_SOURCEMAPS": "1"
     }
   },
   "headers": [
@@ -20,13 +20,37 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=3600, stale-while-revalidate=86400"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
         }
       ]
     }
   ],
-  "buildCommand": "NODE_ENV=production NEXT_DISABLE_SOURCEMAPS=1 pnpm run build",
-  "installCommand": "pnpm install --no-frozen-lockfile",
+  "buildCommand": "NODE_OPTIONS='--max-old-space-size=4096' pnpm run build",
+  "installCommand": "pnpm install",
   "framework": "nextjs",
+  "regions": ["hkg1"],
+  "functions": {
+    "app/api/**/*": {
+      "memory": 1024,
+      "maxDuration": 10
+    },
+    "app/blog/**/*": {
+      "memory": 3008,
+      "maxDuration": 15
+    }
+  },
+  "crons": [],
   "builds": [
     {
       "src": "next.config.js",
