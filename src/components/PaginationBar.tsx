@@ -1,17 +1,21 @@
 import { useState, useEffect, memo } from "react";
-import { useThemeUtils } from "@/hooks/useThemeUtils";
+import { useThemeUtils, ThemeType } from "@/hooks/useThemeUtils";
 
 interface PaginationBarProps {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
   className?: string;
+  theme?: ThemeType;
 }
 
-const PaginationBar = memo(({ currentPage, totalPages, onPageChange, className = "" }: PaginationBarProps) => {
+const PaginationBar = memo(({ currentPage, totalPages, onPageChange, className = "", theme: propTheme }: PaginationBarProps) => {
   const [inputValue, setInputValue] = useState(currentPage);
   const [isInputFocused, setIsInputFocused] = useState(false);
-  const { getThemeClass } = useThemeUtils();
+  const { getThemeClass, theme: contextTheme } = useThemeUtils();
+  
+  // 优先使用传入的主题，否则使用上下文主题
+  const theme = propTheme || contextTheme;
 
   useEffect(() => { setInputValue(currentPage); }, [currentPage]);
 

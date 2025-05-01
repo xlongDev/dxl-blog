@@ -8,6 +8,7 @@ import Categories from "./Categories";
 import { useThemeUtils } from "@/hooks/useThemeUtils";
 import { Post } from "contentlayer/generated";
 import PaginationBar from "./PaginationBar";
+import { useRouter } from "next/navigation";
 
 interface CategoryFilterProps {
   posts: Post[];
@@ -28,7 +29,8 @@ export default function CategoryFilter({
   currentPage,
   totalPages,
 }: CategoryFilterProps) {
-  const { getThemeClass } = useThemeUtils();
+  const router = useRouter();
+  const { getThemeClass, theme } = useThemeUtils();
   const [visiblePosts, setVisiblePosts] = useState<Post[]>([]);
   const postsPerPage = 9;
   const isLoadingRef = useRef(false); // 避免重复加载
@@ -81,7 +83,8 @@ export default function CategoryFilter({
   });
 
   const handlePageChange = (page: number) => {
-    window.location.href = `/blog/category/${currentCategory}?page=${page}`;
+    // 使用 router.push 进行客户端路由跳转
+    router.push(`/blog/category/${currentCategory}?page=${page}`);
   };
 
   return (
@@ -113,11 +116,12 @@ export default function CategoryFilter({
         {totalPages > 1 && (
           <div className="mt-8 flex justify-center items-center space-x-4">
             <PaginationBar
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-            className={paginationClass}
-          />
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              className={paginationClass}
+              theme={theme} // 传递当前主题到分页组件
+            />
           </div>
         )}
       </div>

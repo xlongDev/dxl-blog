@@ -3,9 +3,10 @@ import { compareDesc } from "date-fns";
 import CategoryFilter from "@/components/CategoryFilter";
 import { Post } from "contentlayer/generated";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 
-// 获取所有分类和统计信息
-function getPostsStats() {
+// 使用 React cache 缓存统计数据
+const getPostsStats = cache(() => {
   try {
     // 获取所有分类
     const categories = Array.from(
@@ -43,7 +44,21 @@ function getPostsStats() {
       totalPosts: 0
     };
   }
-}
+});
+
+// 使用 React cache 缓存分类文章数据
+const getCategoryPosts = cache((category: string) => {
+  return allPosts
+    .filter((post) => {
+      const pathSegments = post._raw.flattenedPath.split("/");
+      const postCategory = pathSegments[0].toLowerCase();
+      return (
+        category === "all" ||
+        postCategory === category
+      );
+    })
+    .sort((a, b) => compareDesc(new Date(a.date), new Date(b.date)));
+});
 
 export async function generateStaticParams() {
   try {
@@ -52,10 +67,7 @@ export async function generateStaticParams() {
     // 热门分类（根据 views 排序，取前 5 个）
     const popularCategories = categoriesOriginal
       .map((category) => {
-        const posts = allPosts.filter((post) => {
-          const pathSegments = post._raw.flattenedPath.split("/");
-          return pathSegments[0].toLowerCase() === category.toLowerCase();
-        });
+        const posts = getCategoryPosts(category.toLowerCase());
         const totalViews = posts.reduce(
           (sum, post) => sum + (post.views || 0),
           0
@@ -76,7 +88,8 @@ export async function generateStaticParams() {
   }
 }
 
-export const revalidate = 60;
+// 设置较长的重新验证时间，因为内容不会频繁更新
+export const revalidate = 3600; // 1小时
 
 export default async function CategoryPage({
   params,
@@ -99,17 +112,8 @@ export default async function CategoryPage({
       notFound();
     }
 
-    // 仅加载当前分类的文章
-    const filteredPosts: Post[] = allPosts
-      .filter((post) => {
-        const pathSegments = post._raw.flattenedPath.split("/");
-        const postCategory = pathSegments[0].toLowerCase();
-        return (
-          decodedCategory === "all" ||
-          postCategory === decodedCategory
-        );
-      })
-      .sort((a, b) => compareDesc(new Date(a.date), new Date(b.date)));
+    // 获取缓存的分类文章数据
+    const filteredPosts = getCategoryPosts(decodedCategory);
 
     // 计算分页
     const totalPosts = filteredPosts.length;
