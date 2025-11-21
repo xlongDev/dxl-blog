@@ -107,7 +107,7 @@ const BlogStats = () => {
     const tags = new Set(data.posts.flatMap((post) => post.tags || []));
 
     // 使用 reduce 一次遍历计算多个统计数据
-    const { totalViews, totalLikes, readingTimeDistribution } = data.posts.reduce(
+    const { totalViews, readingTimeDistribution } = data.posts.reduce(
       (acc, post, index) => {
         const readingTime = Math.ceil((wordCounts[index] || 0) / 200);
         const category =
@@ -122,13 +122,11 @@ const BlogStats = () => {
         acc.readingTimeDistribution[category] =
           (acc.readingTimeDistribution[category] || 0) + 1;
         acc.totalViews += post.views || 0;
-        acc.totalLikes += post.likes || 0;
-
+        
         return acc;
       },
       {
         totalViews: 0,
-        totalLikes: 0,
         readingTimeDistribution: {} as Record<string, number>,
       }
     );
@@ -174,7 +172,6 @@ const BlogStats = () => {
       featuredPosts,
       avgReadingTime,
       totalViews,
-      totalLikes,
       totalWords,
       readingTimeDistribution,
     };
@@ -225,7 +222,6 @@ const BlogStats = () => {
         <div className="w-full">
           <ExtendedStats
             totalViews={stats.totalViews}
-            totalLikes={stats.totalLikes}
             totalWords={stats.totalWords}
             readingTimeDistribution={stats.readingTimeDistribution}
           />

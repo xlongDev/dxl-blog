@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Post } from "contentlayer/generated";
 import PostCard from "@/components/PostCard";
@@ -13,6 +14,20 @@ interface LatestPostsProps {
 
 export default function LatestPosts({ posts }: LatestPostsProps) {
   const { theme, getThemeValue } = useThemeUtils();
+  const [shouldPrefetch, setShouldPrefetch] = useState(true);
+  useEffect(() => {
+    try {
+      const nav: any = typeof navigator !== "undefined" ? navigator : null;
+      const conn: any = nav && nav.connection ? nav.connection : null;
+      const saveData = !!(conn && conn.saveData);
+      const effective = (conn && conn.effectiveType) || "4g";
+      const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+      const slow = /(^2g|^slow-2g|^3g)/.test(effective);
+      setShouldPrefetch(!saveData && !slow && !isMobile);
+    } catch {
+      setShouldPrefetch(true);
+    }
+  }, []);
 
   // 根据主题获取图标背景渐变
   const getIconGradient = () => {
@@ -114,6 +129,7 @@ export default function LatestPosts({ posts }: LatestPostsProps) {
               </div>
               <Link
                 href={`/blog/${post._raw.flattenedPath}`}
+                prefetch={shouldPrefetch}
                 className={`flex items-center gap-1 ${getLinkTextColor()} transition-colors`}
               >
                 阅读全文
@@ -126,6 +142,7 @@ export default function LatestPosts({ posts }: LatestPostsProps) {
       <div className="text-center">
         <Link
           href="/blog"
+          prefetch={shouldPrefetch}
           className={`inline-block px-6 py-3 rounded-full bg-gradient-to-r ${getButtonGradient()} text-white transition-all duration-300 hover:shadow-lg`}
         >
           查看所有文章

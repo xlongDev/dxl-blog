@@ -58,13 +58,8 @@ export default function Navigation({ onNavigate }: NavigationProps) {
     );
   };
 
-  const linkGradient = mounted
-    ? getLinkGradient()
-    : "after:from-blue-600 after:to-purple-600";
-
-  const panelGradient = mounted
-    ? getPanelGradient()
-    : "from-blue-500/5 via-purple-500/5 to-pink-500/5";
+  const linkGradient = !mounted ? "after:from-blue-600 after:to-purple-600" : getLinkGradient();
+  const panelGradient = !mounted ? "from-blue-500/5 via-purple-500/5 to-pink-500/5" : getPanelGradient();
 
   return (
     <div className="flex md:items-center md:space-x-6 flex-col md:flex-row space-y-4 md:space-y-0">
@@ -78,30 +73,10 @@ export default function Navigation({ onNavigate }: NavigationProps) {
       <div className="relative group md:hover:block">
         <button
           onClick={() => setIsCategoryOpen(!isCategoryOpen)}
-          className={`relative py-1 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 md:group-hover:after:w-full after:transition-all after:duration-300 flex items-center gap-1 w-full justify-center md:justify-start after:bg-gradient-to-r ${
-            theme === "dark"
-              ? "after:from-blue-400 after:to-purple-400"
-              : theme === "green"
-              ? "after:from-green-600 after:to-green-400"
-              : theme === "purple"
-              ? "after:from-purple-600 after:to-purple-400"
-              : theme === "orange"
-              ? "after:from-orange-600 after:to-orange-400"
-              : theme === "blue"
-              ? "after:from-blue-600 after:to-blue-400"
-              : theme === "pink"
-              ? "after:from-pink-600 after:to-pink-400"
-              : theme === "brown"
-              ? "after:from-amber-700 after:to-amber-500"
-              : "after:from-blue-600 after:to-purple-600"
-          }`}
+          className={`relative py-1 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 md:group-hover:after:w-full after:transition-all after:duration-300 flex items-center gap-1 w-full justify-center md:justify-start after:bg-gradient-to-r ${linkGradient}`}
         >
           分类
-          <ChevronDownIcon
-            className={`h-4 w-4 transition-transform duration-300 opacity-70 md:group-hover:opacity-100 ${
-              isCategoryOpen ? "rotate-180" : ""
-            } md:group-hover:rotate-180`}
-          />
+          <ChevronDownIcon className="h-4 w-4" />
         </button>
         <div
           className={`md:absolute left-1/2 -translate-x-1/2 mt-2 w-[280px] bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-xl py-4 transition-all duration-300 ease-in-out transform border border-gray-200/50 dark:border-gray-700/50 overflow-hidden md:left-1/2 md:-translate-x-1/2 left-0 translate-x-0

@@ -1,12 +1,19 @@
 import { withContentlayer } from "next-contentlayer2";
 
 const nextConfig = {
+  // 构建输出目录
   distDir: ".next",
+
+  // 构建ID生成策略
   generateBuildId: () => "build",
+
+  // 启用ETag生成
   generateEtags: true,
+
+  // 静态页面生成超时时间
   staticPageGenerationTimeout: 720,
 
-  // 启用增量静态再生（ISR），优化动态页面
+  // 重写规则配置
   async rewrites() {
     return {
       beforeFiles: [
@@ -25,34 +32,51 @@ const nextConfig = {
     };
   },
 
-  // 优化大型页面数据处理与实验性功能配置
+  // 实验性功能配置
   experimental: {
-    largePageDataBytes: 64 * 1000, // 减小到 64KB
+    // 优化大页面数据处理
+    largePageDataBytes: 64 * 1000,
+
+    // 优化包导入
     optimizePackageImports: [
       "contentlayer/source-files",
       "rehype-pretty-code",
       "remark-gfm",
     ],
+
+    // 启用工作线程
     workerThreads: true,
+
+    // 服务器操作配置
     serverActions: {
-      bodySizeLimit: "1mb", // 减小到 1MB
+      bodySizeLimit: "1mb",
     },
-    optimizeCss: true, // 启用 CSS 优化
-    scrollRestoration: true, // 启用滚动恢复
-    
-    // Turbopack 配置
+
+    // CSS优化
+    optimizeCss: true,
+
+    // 滚动恢复
+    scrollRestoration: true,
+
+    // Turbopack配置
     turbo: {
-      resolveExtensions: [".mdx", ".tsx", ".ts", ".jsx", ".js", ".mjs", ".json"],
-      rules: {
-        // 可以根据需要添加特定的 loader 配置
-      }
-    }
+      resolveExtensions: [
+        ".mdx",
+        ".tsx",
+        ".ts",
+        ".jsx",
+        ".js",
+        ".mjs",
+        ".json",
+      ],
+      rules: {},
+    },
   },
 
-  // 启用 React 严格模式（开发时）
+  // React严格模式
   reactStrictMode: process.env.NODE_ENV === "development",
 
-  // 优化图像加载
+  // 图片优化配置
   images: {
     remotePatterns: [
       {
@@ -60,12 +84,12 @@ const nextConfig = {
         hostname: "**",
       },
     ],
-    minimumCacheTTL: 60, // 图片缓存 60 秒
+    minimumCacheTTL: 86400, // 提升图片缓存时间为一天
   },
 
-  // Webpack 配置优化
+  // Webpack自定义配置
   webpack: (config, { isServer }) => {
-    // 禁用 punycode 警告
+    // 解决punycode警告
     config.resolve = {
       ...config.resolve,
       fallback: {
@@ -74,7 +98,7 @@ const nextConfig = {
       },
     };
 
-    // 优化文件监视配置
+    // 文件监视优化
     config.watchOptions = {
       ...config.watchOptions,
       ignored: /node_modules|.git|.next/,
@@ -82,7 +106,7 @@ const nextConfig = {
       poll: 1000,
     };
 
-    // 优化 runtimeChunk 配置
+    // 运行时chunk优化
     if (config.optimization && config.optimization.runtimeChunk) {
       if (isServer) {
         config.optimization.runtimeChunk = {
@@ -93,14 +117,14 @@ const nextConfig = {
       }
     }
 
-    // 优化客户端构建性能
+    // 客户端构建优化
     if (!isServer) {
       config.optimization = {
         ...config.optimization,
         splitChunks: {
           chunks: "all",
           minSize: 20000,
-          maxSize: 200000, // 减小 maxSize，提升加载速度
+          maxSize: 200000,
           minChunks: 1,
           maxAsyncRequests: 30,
           maxInitialRequests: 30,
@@ -126,7 +150,7 @@ const nextConfig = {
       };
     }
 
-    // 启用 SWC 编译器加速 MDX 处理
+    // MDX处理优化
     config.module.rules.push({
       test: /\.mdx$/,
       use: {

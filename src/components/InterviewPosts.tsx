@@ -253,9 +253,6 @@ const InterviewPosts = ({ interviewPosts }: InterviewPostsProps) => {
         <div className="flex items-center justify-between relative z-10">
           <h4 className="font-medium line-clamp-1 flex-1">{post.title}</h4>
           <div className="flex items-center gap-2">
-            <span className="text-xs opacity-70 whitespace-nowrap">
-              {post.views || 0} 阅读
-            </span>
             <ExternalLink size={14} className="opacity-70" />
           </div>
         </div>
@@ -335,7 +332,7 @@ const InterviewPosts = ({ interviewPosts }: InterviewPostsProps) => {
           {post.description}
         </p>
 
-        <div className="mt-4 pt-3 border-t border-gray-200/30 dark:border-gray-700/30 flex justify-between items-center relative z-10">
+        <div className="mt-4 pt-3 border-t border-gray-200/30 dark:border-gray-700/30 flex items-center relative z-10">
           <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
             {post.tags &&
               post.tags.length > 0 &&
@@ -354,10 +351,6 @@ const InterviewPosts = ({ interviewPosts }: InterviewPostsProps) => {
                 +{post.tags.length - 2}
               </span>
             )}
-          </div>
-          <div className="text-xs opacity-70 flex items-center gap-1">
-            <span>{post.views || 0}</span>
-            <span>阅读</span>
           </div>
         </div>
 

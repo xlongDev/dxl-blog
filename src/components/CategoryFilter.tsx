@@ -34,6 +34,16 @@ export default function CategoryFilter({
   const [visiblePosts, setVisiblePosts] = useState<Post[]>([]);
   const postsPerPage = 9;
   const isLoadingRef = useRef(false); // 避免重复加载
+  const [shouldPrefetch, setShouldPrefetch] = useState(true);
+  const idlePrefetch = (href: string) => {
+    if (!shouldPrefetch) return;
+    const ric = (window as any).requestIdleCallback;
+    if (typeof ric === "function") {
+      ric(() => router.prefetch(href));
+    } else {
+      setTimeout(() => router.prefetch(href), 0);
+    }
+  };
 
   // 使用 react-intersection-observer 检测滚动到底部
   const { ref: loadMoreRef, inView } = useInView({
@@ -60,6 +70,20 @@ export default function CategoryFilter({
     }
   }, [inView, posts, visiblePosts.length]);
 
+  useEffect(() => {
+    try {
+      const nav: any = typeof navigator !== "undefined" ? navigator : null;
+      const conn: any = nav && nav.connection ? nav.connection : null;
+      const saveData = !!(conn && conn.saveData);
+      const effective = (conn && conn.effectiveType) || "4g";
+      const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+      const slow = /(^2g|^slow-2g|^3g)/.test(effective);
+      setShouldPrefetch(!saveData && !slow && !isMobile);
+    } catch {
+      setShouldPrefetch(true);
+    }
+  }, []);
+
   const containerClass = getThemeClass("bg-white/10", {
     light: "bg-white/10",
     dark: "bg-gray-800/10",
@@ -83,9 +107,20 @@ export default function CategoryFilter({
   });
 
   const handlePageChange = (page: number) => {
-    // 使用 router.push 进行客户端路由跳转
+    idlePrefetch(`/blog/category/${currentCategory}?page=${page}`);
     router.push(`/blog/category/${currentCategory}?page=${page}`);
   };
+
+  useEffect(() => {
+    const next = currentPage + 1;
+    const prev = currentPage - 1;
+    if (next <= totalPages) {
+      idlePrefetch(`/blog/category/${currentCategory}?page=${next}`);
+    }
+    if (prev >= 1) {
+      idlePrefetch(`/blog/category/${currentCategory}?page=${prev}`);
+    }
+  }, [router, currentCategory, currentPage, totalPages, shouldPrefetch]);
 
   return (
     <div className="space-y-8">
@@ -99,11 +134,17 @@ export default function CategoryFilter({
         className={`w-full ${containerClass} rounded-2xl p-6 backdrop-blur-sm mt-16`}
       >
         <div className="grid gap-8 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-          {visiblePosts.map((post, index) => (
-            <FadeIn key={post.url} delay={index < 9 ? 0.1 * (index % 9) : 0}>
-              <PostCard post={post} />
-            </FadeIn>
-          ))}
+          {visiblePosts.map((post, index) => {
+            const firstPage = index < postsPerPage;
+            const card = <PostCard post={post} />;
+            return firstPage ? (
+              <FadeIn key={post.url} delay={0.08 * (index % postsPerPage)}>
+                {card}
+              </FadeIn>
+            ) : (
+              <div key={post.url}>{card}</div>
+            );
+          })}
         </div>
         {/* 添加一个用于检测滚动的元素 */}
         {visiblePosts.length < posts.length && (

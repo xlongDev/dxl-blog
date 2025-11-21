@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     // 使用 stale-while-revalidate 策略来优化缓存
     const response = await fetch(
-      `https://www.bing.com/HPImageArchive.aspx?format=js&idx=${offset}&n=8&mkt=zh-CN`,
+      `https://www.bing.com/HPImageArchive.aspx?format=js&idx=${offset}&n=1&mkt=zh-CN`,
       {
         next: {
           revalidate: 3600, // 每小时重新验证一次

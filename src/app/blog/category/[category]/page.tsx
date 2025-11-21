@@ -30,10 +30,10 @@ const getPostsStats = cache(() => {
     }, {} as Record<string, number>);
 
     return {
-      categories: categories.map(c => c.toLowerCase()),
+      categories: categories.map((c) => c.toLowerCase()),
       categoriesOriginal: categories,
       postsByCategory,
-      totalPosts: allPosts.length
+      totalPosts: allPosts.length,
     };
   } catch (error) {
     console.error("Error getting posts stats:", error);
@@ -41,7 +41,7 @@ const getPostsStats = cache(() => {
       categories: [],
       categoriesOriginal: [],
       postsByCategory: {},
-      totalPosts: 0
+      totalPosts: 0,
     };
   }
 });
@@ -52,10 +52,7 @@ const getCategoryPosts = cache((category: string) => {
     .filter((post) => {
       const pathSegments = post._raw.flattenedPath.split("/");
       const postCategory = pathSegments[0].toLowerCase();
-      return (
-        category === "all" ||
-        postCategory === category
-      );
+      return category === "all" || postCategory === category;
     })
     .sort((a, b) => compareDesc(new Date(a.date), new Date(b.date)));
 });
@@ -63,25 +60,35 @@ const getCategoryPosts = cache((category: string) => {
 export async function generateStaticParams() {
   try {
     const { categoriesOriginal } = getPostsStats();
-    
-    // 热门分类（根据 views 排序，取前 5 个）
-    const popularCategories = categoriesOriginal
-      .map((category) => {
-        const posts = getCategoryPosts(category.toLowerCase());
-        const totalViews = posts.reduce(
-          (sum, post) => sum + (post.views || 0),
-          0
-        );
-        return { category, totalViews };
-      })
-      .sort((a, b) => b.totalViews - a.totalViews)
-      .slice(0, 5)
-      .map(({ category }) => category);
+    const postsPerPage = 9;
 
-    // 预生成热门分类页面和 "all" 页面
-    return [...popularCategories, "all"].map((category) => ({
-      category: category.toLowerCase(),
-    }));
+    // 为每个分类生成所有可能的页面
+    const params = [];
+
+    // 添加 "all" 分类的所有页面
+    const allPosts = getCategoryPosts("all");
+    const allTotalPages = Math.ceil(allPosts.length / postsPerPage);
+    for (let page = 1; page <= allTotalPages; page++) {
+      params.push({
+        category: "all",
+        page: page.toString(),
+      });
+    }
+
+    // 为每个分类生成所有页面
+    for (const category of categoriesOriginal) {
+      const categoryPosts = getCategoryPosts(category.toLowerCase());
+      const totalPages = Math.ceil(categoryPosts.length / postsPerPage);
+
+      for (let page = 1; page <= totalPages; page++) {
+        params.push({
+          category: category.toLowerCase(),
+          page: page.toString(),
+        });
+      }
+    }
+
+    return params;
   } catch (error) {
     console.error("Error generating static params:", error);
     return [];
@@ -104,11 +111,21 @@ export default async function CategoryPage({
     const page = Number(searchParams.page) || 1;
     const postsPerPage = 9;
 
-    const { categories, categoriesOriginal, postsByCategory, totalPosts: totalAllPosts } = getPostsStats();
+    const {
+      categories,
+      categoriesOriginal,
+      postsByCategory,
+      totalPosts: totalAllPosts,
+    } = getPostsStats();
 
     // 验证分类是否存在
     if (decodedCategory !== "all" && !categories.includes(decodedCategory)) {
-      console.log("Category not found:", decodedCategory, "Available categories:", categories);
+      console.log(
+        "Category not found:",
+        decodedCategory,
+        "Available categories:",
+        categories
+      );
       notFound();
     }
 
@@ -118,7 +135,7 @@ export default async function CategoryPage({
     // 计算分页
     const totalPosts = filteredPosts.length;
     const totalPages = Math.ceil(totalPosts / postsPerPage);
-    
+
     // 验证页码是否有效
     if (totalPages > 0 && (page < 1 || page > totalPages)) {
       notFound();
@@ -132,7 +149,11 @@ export default async function CategoryPage({
       <div className="space-y-8 container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <CategoryFilter
           posts={paginatedPosts}
-          totalPosts={decodedCategory === "all" ? totalAllPosts : postsByCategory[decodedCategory] || 0}
+          totalPosts={
+            decodedCategory === "all"
+              ? totalAllPosts
+              : postsByCategory[decodedCategory] || 0
+          }
           currentCategory={decodedCategory}
           categories={categoriesOriginal}
           postsByCategory={postsByCategory}

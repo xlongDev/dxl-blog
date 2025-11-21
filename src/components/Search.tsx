@@ -50,30 +50,12 @@ export default function Search({ posts, isOpen, setIsOpen }: SearchProps) {
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const resultItemsRef = useRef<(HTMLElement | null)[]>([]);
 
-  // 从缓存加载所有文章的标签
+  // 直接从传入的 posts 数据获取标签
   useEffect(() => {
-    const fetchTags = async () => {
-      try {
-        const response = await fetch("/cache/tags.json");
-        if (response.ok) {
-          const cachedData: { allTags: string[] } = await response.json();
-          setAllTags(cachedData.allTags);
-        } else {
-          const tags = Array.from(
-            new Set(posts.flatMap((post) => post.tags || []))
-          ).sort();
-          setAllTags(tags);
-        }
-      } catch (error) {
-        console.error("Failed to load tags cache:", error);
-        const tags = Array.from(
-          new Set(posts.flatMap((post) => post.tags || []))
-        ).sort();
-        setAllTags(tags);
-      }
-    };
-
-    fetchTags();
+    const tags = Array.from(
+      new Set(posts.flatMap((post) => post.tags || []))
+    ).sort();
+    setAllTags(tags);
   }, [posts]);
 
   const processedPosts = useMemo(() => {

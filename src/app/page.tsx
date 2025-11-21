@@ -2,7 +2,6 @@ import { allPosts } from "contentlayer/generated";
 import { compareDesc } from "date-fns";
 import Hero from "@/components/Hero";
 import BingHero from "@/components/BingHero";
-import PopularPosts from "@/components/PopularPosts";
 import TechCategories from "@/components/TechCategories";
 import LatestPosts from "@/components/LatestPosts";
 import HeroTitle from "@/components/HeroTitle";
@@ -100,35 +99,34 @@ export default async function Home() {
         {/* 技术分类 */}
         <TechCategories />
 
-        {/* 热门文章 */}
-        <PopularPosts />
-
         {/* 精选文章 */}
         <div className="mt-16">
-          <FeaturedPosts featuredPosts={featuredPosts.map(post => ({
-            title: post.title,
-            date: post.date,
-            url: post.url,
-            category: post.category ?? "未分类",
-            tags: post.tags,
-            views: post.views,
-            likes: post.likes,
-            description: post.description ?? ""
-          }))} />
+          <FeaturedPosts
+            featuredPosts={featuredPosts.map((post) => ({
+              title: post.title,
+              date: post.date,
+              url: post.url,
+              category: post.category ?? "未分类",
+              tags: post.tags,
+              views: post.views,
+              description: post.description ?? "",
+            }))}
+          />
         </div>
 
         {/* 推荐阅读 */}
         <div className="mt-16">
-          <RecommendedPosts recommendedPosts={recommendedPosts.map(post => ({
-            title: post.title,
-            date: post.date,
-            url: post.url,
-            category: post.category ?? "未分类",
-            tags: post.tags,
-            views: post.views,
-            likes: post.likes,
-            description: post.description ?? ""
-          }))} />
+          <RecommendedPosts
+            recommendedPosts={recommendedPosts.map((post) => ({
+              title: post.title,
+              date: post.date,
+              url: post.url,
+              category: post.category ?? "未分类",
+              tags: post.tags,
+              views: post.views,
+              description: post.description ?? "",
+            }))}
+          />
         </div>
 
         {/* 面试精华 */}

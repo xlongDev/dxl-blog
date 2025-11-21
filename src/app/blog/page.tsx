@@ -12,6 +12,16 @@ export async function generateMetadata() {
   };
 }
 
+export async function generateStaticParams() {
+  const postsPerPage = 12;
+  const totalPosts = allPosts.length;
+  const totalPages = Math.ceil(totalPosts / postsPerPage);
+
+  return Array.from({ length: totalPages }, (_, i) => ({
+    page: (i + 1).toString(),
+  }));
+}
+
 export default async function BlogPage({
   searchParams,
 }: {
@@ -21,7 +31,9 @@ export default async function BlogPage({
     const page = Number(searchParams.page) || 1;
     const postsPerPage = 12;
 
-    const sortedPosts = allPosts.sort((a, b) => compareDesc(new Date(a.date), new Date(b.date)));
+    const sortedPosts = allPosts.sort((a, b) =>
+      compareDesc(new Date(a.date), new Date(b.date))
+    );
     const totalPosts = sortedPosts.length;
     const totalPages = Math.ceil(totalPosts / postsPerPage);
 

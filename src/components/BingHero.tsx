@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+ 
 import {
   ChevronDownIcon,
   InformationCircleIcon,
@@ -11,6 +12,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { quotes } from "@/data/quotes";
 import TypewriterQuote from "./TypewriterQuote";
+import Image from "next/image";
 
 interface BingWallpaper {
   url: string;
@@ -24,87 +26,110 @@ export default function BingHero() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showInfo, setShowInfo] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  // 直接在初始化时生成随机标语
   const [currentQuote, setCurrentQuote] = useState(getRandomQuote());
   const [offset, setOffset] = useState(0);
-  const [isPreloading, setIsPreloading] = useState(false);
+  const [isLoadingNext, setIsLoadingNext] = useState(false);
+  const [isLoadingPrev, setIsLoadingPrev] = useState(false);
+  const MAX_INDEX = 7;
+  const preloadedUrlsRef = useRef<Set<string>>(new Set());
 
-  // 随机选择一个标语
+  // 随机选择标语
   function getRandomQuote() {
-    const quoteIndex = Math.floor(Math.random() * quotes.length);
-    return quotes[quoteIndex];
+    return quotes[Math.floor(Math.random() * quotes.length)];
   }
 
-  // 获取 Bing 壁纸数据
-  const fetchBingWallpapers = async (offset: number) => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(`/api/bing?offset=${offset}`);
-      const data = await response.json();
-      const images = data.images;
+  // 预加载图片
+  const preloadImage = (url: string) =>
+    new Promise<void>((resolve) => {
+      if (preloadedUrlsRef.current.has(url)) {
+        resolve();
+        return;
+      }
+      
+      const img = new window.Image();
+      img.src = url;
+      img.onload = () => {
+        preloadedUrlsRef.current.add(url);
+        resolve();
+      };
+      img.onerror = () => resolve();
+    });
 
-      const wallpaperData = images.map((image: any) => ({
+  // 获取壁纸数据
+  const fetchBingWallpapers = async (offset: number): Promise<BingWallpaper[]> => {
+    try {
+      const response = await fetch(`/api/bing?offset=${offset}`);
+      if (!response.ok) throw new Error('Failed to fetch wallpapers');
+      
+      const data = await response.json();
+      return data.images.map((image: any) => ({
         url: `https://www.bing.com${image.url}`,
         copyright: image.copyright,
         title: image.title,
         location: image.copyright.split("(")[1]?.split(")")[0] || "未知地点",
       }));
-
-      setWallpapers((prev) => {
-        if (offset === 0) {
-          return wallpaperData;
-        }
-        const existingUrls = prev.map((w: BingWallpaper) => w.url);
-        const uniqueWallpaperData = wallpaperData.filter(
-          (w: BingWallpaper) => !existingUrls.includes(w.url)
-        );
-        return [...prev, ...uniqueWallpaperData];
-      });
     } catch (error) {
       console.error("Failed to fetch Bing wallpapers:", error);
-    } finally {
-      setIsLoading(false);
-      setIsPreloading(false);
+      return [];
     }
   };
 
-  // 初始化时获取第一批壁纸
+  // 预加载相邻壁纸
+  const preloadAdjacentWallpapers = async (index: number) => {
+    if (index < 0 || index >= wallpapers.length) return;
+    
+    const nextIndex = index + 1;
+    const prevIndex = index - 1;
+    
+    if (nextIndex < wallpapers.length) {
+      await preloadImage(wallpapers[nextIndex].url);
+    }
+    
+    if (prevIndex >= 0) {
+      await preloadImage(wallpapers[prevIndex].url);
+    }
+  };
+
+  // 初始化壁纸
   useEffect(() => {
     const initWallpapers = async () => {
-      await fetchBingWallpapers(offset);
-      setCurrentIndex(0);
+      setIsLoading(true);
+      try {
+        const firstBatch = await fetchBingWallpapers(0);
+        if (firstBatch.length > 0) {
+          setWallpapers(firstBatch);
+          // 预加载首张和下一张
+          await Promise.all([
+            preloadImage(firstBatch[0].url),
+            firstBatch[1] ? preloadImage(firstBatch[1].url) : Promise.resolve()
+          ]);
+          setCurrentIndex(0);
+        }
+      } catch (error) {
+        console.error("Initialization failed:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
+    
     initWallpapers();
   }, []);
 
-  // 预加载下一组壁纸和图片
+  // 预加载LCP图片
   useEffect(() => {
-    if (currentIndex >= wallpapers.length - 3 && !isPreloading) {
-      let newOffset = offset + 8;
-      if (newOffset > 16) newOffset = 0;
-      setOffset(newOffset);
-      setIsPreloading(true);
-      fetchBingWallpapers(newOffset);
-
-      if (currentIndex < wallpapers.length - 1) {
-        const nextImage = new Image();
-        nextImage.src = wallpapers[currentIndex + 1].url;
-      }
-    }
-
-    const preloadImages = () => {
-      if (currentIndex > 0) {
-        const prevImage = new Image();
-        prevImage.src = wallpapers[currentIndex - 1].url;
-      }
-      if (currentIndex < wallpapers.length - 1) {
-        const nextImage = new Image();
-        nextImage.src = wallpapers[currentIndex + 1].url;
-      }
+    // 只有当有壁纸且是第一张时才预加载
+    if (!wallpapers.length || !wallpapers[0]?.url) return;
+    
+    const link = document.createElement("link");
+    link.rel = "preload";
+    link.as = "image";
+    link.href = wallpapers[0].url;
+    document.head.appendChild(link);
+    
+    return () => {
+      document.head.removeChild(link);
     };
-
-    preloadImages();
-  }, [currentIndex, wallpapers.length, isPreloading, offset, wallpapers]);
+  }, [wallpapers]);
 
   // 滚动到内容区域
   const scrollToContent = () => {
@@ -115,45 +140,73 @@ export default function BingHero() {
   };
 
   // 切换到下一张壁纸
-  const nextWallpaper = () => {
-    if (currentIndex < wallpapers.length - 1) {
-      setCurrentIndex((prev) => prev + 1);
-      setCurrentQuote(getRandomQuote());
-    } else if (currentIndex === wallpapers.length - 1) {
-      setCurrentIndex(0);
-      setCurrentQuote(getRandomQuote());
-      if (offset + 8 > 16) {
-        setOffset(0);
+  const nextWallpaper = async () => {
+    if (isLoadingNext || (currentIndex >= wallpapers.length - 1 && offset >= MAX_INDEX)) return;
+    setIsLoadingNext(true);
+    
+    try {
+      const targetIndex = currentIndex + 1;
+      
+      // 需要新批次数据
+      if (targetIndex >= wallpapers.length && offset < MAX_INDEX) {
+        const newOffset = offset + 1;
+        const newBatch = await fetchBingWallpapers(newOffset);
+        
+        if (newBatch.length > 0) {
+          setWallpapers(prev => [...prev, ...newBatch]);
+          setOffset(newOffset);
+        }
       }
+      
+      // 确保目标壁纸已加载
+      const targetUrl = wallpapers[targetIndex]?.url;
+      if (targetUrl) {
+        await preloadImage(targetUrl);
+      }
+      
+      setCurrentIndex(targetIndex);
+      setCurrentQuote(getRandomQuote());
+      await preloadAdjacentWallpapers(targetIndex);
+    } catch (error) {
+      console.error("Next wallpaper failed:", error);
+    } finally {
+      setIsLoadingNext(false);
     }
   };
 
   // 切换到上一张壁纸
-  const prevWallpaper = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex((prev) => prev - 1);
+  const prevWallpaper = async () => {
+    if (isLoadingPrev || currentIndex === 0) return;
+    setIsLoadingPrev(true);
+    
+    try {
+      const targetIndex = currentIndex - 1;
+      
+      // 确保目标壁纸已加载
+      const targetUrl = wallpapers[targetIndex]?.url;
+      if (targetUrl) {
+        await preloadImage(targetUrl);
+      }
+      
+      setCurrentIndex(targetIndex);
       setCurrentQuote(getRandomQuote());
-    } else if (currentIndex === 0) {
-      setCurrentIndex(wallpapers.length - 1);
-      setCurrentQuote(getRandomQuote());
+      await preloadAdjacentWallpapers(targetIndex);
+    } catch (error) {
+      console.error("Previous wallpaper failed:", error);
+    } finally {
+      setIsLoadingPrev(false);
     }
   };
 
-  // 处理打字完成后的回调
+  // 处理打字完成
   const handleTypingComplete = () => {
-    const newQuote = getRandomQuote();
-    if (newQuote.text === currentQuote.text) {
-      setCurrentQuote(
-        quotes[
-          (quotes.findIndex((q) => q.text === currentQuote.text) + 1) %
-            quotes.length
-        ]
-      );
-    } else {
-      setCurrentQuote(newQuote);
-    }
+    setCurrentQuote(prev => {
+      const currentIndex = quotes.findIndex(q => q.text === prev.text);
+      return quotes[(currentIndex + 1) % quotes.length];
+    });
   };
 
+  // 恢复骨架屏
   if (isLoading || !wallpapers.length) {
     return (
       <div
@@ -199,36 +252,38 @@ export default function BingHero() {
     );
   }
 
-  const currentWallpaper = wallpapers[currentIndex];
-  if (!currentWallpaper) {
-    setCurrentIndex(0);
-    return null;
-  }
+  const currentWallpaper = wallpapers[currentIndex] || wallpapers[0];
+  if (!currentWallpaper) return null;
 
   return (
     <div className="relative w-full" style={{ height: "100vh" }}>
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentWallpaper.url}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 1 }}
-          className="absolute inset-0"
-        >
-          <div
-            className="absolute inset-0 w-full h-full"
-            style={{
-              backgroundImage: `url(${currentWallpaper.url})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              backgroundRepeat: "no-repeat",
-            }}
-          />
-          <div className="absolute inset-0 bg-black/30" />
-        </motion.div>
-      </AnimatePresence>
+      {/* 壁纸展示区 - 优化动画流程 */}
+      <div className="absolute inset-0">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentWallpaper.url}
+            className="absolute inset-0"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <Image
+              src={currentWallpaper.url}
+              alt={currentWallpaper.title}
+              fill
+              priority
+              className="object-cover"
+              sizes="100vw"
+              draggable={false}
+              onLoad={() => preloadedUrlsRef.current.add(currentWallpaper.url)}
+            />
+            <div className="absolute inset-0 bg-black/30" />
+          </motion.div>
+        </AnimatePresence>
+      </div>
 
+      {/* 内容区域 */}
       <div className="absolute inset-0 flex items-center justify-center">
         <TypewriterQuote
           key={currentQuote.text}
@@ -238,103 +293,102 @@ export default function BingHero() {
         />
       </div>
 
+      {/* 滚动指示器 */}
       <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2">
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
+        <button
           onClick={scrollToContent}
           className="animate-bounce text-white hover:text-blue-400 transition-colors"
           aria-label="Scroll to content"
         >
           <ChevronDownIcon className="h-10 w-10" />
-        </motion.button>
+        </button>
       </div>
 
-      {/* Navigation buttons */}
+      {/* 导航按钮 - 添加加载状态反馈 */}
       <div className="absolute top-1/2 -translate-y-1/2 left-4 sm:left-8">
-        <motion.button
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
+        <button
           onClick={prevWallpaper}
-          className="p-2 sm:p-3 text-white/50 hover:text-white bg-black/10 hover:bg-black/30 hover:backdrop-blur-sm rounded-full transition-all duration-300 hover:scale-110"
+          disabled={isLoadingPrev || currentIndex === 0}
+          className={`p-2 sm:p-3 rounded-full transition-all duration-300 ${
+            isLoadingPrev || currentIndex === 0
+              ? "cursor-not-allowed opacity-50"
+              : "text-white/50 hover:text-white bg-black/10 hover:bg-black/30 hover:backdrop-blur-sm hover:scale-110"
+          }`}
           aria-label="Previous wallpaper"
         >
-          <ChevronLeftIcon className="h-6 w-6 sm:h-7 sm:w-7" />
-        </motion.button>
+          {isLoadingPrev ? (
+            <div className="h-6 w-6 sm:h-7 sm:w-7 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <ChevronLeftIcon className="h-6 w-6 sm:h-7 sm:w-7" />
+          )}
+        </button>
       </div>
 
       <div className="absolute top-1/2 -translate-y-1/2 right-4 sm:right-8">
-        <motion.button
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
+        <button
           onClick={nextWallpaper}
-          className="p-2 sm:p-3 text-white/50 hover:text-white bg-black/10 hover:bg-black/30 hover:backdrop-blur-sm rounded-full transition-all duration-300 hover:scale-110"
+          disabled={isLoadingNext || (currentIndex >= wallpapers.length - 1 && offset >= MAX_INDEX)}
+          className={`p-2 sm:p-3 rounded-full transition-all duration-300 ${
+            isLoadingNext || (currentIndex >= wallpapers.length - 1 && offset >= MAX_INDEX)
+              ? "cursor-not-allowed opacity-50"
+              : "text-white/50 hover:text-white bg-black/10 hover:bg-black/30 hover:backdrop-blur-sm hover:scale-110"
+          }`}
           aria-label="Next wallpaper"
         >
-          <ChevronRightIcon className="h-6 w-6 sm:h-7 sm:w-7" />
-        </motion.button>
+          {isLoadingNext ? (
+            <div className="h-6 w-6 sm:h-7 sm:w-7 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <ChevronRightIcon className="h-6 w-6 sm:h-7 sm:w-7" />
+          )}
+        </button>
       </div>
 
-      {/* Info button */}
+      {/* 信息面板 */}
       <div className="absolute top-4 right-4 sm:top-8 sm:right-8 flex flex-col items-end">
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
+        <button
           onClick={() => setShowInfo(!showInfo)}
           className="p-2 sm:p-3 text-white/50 hover:text-white bg-black/10 hover:bg-black/30 hover:backdrop-blur-sm rounded-full transition-all duration-300 hover:scale-110"
           aria-label="Toggle information"
         >
           <InformationCircleIcon className="h-6 w-6 sm:h-7 sm:w-7" />
-        </motion.button>
+        </button>
 
-        {/* Wallpaper information */}
-        <AnimatePresence>
-          {showInfo && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              className="mt-2 bg-black/40 backdrop-blur-sm text-white p-4 rounded-lg w-[calc(100vw-2rem)] sm:w-[420px]"
-            >
-              <div className="flex justify-between items-start">
-                <div className="flex-1 pr-4">
-                  <h3 className="font-bold mb-2 text-sm sm:text-base">
-                    {currentWallpaper.title}
-                  </h3>
-                  <p className="text-xs sm:text-sm">
-                    {currentWallpaper.copyright}
-                  </p>
-                </div>
-                <button
-                  onClick={async () => {
-                    try {
-                      const response = await fetch(currentWallpaper.url);
-                      const blob = await response.blob();
-                      const url = window.URL.createObjectURL(blob);
-                      const a = document.createElement("a");
-                      a.href = url;
-                      a.download = `${currentWallpaper.title}.jpg`;
-                      document.body.appendChild(a);
-                      a.click();
-                      window.URL.revokeObjectURL(url);
-                      document.body.removeChild(a);
-                    } catch (error) {
-                      console.error("下载失败:", error);
-                    }
-                  }}
-                  className="p-2 text-white/50 hover:text-white bg-black/10 hover:bg-black/30 hover:backdrop-blur-sm rounded-full transition-all duration-300 hover:scale-110"
-                  aria-label="下载壁纸"
-                >
-                  <ArrowDownTrayIcon className="h-5 w-5" />
-                </button>
+        {showInfo && (
+          <div className="mt-2 bg-black/40 backdrop-blur-sm text-white p-4 rounded-lg w-[calc(100vw-2rem)] sm:w-[420px]">
+            <div className="flex justify-between items-start">
+              <div className="flex-1 pr-4">
+                <h3 className="font-bold mb-2 text-sm sm:text-base">
+                  {currentWallpaper.title}
+                </h3>
+                <p className="text-xs sm:text-sm">
+                  {currentWallpaper.copyright}
+                </p>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await fetch(currentWallpaper.url);
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `${currentWallpaper.title}.jpg`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                  } catch (error) {
+                    console.error("下载失败:", error);
+                  }
+                }}
+                className="p-2 text-white/50 hover:text-white bg-black/10 hover:bg-black/30 hover:backdrop-blur-sm rounded-full transition-all duration-300 hover:scale-110"
+                aria-label="下载壁纸"
+              >
+                <ArrowDownTrayIcon className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, ReactNode, Suspense } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import type { MDXComponents as MDXComponentsType } from "mdx/types";
 import {
   CheckIcon,
@@ -118,64 +117,44 @@ const CodeBlock = ({
 
   return (
     <div className="relative my-4 group">
-      <AnimatePresence mode="wait">
-        {isEditing ? (
-          <motion.div
-            key="editor"
-            initial={{ opacity: 0, y: 10, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.98 }}
-            transition={{
-              duration: 0.3,
-              ease: [0.4, 0, 0.2, 1],
-            }}
+      {isEditing ? (
+        <div className="transition-opacity duration-300">
+          <CodeEditor
+            code={codeText}
+            language={className?.replace(/language-/, "") || "javascript"}
+            onChange={setCodeText}
+          />
+        </div>
+      ) : (
+        <div className="transition-opacity duration-300">
+          <pre
+            className={`overflow-x-auto rounded-lg ${getThemeColor(
+              "bg-gray-900/95",
+              "bg-gray-800/95",
+              {
+                green: "bg-emerald-950/95",
+                purple: "bg-purple-950/95",
+                orange: "bg-orange-950/95",
+                blue: "bg-blue-950/95",
+                pink: "bg-pink-950/95",
+                brown: "bg-amber-950/95",
+              }
+            )} backdrop-blur-sm transition-all duration-300 ease-in-out ${
+              isCollapsed ? "max-h-16" : "max-h-[1000vh]"
+            }`}
           >
-            <CodeEditor
-              code={codeText}
-              language={className?.replace(/language-/, "") || "javascript"}
-              onChange={setCodeText}
-            />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="preview"
-            initial={{ opacity: 0, y: 10, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.98 }}
-            transition={{
-              duration: 0.3,
-              ease: [0.4, 0, 0.2, 1],
-            }}
-          >
-            <pre
-              className={`overflow-x-auto rounded-lg ${getThemeColor(
-                "bg-gray-900/95",
-                "bg-gray-800/95",
-                {
-                  green: "bg-emerald-950/95",
-                  purple: "bg-purple-950/95",
-                  orange: "bg-orange-950/95",
-                  blue: "bg-blue-950/95",
-                  pink: "bg-pink-950/95",
-                  brown: "bg-amber-950/95",
-                }
-              )} backdrop-blur-sm transition-all duration-300 ease-in-out ${
-                isCollapsed ? "max-h-16" : "max-h-[1000vh]"
+            <div
+              className={`px-4 py-2 transition-all duration-300 ease-in-out origin-top ${
+                isCollapsed
+                  ? "opacity-0 -translate-y-6 scale-y-0"
+                  : "opacity-100 translate-y-0 scale-y-100"
               }`}
             >
-              <div
-                className={`px-4 py-2 transition-all duration-300 ease-in-out origin-top ${
-                  isCollapsed
-                    ? "opacity-0 transform -translate-y-6 scale-y-0"
-                    : "opacity-100 transform translate-y-0 scale-y-100"
-                }`}
-              >
-                {children}
-              </div>
-            </pre>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              {children}
+            </div>
+          </pre>
+        </div>
+      )}
       <CodeBlockActions
         isEditing={isEditing}
         setIsEditing={setIsEditing}
@@ -221,12 +200,10 @@ const CodeBlockActions = ({
   return (
     <div className="absolute top-2 right-2 flex gap-1">
       {!isEditing && (
-        <motion.button
+        <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className={buttonBaseClass}
+          className={`${buttonBaseClass} transition-transform hover:scale-110 active:scale-95`}
           title={isCollapsed ? "展开代码" : "折叠代码"}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
         >
           <svg
             className={`w-4 h-4 transform transition-transform duration-200 ${
@@ -243,24 +220,20 @@ const CodeBlockActions = ({
               d={isCollapsed ? "M19 9l-7 7-7-7" : "M19 15l-7-7-7 7"}
             />
           </svg>
-        </motion.button>
+        </button>
       )}
-      <motion.button
+      <button
         onClick={() => setIsEditing(!isEditing)}
-        className={buttonBaseClass}
+        className={`${buttonBaseClass} transition-transform hover:scale-110 active:scale-95`}
         title={isEditing ? "预览代码" : "编辑代码"}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
       >
         <PencilIcon className="w-4 h-4" />
-      </motion.button>
+      </button>
       {!isEditing && (
-        <motion.button
+        <button
           onClick={onCopy}
-          className={buttonBaseClass}
+          className={`${buttonBaseClass} transition-transform hover:scale-110 active:scale-95`}
           title={isCopied ? "已复制" : "复制代码"}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
         >
           <div className="relative">
             <ClipboardIcon
@@ -274,7 +247,7 @@ const CodeBlockActions = ({
               }`}
             />
           </div>
-        </motion.button>
+        </button>
       )}
     </div>
   );

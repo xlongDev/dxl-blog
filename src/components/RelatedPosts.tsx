@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import { Post } from "contentlayer/generated";
 import Link from "next/link";
 import { useThemeUtils } from "@/hooks/useThemeUtils";
@@ -24,6 +25,20 @@ export default function RelatedPosts({
 }) {
   const relatedPosts = getRelatedPosts(currentPost, allPosts);
   const { theme, getThemeColor } = useThemeUtils();
+  const [shouldPrefetch, setShouldPrefetch] = useState(true);
+  useEffect(() => {
+    try {
+      const nav: any = typeof navigator !== "undefined" ? navigator : null;
+      const conn: any = nav && nav.connection ? nav.connection : null;
+      const saveData = !!(conn && conn.saveData);
+      const effective = (conn && conn.effectiveType) || "4g";
+      const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+      const slow = /(^2g|^slow-2g|^3g)/.test(effective);
+      setShouldPrefetch(!saveData && !slow && !isMobile);
+    } catch {
+      setShouldPrefetch(true);
+    }
+  }, []);
 
   if (relatedPosts.length === 0) return null;
 
@@ -106,6 +121,7 @@ export default function RelatedPosts({
             <Link
               key={post._id}
               href={`/blog/${post._raw.flattenedPath}`}
+              prefetch={shouldPrefetch}
               className={`block p-6 rounded-xl ${cardBg} backdrop-blur-sm border ${borderColor} ${hoverBorderColor} hover:shadow-xl transition-all duration-300 group`}
             >
               <h3

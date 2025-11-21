@@ -141,7 +141,7 @@ const CategoryLink = memo(
       },
     };
 
-    const baseClasses = `group flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg border shadow-sm`;
+  const baseClasses = `group flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg border shadow-sm`;
 
     const activeClasses = isActive
       ? getThemeClass(
@@ -227,8 +227,23 @@ const CategoryLink = memo(
           }
         );
 
+    const [shouldPrefetch, setShouldPrefetch] = useState(true);
+    useEffect(() => {
+      try {
+        const nav: any = typeof navigator !== "undefined" ? navigator : null;
+        const conn: any = nav && nav.connection ? nav.connection : null;
+        const saveData = !!(conn && conn.saveData);
+        const effective = (conn && conn.effectiveType) || "4g";
+        const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+        const slow = /(^2g|^slow-2g|^3g)/.test(effective);
+        setShouldPrefetch(!saveData && !slow && !isMobile);
+      } catch {
+        setShouldPrefetch(true);
+      }
+    }, []);
+
     return (
-      <Link href={href} className={`${baseClasses} ${activeClasses}`}>
+      <Link href={href} prefetch={shouldPrefetch} className={`${baseClasses} ${activeClasses}`}>
         <span className={`transition-all duration-300 ${textClasses}`}>
           {category}
         </span>
@@ -371,17 +386,22 @@ function Categories({
               count={totalPosts}
               isActive={currentCategory === "all"}
             />
-            {categories.map((category) => (
-              <CategoryLink
-                key={category}
-                href={`/blog/category/${category.toLowerCase()}`}
-                category={category}
-                count={postsByCategory[category] || 0}
-                isActive={
-                  category.toLowerCase() === currentCategory.toLowerCase()
-                }
-              />
-            ))}
+            {categories.map((category) => {
+              const keyLower = category.toLowerCase();
+              const count =
+                (postsByCategory as any)[category] ??
+                (postsByCategory as any)[keyLower] ??
+                0;
+              return (
+                <CategoryLink
+                  key={category}
+                  href={`/blog/category/${keyLower}`}
+                  category={category}
+                  count={count}
+                  isActive={keyLower === currentCategory.toLowerCase()}
+                />
+              );
+            })}
           </div>
         </div>
       </div>
@@ -394,15 +414,22 @@ function Categories({
           count={totalPosts}
           isActive={currentCategory === "all"}
         />
-        {categories.map((category) => (
-          <CategoryLink
-            key={category}
-            href={`/blog/category/${category.toLowerCase()}`}
-            category={category}
-            count={postsByCategory[category] || 0}
-            isActive={category.toLowerCase() === currentCategory.toLowerCase()}
-          />
-        ))}
+        {categories.map((category) => {
+          const keyLower = category.toLowerCase();
+          const count =
+            (postsByCategory as any)[category] ??
+            (postsByCategory as any)[keyLower] ??
+            0;
+          return (
+            <CategoryLink
+              key={category}
+              href={`/blog/category/${keyLower}`}
+              category={category}
+              count={count}
+              isActive={keyLower === currentCategory.toLowerCase()}
+            />
+          );
+        })}
       </div>
     </nav>
   );

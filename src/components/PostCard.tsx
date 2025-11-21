@@ -9,6 +9,7 @@ import { renderEmojiText } from "@/utils/emojiUtils";
 import { Post } from "contentlayer/generated";
 import Image from "next/image";
 import { Eye, Heart } from "lucide-react";
+import { useState, useEffect } from "react";
 
 interface PostCardProps {
   post: Post;
@@ -17,6 +18,11 @@ interface PostCardProps {
 export default function PostCard({ post }: PostCardProps) {
   const { theme, getThemeValue } = useThemeUtils();
   const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // 获取卡片背景色
   const getCardBg = () => {
@@ -125,9 +131,14 @@ export default function PostCard({ post }: PostCardProps) {
     );
   };
 
-  // 获取标签背景色
-  const getTagBgColor = () => {
-    return getThemeValue(
+  // 获取标签样式 - 修复水合错误
+  const getTagStyles = () => {
+    if (!mounted) {
+      // 服务端渲染时使用简化的样式，避免水合错误
+      return "text-xs px-2.5 py-0.5 rounded-full transition-all bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300 hover:bg-blue-100";
+    }
+
+    const bgColor = getThemeValue(
       {
         light:
           "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300",
@@ -145,11 +156,8 @@ export default function PostCard({ post }: PostCardProps) {
       },
       "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300"
     );
-  };
 
-  // 获取标签hover背景色
-  const getTagHoverBgColor = () => {
-    return getThemeValue(
+    const hoverBgColor = getThemeValue(
       {
         light: "hover:bg-blue-100",
         dark: "hover:bg-blue-800/50",
@@ -162,6 +170,8 @@ export default function PostCard({ post }: PostCardProps) {
       },
       "hover:bg-blue-100 dark:hover:bg-blue-800/50"
     );
+
+    return `text-xs px-2.5 py-0.5 rounded-full transition-all ${bgColor} ${hoverBgColor}`;
   };
 
   const cardBg = getCardBg();
@@ -170,12 +180,27 @@ export default function PostCard({ post }: PostCardProps) {
   const hoverGradient = getHoverGradient();
   const titleGradient = getTitleGradient();
   const dateColor = getDateColor();
-  const tagBgColor = getTagBgColor();
-  const tagHoverBgColor = getTagHoverBgColor();
+  const tagStyles = getTagStyles();
+  const [shouldPrefetch, setShouldPrefetch] = useState(true);
+
+  useEffect(() => {
+    try {
+      const nav: any = typeof navigator !== "undefined" ? navigator : null;
+      const conn: any = nav && nav.connection ? nav.connection : null;
+      const saveData = !!(conn && conn.saveData);
+      const effective = (conn && conn.effectiveType) || "4g";
+      const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+      const slow = /(^2g|^slow-2g|^3g)/.test(effective);
+      setShouldPrefetch(!saveData && !slow && !isMobile);
+    } catch {
+      setShouldPrefetch(true);
+    }
+  }, []);
 
   return (
     <Link
       href={post.url}
+      prefetch={shouldPrefetch}
       className={`group block p-6 rounded-lg border ${cardBorder} ${cardBg} hover:backdrop-blur-lg ${hoverBorder} transition-all duration-300 hover:-translate-y-1 shadow-md hover:shadow-xl hover:bg-gradient-to-r ${hoverGradient}`}
     >
       <div className="space-y-4">
@@ -204,7 +229,7 @@ export default function PostCard({ post }: PostCardProps) {
             {post.tags.map((tag) => (
               <span
                 key={tag}
-                className={`text-xs px-2.5 py-0.5 rounded-full transition-all ${tagBgColor} ${tagHoverBgColor}`}
+                className={tagStyles}
               >
                 {tag}
               </span>

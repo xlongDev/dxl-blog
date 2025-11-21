@@ -1,6 +1,5 @@
 "use client";
 
-import { useMDXComponent } from "next-contentlayer2/hooks";
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
 import { Post } from "contentlayer/generated";
@@ -17,6 +16,7 @@ import { useThemeUtils, ThemeType } from "@/hooks/useThemeUtils";
 import { useTheme } from "next-themes";
 import { THEME_COLORS } from "@/hooks/themeConstants";
 import { renderEmojiText } from "@/utils/emojiUtils";
+import { useMDXComponent } from "next-contentlayer2/hooks";
 
 // 动态导入组件
 const Comments = dynamic(() => import("@/components/Comments"), {
@@ -239,7 +239,6 @@ const ArticleContent = ({
   allPosts,
   getThemeValue,
 }: ArticleContentProps) => {
-  const MDXContent = useMDXComponent(post.body.code);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -262,6 +261,8 @@ const ArticleContent = ({
       "from-blue-600 via-purple-600 to-pink-600"
     );
   };
+
+  const MDXContent = useMDXComponent(post.body.code);
 
   if (!mounted) {
     return (
@@ -303,11 +304,49 @@ export default function BlogPostClient({
 }: BlogPostClientProps) {
   const { getThemeValue } = useThemeUtils();
   const [mounted, setMounted] = useState(false);
-  const MDXContent = useMDXComponent(post.body.code);
+  const [showComments, setShowComments] = useState(false);
+  const [showRelated, setShowRelated] = useState(false);
+  const [contentReady, setContentReady] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    const onScroll = () => {
+      if (showComments && showRelated) return;
+      const scrollY = window.scrollY || 0;
+      const viewportH = window.innerHeight || 0;
+      const docH = document.documentElement.scrollHeight || 0;
+      const distanceToBottom = docH - (scrollY + viewportH);
+      if (!showComments && distanceToBottom < 600) setShowComments(true);
+      if (!showRelated && distanceToBottom < 800) setShowRelated(true);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [showComments, showRelated]);
+
+  useEffect(() => {
+    const checkReady = () => {
+      const el = document.querySelector("article .prose");
+      if (el && (el as HTMLElement).clientHeight > 0) {
+        setContentReady(true);
+        return true;
+      }
+      return false;
+    };
+    if (checkReady()) return;
+    const interval = setInterval(() => {
+      if (checkReady()) clearInterval(interval);
+    }, 100);
+    const onLoad = () => checkReady();
+    window.addEventListener("load", onLoad);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("load", onLoad);
+    };
+  }, [post.url]);
 
   // 获取标题渐变色
   const getTitleGradient = () => {
@@ -326,6 +365,8 @@ export default function BlogPostClient({
     );
   };
 
+  const MDXContent = useMDXComponent(post.body.code);
+
   if (!mounted) {
     return (
       <div className="min-h-screen space-y-4 p-4">
@@ -338,7 +379,7 @@ export default function BlogPostClient({
 
   return (
     <div className="relative min-h-screen">
-      <ReadingProgress />
+      {contentReady && <ReadingProgress />}
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-8">
           <article className="relative">
@@ -362,8 +403,16 @@ export default function BlogPostClient({
               <ArticleActions slug={post.url} />
             </div>
             <div className="mt-16 space-y-16">
-              <Comments />
-              <RelatedPosts currentPost={post} allPosts={allPosts} />
+              {showComments ? (
+                <Comments />
+              ) : (
+                <LoadingPlaceholder height="h-32" />
+              )}
+              {showRelated ? (
+                <RelatedPosts currentPost={post} allPosts={allPosts} />
+              ) : (
+                <LoadingPlaceholder height="h-48" />
+              )}
             </div>
           </article>
           <aside className="space-y-8">

@@ -1,24 +1,19 @@
 "use client";
 import React from "react";
 import { BarChart2, FileText, Clock, MessageCircle } from "lucide-react";
-
-import { useBlogStats } from "@/hooks/useBlogStats";
 import { useThemeUtils } from "@/hooks/useThemeUtils";
 
 interface ExtendedStatsProps {
   totalViews: number;
   totalWords: number;
   readingTimeDistribution: Record<string, number>;
-  totalLikes: number;
 }
 
 const ExtendedStats = ({
   totalWords,
   readingTimeDistribution,
   totalViews,
-  totalLikes,
 }: ExtendedStatsProps) => {
-  const { stats, loading, error } = useBlogStats();
   const { theme } = useThemeUtils();
 
   // 根据主题获取背景渐变色
@@ -129,14 +124,6 @@ const ExtendedStats = ({
   const iconColorClass = getIconColorClass();
   const tagTextClass = getTagTextClass();
 
-  if (loading) {
-    return <div>加载中...</div>;
-  }
-
-  if (error) {
-    return <div>加载失败: {error}</div>;
-  }
-
   // 根据主题获取图标渐变色
   const getIconGradient = () => {
     const themeColors = {
@@ -197,7 +184,7 @@ const ExtendedStats = ({
           <span
             className={`relative z-10 text-2xl md:text-3xl font-bold bg-gradient-to-r ${textGradientClass} bg-clip-text text-transparent`}
           >
-            {stats.totalViews.toLocaleString()}
+            {totalViews.toLocaleString()}
           </span>
         </div>
 
@@ -259,28 +246,7 @@ const ExtendedStats = ({
           </div>
         </div>
 
-        {/* 总点赞数卡片 */}
-        <div
-          className={`group/item relative overflow-hidden hover:transform hover:translate-y-[-0.5rem] transition-all duration-300 p-4 md:p-5 lg:p-6 rounded-xl bg-gradient-to-br ${gradientBgClass} shadow-md hover:shadow-xl border ${borderClass}`}
-        >
-          <div
-            className={`absolute inset-0 bg-gradient-to-br ${hoverGradientClass} opacity-0 group-hover/item:opacity-100 transition-opacity duration-500`}
-          />
-          <div className="relative z-10 flex items-center gap-3 mb-3">
-            <MessageCircle
-              size={22}
-              className={`${iconColorClass} transition-all duration-300 transform group-hover/item:translate-y-[-5px]`}
-            />
-            <span className="text-base text-gray-700 dark:text-gray-300 font-medium">
-              总点赞数
-            </span>
-          </div>
-          <span
-            className={`relative z-10 text-2xl md:text-3xl font-bold bg-gradient-to-r ${textGradientClass} bg-clip-text text-transparent`}
-          >
-            {stats.totalLikes.toLocaleString()}
-          </span>
-        </div>
+        
       </div>
     </div>
   );
