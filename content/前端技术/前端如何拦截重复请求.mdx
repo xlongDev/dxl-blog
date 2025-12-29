@@ -1,0 +1,286 @@
+---
+
+type: "Post"
+title: "前端如何拦截重复请求？从原理到实战，拒绝重复的烦恼"
+date: "2023-08-28"
+description: "深入探讨前端如何拦截重复请求，涵盖原理、实现方法、工具封装和最佳实践，助力你打造更健壮的 Web 应用。"
+keywords: "前端开发, 重复请求拦截, HTTP 请求, 请求去重, Axios, Fetch, JavaScript, 性能优化"
+author: "晓龙"
+image: "/images/hero/request-deduplication.jpg"
+tags: ["前端开发", "JavaScript", "性能优化"]
+category: "前端技术"
+---
+
+嗨，前端朋友们 👋！有没有遇到过这样的场景：用户狂点“提交”按钮，结果服务器被同一请求轰炸，数据库里多了十条重复记录，PM 跑过来问你：“这 bug 咋回事儿？” 😅。或者更糟，接口限流把你拦在门外，页面直接卡死，体验崩塌。别慌，今天咱们就来聊聊如何在前端优雅地拦截重复请求，解锁这项“防御性编程”的必杀技。
+
+重复请求，听起来像是前端开发中的“社死瞬间”，但其实它是个很常见的问题。表单提交、按钮连点、接口并发，这些场景都可能触发重复请求。不仅浪费资源，还可能导致数据不一致甚至服务端压力过大。那么，如何从源头解决问题？本文将带你从原理到实战，层层递进，手把手教你搞定它。准备好了吗？Let’s dive in! 🚀
+
+## 为什么需要拦截重复请求？
+
+先从“为什么”聊起。假设你在开发一个电商下单页面，用户点击“购买”，前端发了个 POST 请求到后端。如果用户手速过快，连点两次，服务器可能会收到两个一模一样的请求，后端没做幂等处理的话，恭喜你，用户可能收到两份快递，钱包却哭了 😭。
+
+再比如，有些接口响应慢，用户不耐烦地刷新页面，结果短时间内触发了多次重复请求。不仅浪费带宽，还可能让页面状态混乱。这就像你在餐厅点菜，服务员还没记完你就连喊三遍“炒个青椒肉丝”，最后端上来三盘——吃得下吗？😂
+
+拦截重复请求的核心目标是：
+1. **提升用户体验**：避免重复操作带来的混乱。
+2. **优化性能**：减少不必要的网络请求。
+3. **保护后端**：降低服务器压力，避免数据异常。
+
+好了，道理讲完，咱们进入正题：怎么做？
+
+## 拦截重复请求的原理
+
+要拦截重复请求，核心思路是“去重”。但怎么判断两个请求是“重复”的呢？这得靠一个“请求指纹”（Request Fingerprint）。指纹是什么？简单来说，就是能唯一标识一个请求的特征组合，比如：
+- **URL**：请求的目标地址。
+- **Method**：GET、POST 等方法。
+- **Params/Body**：请求的参数或数据。
+- **Headers**：某些特定头部（比如 Authorization）。
+
+有了指纹，我们就可以在请求发出前检查：当前请求是否已经在队列里？如果在，就拦截；如果不在，就放行。这就像门卫查身份证，同一个ID不让你重复进场。
+
+实现上，通常有两种策略：
+1. **基于状态管理**：用一个全局 Map 或 Set 记录正在进行的请求。
+2. **基于时间窗口**：限制某个时间段内只能发一次请求。
+
+接下来，咱们从这两种思路出发，结合代码实例逐步展开。
+
+## 方法一：基于状态管理的请求去重
+
+### 基本实现：用 Map 存指纹
+
+最直观的方式是用一个 Map 来追踪所有正在进行的请求。每次发请求前，先算出指纹，检查 Map 里有没有；请求完成或失败后，再把指纹移除。
+
+```javascript
+// 请求拦截器核心逻辑
+const requestPool = new Map();
+
+function generateRequestKey(method, url, data) {
+  const key = `${method.toUpperCase()}@${url}@${JSON.stringify(data || {})}`;
+  return key;
+}
+
+async function requestWithDeduplication({ method, url, data }) {
+  const key = generateRequestKey(method, url, data);
+  
+  // 如果请求已在池中，直接返回现有 Promise
+  if (requestPool.has(key)) {
+    console.log(`重复请求被拦截: ${key}`);
+    return requestPool.get(key);
+  }
+
+  // 发起请求并存入池子
+  const promise = fetch(url, {
+    method,
+    body: data ? JSON.stringify(data) : null,
+    headers: { 'Content-Type': 'application/json' },
+  })
+    .then(res => res.json())
+    .finally(() => requestPool.delete(key)); // 请求完成移除
+
+  requestPool.set(key, promise);
+  return promise;
+}
+
+// 测试一下
+requestWithDeduplication({
+  method: 'POST',
+  url: '/api/order',
+  data: { productId: 123 },
+}).then(data => console.log('结果1:', data));
+
+requestWithDeduplication({
+  method: 'POST',
+  url: '/api/order',
+  data: { productId: 123 },
+}).then(data => console.log('结果2:', data));
+```
+
+**运行结果**：第二个请求被拦截，只有一个实际请求发出去，两个 `.then` 共享同一个结果。
+
+**小 Tips** 💡：生成 `key` 时，记得对 `data` 做排序（比如用 `Object.keys().sort()`），不然 `{ a: 1, b: 2 }` 和 `{ b: 2, a: 1 }` 会生成不同的 key，拦截失效。
+
+### 升级版：结合 Axios 拦截器
+
+现实开发中，我们大多用 Axios。怎么把这套逻辑融入呢？答案是拦截器！
+
+```javascript
+import axios from 'axios';
+
+const instance = axios.create();
+const requestPool = new Map();
+
+function getRequestKey(config) {
+  const { method, url, params, data } = config;
+  return `${method.toUpperCase()}@${url}@${JSON.stringify(params || data || {})}`;
+}
+
+instance.interceptors.request.use(config => {
+  const key = getRequestKey(config);
+  if (requestPool.has(key)) {
+    return Promise.reject(new Error('重复请求被拦截'));
+  }
+  requestPool.set(key, true);
+  return config;
+});
+
+instance.interceptors.response.use(
+  response => {
+    const key = getRequestKey(response.config);
+    requestPool.delete(key);
+    return response;
+  },
+  error => {
+    const key = getRequestKey(error.config || error.request);
+    requestPool.delete(key);
+    return Promise.reject(error);
+  }
+);
+
+// 使用
+instance.post('/api/order', { productId: 123 })
+  .then(res => console.log('成功:', res.data))
+  .catch(err => console.log('失败:', err.message));
+```
+
+**优点**：无缝集成现有代码，拦截逻辑集中管理。
+**小 Tips** 💡：可以用 `Symbol` 或自定义属性标记请求，避免误删其他拦截器加的 key。
+
+### 幽默插曲
+这种方法就像在公司门口装了个刷卡机，同一个员工刷两次卡，门直接说：“哥们儿，你已经进去了，别再刷了！” 😂
+
+## 方法二：基于时间窗口的防抖/节流
+
+有时候，重复请求不是完全一样的请求，而是短时间内的高频操作。比如搜索框输入，输入“abc”触发一次，输入“abcd”又触发一次。这时可以用**防抖（debounce）**或**节流（throttle）**。
+
+### 防抖实现
+防抖的核心是“等你消停了再说”。代码如下：
+
+```javascript
+function debounce(fn, delay) {
+  let timer;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+
+const sendRequest = debounce(async (query) => {
+  const res = await fetch(`/api/search?q=${query}`);
+  const data = await res.json();
+  console.log('搜索结果:', data);
+}, 500);
+
+// 输入框绑定
+document.querySelector('#search').addEventListener('input', e => {
+  sendRequest(e.target.value);
+});
+```
+
+**场景**：适合搜索、表单验证等，用户输入完再发请求。
+
+### 节流实现
+节流则是“每隔一段时间处理一次”，适合按钮点击：
+
+```javascript
+function throttle(fn, delay) {
+  let lastTime = 0;
+  return function (...args) {
+    const now = Date.now();
+    if (now - lastTime >= delay) {
+      fn.apply(this, args);
+      lastTime = now;
+    }
+  };
+}
+
+const submitOrder = throttle(async () => {
+  const res = await fetch('/api/order', { method: 'POST' });
+  console.log('订单提交:', await res.json());
+}, 1000);
+
+document.querySelector('#submit').addEventListener('click', submitOrder);
+```
+
+**小 Tips** 💡：防抖适合“结果导向”，节流适合“频率控制”。别搞混了，不然用户点半天没反应，还以为你代码写挂了 😜。
+
+## 方法三：借助工具封装
+
+自己写拦截逻辑当然爽，但如果团队大了，手动维护容易乱。可以用现成工具，比如 `axios-retry` 或自己封装个请求库。
+
+### 封装请求工具
+
+```javascript
+class RequestManager {
+  constructor() {
+    this.pool = new Map();
+  }
+
+  generateKey(method, url, data) {
+    return `${method}@${url}@${JSON.stringify(data || {})}`;
+  }
+
+  async request({ method, url, data }) {
+    const key = this.generateKey(method, url, data);
+    if (this.pool.has(key)) {
+      return this.pool.get(key);
+    }
+
+    const promise = fetch(url, {
+      method,
+      body: data ? JSON.stringify(data) : null,
+    })
+      .then(res => res.json())
+      .finally(() => this.pool.delete(key));
+
+    this.pool.set(key, promise);
+    return promise;
+  }
+}
+
+const requester = new RequestManager();
+requester.request({ method: 'POST', url: '/api/test', data: { id: 1 } });
+```
+
+**优点**：复用性强，逻辑隔离。
+**小 Tips** 💡：可以加个 `timeout` 参数，超时自动清理 pool，避免内存泄漏。
+
+## 最佳实践：让拦截更聪明
+
+光会拦截还不够，咱们得让它更智能。以下是几条实战经验：
+
+1. **区分请求类型**  
+   不是所有请求都需要拦截。GET 请求通常是幂等的，可以放宽限制；POST/PUT 这种有副作用的请求，必须严格去重。  
+   **小 Tips** 💡：在拦截器里加个 `config.deduplicate` 开关，手动控制哪些请求需要去重。
+
+2. **用户反馈**  
+   拦截后别让用户傻等，给个提示，比如“操作太快啦，稍等一下～”。  
+   **小 Tips** 💡：可以用 Toast 或 Loading 状态提示，避免用户觉得页面卡死。
+
+3. **支持取消请求**  
+   如果用户主动取消操作（比如切换页面），可以用 `AbortController` 中止请求。  
+   ```javascript
+   const controller = new AbortController();
+   fetch('/api/long-task', { signal: controller.signal });
+   // 取消
+   controller.abort();
+   ```
+
+4. **结合后端幂等设计**  
+   前端拦截只是第一道防线，后端最好也做幂等处理（比如用唯一 token）。两手抓才稳。  
+   **小 Tips** 💡：请求头加个 `X-Request-ID`，后端校验重复。
+
+5. **日志记录**  
+   被拦截的请求记录下来，方便调试。  
+   ```javascript
+   if (requestPool.has(key)) {
+     console.warn(`拦截重复请求: ${key}`);
+   }
+   ```
+
+## 总结：拒绝重复，拥抱优雅
+
+拦截重复请求，说白了就是在前端给服务器加个“门禁系统”。通过状态管理、防抖节流、工具封装，我们能轻松应对各种场景。无论是狂点按钮的用户，还是慢吞吞的接口，都能被我们拿捏得死死的。😂
+
+希望这篇博客能给你带来灵感，下次遇到重复请求，直接祭出这套“组合拳”，让代码更健壮，用户更满意。如果有更好的思路，欢迎留言交流，咱们一起进步！✌️
+
+--- 

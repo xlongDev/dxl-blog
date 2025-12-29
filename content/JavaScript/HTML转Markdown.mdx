@@ -1,0 +1,288 @@
+---
+
+type: "Post"
+title: "JavaScript 如何将 HTML 转成 Markdown？从 DOM 到文本的奇妙旅程"
+date: "2023-03-21"
+description: "深入探讨如何用 JavaScript 将 HTML 转换为 Markdown，涵盖原理、实现方法、实用工具和最佳实践，带你从 DOM 树到 Markdown 的优雅转身。"
+keywords: "JavaScript, HTML, Markdown, DOM, 前端开发, 转换工具, 解析器, AST"
+author: "晓龙"
+image: "/images/hero/html-to-md.jpg"
+tags: ["JavaScript", "前端开发", "Markdown"]
+category: "JavaScript"
+
+---
+
+嗨，前端小伙伴们！✨ 你有没有遇到过这样的场景：手里拿着一堆乱糟糟的 HTML，想把它变成优雅简洁的 Markdown，却不知道从何下手？别急，今天我们就来聊聊如何用 JavaScript 实现这个“魔法转换”，从 DOM 的“树林”走到 Markdown 的“平原”。这篇文章会带你深入原理，配上代码实例、实用工具和一些我踩坑后的最佳实践，尽量写得接地气又有深度。准备好了吗？让我们一起开启这段旅程吧！🚀
+
+## 为什么要把 HTML 转成 Markdown？
+
+先问个灵魂问题：为啥要干这事儿？HTML 是前端的“老大哥”，结构化强但啰嗦；Markdown 则是“轻量级选手”，简洁易读，特别适合文档、博客和静态站点。把 HTML 转成 Markdown，就像是把一堆零件组装好的玩具车拆回说明书，既能复用内容，又能换个玩法。比如：
+
+- 从网页抓取内容，转成 Markdown 存档。
+- 把富文本编辑器的输出（通常是 HTML）变成 Markdown，方便后续编辑。
+- 或者单纯为了好玩，挑战一下自己的代码功底（嘿，谁还没点 geek 精神呢？）。
+
+但问题来了：HTML 和 Markdown 的语法差异可不是小打小闹。HTML 是标签驱动的，`<p>`、`<strong>`、`<ul>` 啥都有；Markdown 则是纯文本加点符号，比如 `#`、`**`、`-`。这就好比把一栋钢筋水泥的大楼拆成简易帐篷，过程得讲究点策略。
+
+## 原理剖析：从 DOM 到 Markdown 的思维链
+
+要实现转换，我们得先搞清楚整个流程的“思维链”。别慌，我会尽量用类比和例子把这事儿讲得像剥洋葱一样清晰。
+
+### Step 1：解析 HTML，走进 DOM 树 🌳
+
+HTML 不是纯文本，它是结构化的标签语言。第一步得把它解析成 JavaScript 能操作的对象——DOM 树。浏览器天然擅长这事儿，但我们也可以用工具模拟。
+
+比如这段 HTML：
+```html
+<p>你好，<strong>前端</strong>世界！</p>
+<ul>
+  <li>HTML</li>
+  <li>CSS</li>
+</ul>
+```
+
+解析后，DOM 树大概长这样：
+- `p` 节点
+  - 文本节点：`你好，`
+  - `strong` 节点
+    - 文本节点：`前端`
+  - 文本节点：`世界！`
+- `ul` 节点
+  - `li` 节点：`HTML`
+  - `li` 节点：`CSS`
+
+**Tips**: 如果是静态 HTML 字符串，可以用 `DOMParser` 来解析：
+```javascript
+const html = `<p>你好，<strong>前端</strong>世界！</p>`;
+const parser = new DOMParser();
+const doc = parser.parseFromString(html, 'text/html');
+console.log(doc.body); // DOM 树就绪！
+```
+
+### Step 2：遍历 DOM，翻译成 Markdown 规则 📝
+
+有了 DOM 树，我们需要递归遍历每个节点，根据 HTML 标签的语义，映射到 Markdown 语法。比如：
+- `<p>` → 普通文本（直接换行）
+- `<strong>` 或 `<b>` → `**粗体**`
+- `<ul>` 和 `<li>` → `- 列表项`
+
+这就好比翻译外语：你得知道“hello”对应“你好”，“bold”对应“**粗体**”。但现实没这么简单，HTML 里可能有嵌套、属性、甚至乱七八糟的样式，怎么办？别急，我们后面会细说。
+
+### Step 3：序列化，输出纯文本结果 ✂️
+
+最后，把翻译好的 Markdown 拼接成字符串。这一步就像把拼好的乐高玩具拍成照片，变成最终的“成品”。
+
+目标结果可能是：
+```markdown
+你好，**前端**世界！
+
+- HTML
+- CSS
+```
+
+## 手写实现：从零打造一个转换器
+
+理论讲完了，咱们动手写一个简易版转换器，边写边聊细节。准备好你的键盘，咱们开始吧！💻
+
+### 基础代码：递归遍历 DOM
+```javascript
+function htmlToMarkdown(node) {
+  let markdown = '';
+
+  // 文本节点直接返回内容
+  if (node.nodeType === Node.TEXT_NODE) {
+    return node.textContent.trim();
+  }
+
+  // 元素节点根据标签处理
+  if (node.nodeType === Node.ELEMENT_NODE) {
+    const children = Array.from(node.childNodes);
+
+    switch (node.tagName.toLowerCase()) {
+      case 'p':
+        markdown += children.map(htmlToMarkdown).join('') + '\n\n';
+        break;
+      case 'strong':
+      case 'b':
+        markdown += `**${children.map(htmlToMarkdown).join('')}**`;
+        break;
+      case 'ul':
+        markdown += children.map(child => {
+          if (child.tagName?.toLowerCase() === 'li') {
+            return `- ${htmlToMarkdown(child)}\n`;
+          }
+          return '';
+        }).join('');
+        break;
+      default:
+        // 未识别的标签，直接处理子节点
+        markdown += children.map(htmlToMarkdown).join('');
+    }
+  }
+
+  return markdown;
+}
+
+// 测试一下
+const html = `<p>你好，<strong>前端</strong>世界！</p><ul><li>HTML</li><li>CSS</li></ul>`;
+const doc = new DOMParser().parseFromString(html, 'text/html');
+const result = htmlToMarkdown(doc.body);
+console.log(result);
+```
+
+运行后，输出正是我们想要的 Markdown！🎉 但这只是个“毛坯房”，实际场景里还有很多坑要填。
+
+### 进阶处理：应对复杂场景
+
+#### 1. 嵌套标签怎么办？
+比如 `<p>你好，<strong>前端<i>开发</i></strong>世界</p>`，期望输出：
+```markdown
+你好，**前端_开发_**世界
+```
+得加个 `case 'i'`：
+```javascript
+case 'i':
+case 'em':
+  markdown += `_${children.map(htmlToMarkdown).join('')}_`;
+  break;
+```
+
+**Tips**: 嵌套时注意顺序，避免生成 `**_前端_开发**` 这种怪胎，Markdown 解析器可能会懵。
+
+#### 2. 标题 `<h1>` 到 `<h6>`
+HTML 有六级标题，Markdown 用 `#` 表示：
+```javascript
+case 'h1':
+  markdown += `# ${children.map(htmlToMarkdown).join('')}\n\n`;
+  break;
+case 'h2':
+  markdown += `## ${children.map(htmlToMarkdown).join('')}\n\n`;
+  break;
+// ...以此类推
+```
+
+**Tips**: 加个换行 `\n\n`，不然标题和正文黏在一起，像挤地铁似的。
+
+#### 3. 链接和图片
+`<a>` 转成 `[文本](链接)`，`<img>` 转成 `![alt](src)`：
+```javascript
+case 'a':
+  const href = node.getAttribute('href') || '';
+  markdown += `[${children.map(htmlToMarkdown).join('')}](${href})`;
+  break;
+case 'img':
+  const src = node.getAttribute('src') || '';
+  const alt = node.getAttribute('alt') || '';
+  markdown += `![${alt}](${src})`;
+  break;
+```
+
+**Tips**: 检查空值，避免生成 `[]()` 这种“空气链接”。
+
+#### 4. 代码块
+`<pre>` 或 `<code>` 转成 ```：
+```javascript
+case 'pre':
+  markdown += '```\n' + children.map(htmlToMarkdown).join('') + '\n```\n';
+  break;
+case 'code':
+  markdown += '`' + children.map(htmlToMarkdown).join('') + '`';
+  break;
+```
+
+**Tips**: `<pre>` 通常是大段代码，记得加换行；`<code>` 是行内代码，单反引号就够了。
+
+## 实用工具：别老自己造轮子
+
+手写转换器挺酷，但生产环境里，时间就是金钱。以下是几个现成的库，省时省力：
+
+### 1. Turndown
+Turndown 是个轻量级神器，支持常见 HTML 标签转换：
+```javascript
+import TurndownService from 'turndown';
+const turndown = new TurndownService();
+const markdown = turndown.turndown('<p>你好，<strong>前端</strong></p>');
+console.log(markdown); // 你好，**前端**
+```
+
+**Tips**: 默认规则不够？可以自定义：
+```javascript
+turndown.addRule('strikethrough', {
+  filter: ['del', 's'],
+  replacement: content => `~~${content}~~`
+});
+```
+
+### 2. html-to-md
+更简单粗暴，直接处理字符串：
+```javascript
+const html2md = require('html-to-md');
+const markdown = html2md('<p>你好，<strong>前端</strong></p>');
+```
+
+**Tips**: 小项目用它够了，但复杂嵌套可能翻车，记得测试。
+
+### 3. Remark + Unified
+如果你是“硬核玩家”，可以用 Remark 生态。它基于 AST（抽象语法树），灵活但上手稍难：
+```javascript
+import { unified } from 'unified';
+import rehypeParse from 'rehype-parse';
+import rehypeRemark from 'rehype-remark';
+import remarkStringify from 'remark-stringify';
+
+const html = '<p>你好，<strong>前端</strong></p>';
+const markdown = await unified()
+  .use(rehypeParse)
+  .use(rehypeRemark)
+  .use(remarkStringify)
+  .process(html);
+console.log(String(markdown));
+```
+
+**Tips**: AST 转换像搭积木，模块化强，但调试时别被树形结构绕晕。
+
+## 最佳实践：让转换更靠谱
+
+### 1. 清理无用标签
+HTML 里常有 `<span style="color: red">` 这种样式垃圾，Markdown 不认这些。转换前可以用正则或 DOM 操作清理：
+```javascript
+function cleanHtml(html) {
+  return html.replace(/<span[^>]*>(.*?)<\/span>/g, '$1');
+}
+```
+
+### 2. 处理换行
+HTML 的 `<br>` 转成 Markdown 的两个空格加换行：
+```javascript
+case 'br':
+  markdown += '  \n';
+  break;
+```
+
+### 3. 错误容忍
+用户输入的 HTML 可能是残缺的（比如没闭合标签），用 `DOMParser` 时加个 try-catch：
+```javascript
+try {
+  const doc = parser.parseFromString(html, 'text/html');
+} catch (e) {
+  console.error('HTML 解析失败，检查下输入吧！', e);
+}
+```
+
+### 4. 测试驱动开发
+写几个测试用例，确保转换稳定：
+```javascript
+console.assert(htmlToMarkdown('<p>测试</p>') === '测试\n\n', '段落转换失败');
+```
+
+## 一点幽默感：转换中的“奇葩”瞬间
+
+写代码时，我有次忘了处理 `<table>`，结果 Markdown 里冒出一堆 `<td>`，活像 HTML 和 Markdown 的“私生子”。还有次，`<div>` 没清理，输出里全是空行，像是文档在“喘粗气”。这些坑提醒我：细节决定成败，别让代码变成“脱口秀”素材。
+
+## 总结：从繁琐到优雅的旅程
+
+HTML 到 Markdown 的转换，就像把一堆零件变成简明说明书。核心是解析 DOM、映射规则、序列化输出。手写实现能深入理解原理，实用工具则能快速落地。无论你是想“炫技”还是“偷懒”，这篇文章都给你铺了路。试试看吧，说不定下一个 Markdown 神作就出自你手！😎
+
+有啥问题或更好的思路？欢迎留言，咱们一起聊聊。毕竟，前端的世界，就是这么奇妙又有趣！🔥
+
+--- 

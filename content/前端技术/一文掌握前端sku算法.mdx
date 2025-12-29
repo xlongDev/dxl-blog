@@ -1,0 +1,263 @@
+---
+type: "Post"
+title: "一文掌握前端 SKU 算法"
+date: "2023-02-01"
+description: "从零到一深入剖析前端 SKU 算法的原理、实现与优化，带你玩转电商开发的硬核技能。"
+keywords: "SKU 算法, 前端开发, 电商开发, 数据结构, 算法优化, JavaScript, React"
+author: "晓龙"
+image: "/images/hero/sku-algorithm.jpg"
+tags: ["前端开发", "算法", "电商", "JavaScript"]
+category: "前端技术"
+---
+
+嘿，前端开发者们！你有没有在电商项目中被 SKU（Stock Keeping Unit，库存单元）搞得头晕眼花？那些“颜色+尺寸+材质”组合，像极了生活中“要不要加辣、要不要加冰”的灵魂拷问。SKU 算法看似简单，但一旦涉及多属性、多库存、动态交互，复杂度瞬间起飞。今天，我就带你从零到一，解锁前端 SKU 算法的奥秘——不仅讲原理，还会手把手教你实现，顺便聊聊优化和踩坑经验。准备好了吗？让我们一起“选购”这波硬核知识吧！🛒
+
+## SKU 是什么？从生活聊到代码
+
+SKU 是电商里的“身份证”，它标识了商品的每一个具体变体。比如一件 T 恤，有“红色/M 码”和“蓝色/L 码”，这就是两个不同的 SKU。生活中，你点外卖时“珍珠奶茶+少冰+三分糖”也是一个 SKU，只不过商家没告诉你罢了。
+
+在前端，SKU 算法的核心任务是：
+1. **展示可选属性**：用户点选“红色”，你得告诉他还能选哪些尺寸。
+2. **计算库存**：用户选完后，显示这个组合还有多少货。
+3. **动态交互**：属性之间互相影响，比如“红色没 M 码，但蓝色有”。
+
+听起来简单？但当属性从 2 个变成 5 个，库存数据一团乱麻时，你会发现这事儿比“解 5 元钱的数学题”还烧脑。别慌，我们一步步拆解。
+
+---
+
+## SKU 算法的灵魂：笛卡尔积
+
+SKU 的本质是**多维属性组合**，而数学上，这叫**笛卡尔积**。假设有：
+- 颜色：红、蓝
+- 尺寸：M、L
+
+笛卡尔积就是把所有可能组合列出来：
+- 红-M
+- 红-L
+- 蓝-M
+- 蓝-L
+
+代码实现呢？用 JavaScript 很简单：
+
+```javascript
+const colors = ["红", "蓝"];
+const sizes = ["M", "L"];
+
+function cartesian(...arrays) {
+  return arrays.reduce((acc, curr) =>
+    acc.flatMap(x => curr.map(y => x + "-" + y)), [""]
+  ).map(item => item.slice(1)); // 去掉开头的 "-"
+}
+
+const skus = cartesian(colors, sizes);
+console.log(skus); // ["红-M", "红-L", "蓝-M", "蓝-L"]
+```
+
+**小 Tips**：`flatMap` 是 ES2019 的新玩具，比嵌套 `map` 加 `concat` 优雅多了。如果属性数组动态传入，用 `...arrays` 解构，灵活性拉满。
+
+但这只是理论上的“全组合”。现实中，库存数据可能是稀疏的，比如“红-M”有货 10 件，其他组合压根不存在。怎么办？我们得引入“路径选择”逻辑。
+
+---
+
+## 数据结构：从暴力枚举到优雅解法
+
+### 原始数据长啥样？
+
+电商后台通常会给前端一个 SKU 表，比如：
+
+```javascript
+const skuList = [
+  { id: 1, attrs: ["红", "M"], stock: 10 },
+  { id: 2, attrs: ["蓝", "L"], stock: 30 },
+];
+const attrs = {
+  color: ["红", "蓝"],
+  size: ["M", "L"],
+};
+```
+
+这里 `skuList` 是实际库存，`attrs` 是所有可选属性。问题来了：用户选“红”，还能选啥尺寸？全靠前端算。
+
+### 方案 1：暴力枚举
+
+最直白的方法：遍历 `skuList`，筛选包含“红”的 SKU，再提取对应的尺寸。
+
+```javascript
+function getAvailableSizes(selectedColor) {
+  return skuList
+    .filter(sku => sku.attrs.includes(selectedColor))
+    .map(sku => sku.attrs[1]) // 假设第 1 个是颜色，第 2 个是尺寸
+    .filter((v, i, arr) => arr.indexOf(v) === i); // 去重
+}
+
+console.log(getAvailableSizes("红")); // ["M"]
+```
+
+**优点**：简单粗暴，容易理解。
+**缺点**：数据大了性能爆炸，而且假设属性顺序固定，太死板。
+
+**小 Tips**：用 `Set` 去重比 `filter` + `indexOf` 更快，改成 `new Set()` 试试，性能提升 30% 不是梦。
+
+### 方案 2：构建 SKU Map
+
+我们可以用一个哈希表，把 SKU 组合和库存映射起来，加速查询：
+
+```javascript
+const skuMap = new Map();
+skuList.forEach(sku => {
+  skuMap.set(sku.attrs.join("-"), sku.stock);
+});
+
+function getAvailableOptions(selected = {}) {
+  const result = {};
+  Object.keys(attrs).forEach(key => {
+    result[key] = attrs[key].filter(option => {
+      const testAttrs = { ...selected, [key]: option };
+      const keyStr = Object.values(testAttrs).join("-");
+      return skuMap.has(keyStr) && skuMap.get(keyStr) > 0;
+    });
+  });
+  return result;
+}
+
+console.log(getAvailableOptions({ color: "红" }));
+// { color: ["红"], size: ["M"] }
+```
+
+**原理**：每次用户选一个属性，就拿它去“试探”所有组合，看哪些还有库存。
+
+**小 Tips**：用 `Map` 而不是普通对象，因为键可以是复杂类型，未来扩展性更好。库存为 0 的直接过滤，用户体验更丝滑。
+
+---
+
+## 动态交互：路径选择算法
+
+现在，用户点了“红”，尺寸只剩“M”可选；点了“M”，颜色只剩“红”。这叫**路径选择**，得实时更新可选属性。
+
+### 用状态机思维
+
+我们可以把用户的选择看成一个状态机，当前状态决定下一步的可选范围。React 实现如下：
+
+```jsx
+import { useState, useMemo } from "react";
+
+const skuList = [
+  { id: 1, attrs: ["红", "M"], stock: 10 },
+  { id: 2, attrs: ["蓝", "L"], stock: 30 },
+];
+const attrs = { color: ["红", "蓝"], size: ["M", "L"] };
+
+function SkuSelector() {
+  const [selected, setSelected] = useState({});
+
+  const skuMap = useMemo(() => {
+    const map = new Map();
+    skuList.forEach(sku => map.set(sku.attrs.join("-"), sku.stock));
+    return map;
+  }, []);
+
+  const availableOptions = useMemo(() => {
+    const result = {};
+    Object.keys(attrs).forEach(key => {
+      result[key] = attrs[key].filter(option => {
+        const testAttrs = { ...selected, [key]: option };
+        const keyStr = Object.values(testAttrs).join("-");
+        return skuMap.has(keyStr) && skuMap.get(keyStr) > 0;
+      });
+    });
+    return result;
+  }, [selected]);
+
+  const handleSelect = (key, value) => {
+    setSelected(prev => ({ ...prev, [key]: value }));
+  };
+
+  return (
+    <div>
+      {Object.entries(attrs).map(([key, options]) => (
+        <div key={key}>
+          <h3>{key}</h3>
+          {options.map(option => (
+            <button
+              key={option}
+              disabled={!availableOptions[key].includes(option)}
+              onClick={() => handleSelect(key, option)}
+              style={{
+                background: selected[key] === option ? "yellow" : "white",
+              }}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      ))}
+      <p>当前库存: {skuMap.get(Object.values(selected).join("-")) || 0}</p>
+    </div>
+  );
+}
+
+export default SkuSelector;
+```
+
+**效果**：用户选“红”，尺寸按钮里“L”变灰；选“M”，颜色里“蓝”变灰。库存实时更新，丝滑得像刚涂了润滑油。
+
+**小 Tips**：用 `useMemo` 缓存计算结果，避免重复运算。按钮禁用状态用 CSS 加点动画（比如 `transition`），用户体验更上一层楼。
+
+---
+
+## 优化与踩坑
+
+### 性能优化
+
+属性多了（比如 5 个维度，每维度 5 个选项），全组合有 5^5 = 3125 种可能。暴力枚举直接 GG。怎么办？
+1. **稀疏存储**：只存有库存的 SKU，放弃笛卡尔全集。
+2. **索引化**：为每个属性建索引，比如 `colorToSkus`：
+   ```javascript
+   const colorToSkus = new Map();
+   skuList.forEach(sku => {
+     const color = sku.attrs[0];
+     if (!colorToSkus.has(color)) colorToSkus.set(color, []);
+     colorToSkus.get(color).push(sku);
+   });
+   ```
+   这样查“红”对应的 SKU 直接 O(1)。
+
+**小 Tips**：大数据量时，考虑 Web Worker 把计算丢到后台线程，主线程不卡顿。
+
+### 踩坑日记
+
+1. **属性顺序问题**：后台数据可能乱序（“红-M” vs “M-红”），用 `Map` 时得统一 key。
+2. **库存边界**：用户选完发现库存是 0，按钮还亮着？加个 `stock > 0` 判断。
+3. **国际化**：属性名可能是“Red”或“红色”，别忘了适配多语言。
+
+**幽默插曲**：有次我忘了库存校验，用户下单买了“空气 SKU”，后台问我：“这哥们儿是想买风吗？” 😂
+
+---
+
+## 最佳实践：让 SKU 飞起来
+
+1. **数据预处理**  
+   把 `skuList` 转成 `skuMap` 或索引结构，加载时只算一次，交互时直接查。  
+   **Tips**：用 `useEffect` 或组件挂载时处理，别放渲染循环里。
+
+2. **状态管理**  
+   属性少用 `useState`，多了用 Redux 或 Zustand，保持全局一致性。  
+   **Tips**：加个“重置”按钮，用户选错了能一键清空。
+
+3. **UI 反馈**  
+   禁用选项加灰色 + 提示（“该组合无货”），别让用户猜。  
+   **Tips**：hover 时弹个 tooltip，告诉用户为啥点不了。
+
+4. **错误边界**  
+   数据格式不对（比如 `attrs` 为空），加个 fallback UI，别让页面崩了。  
+   **Tips**：用 React 的 `ErrorBoundary` 兜底，优雅降级。
+
+---
+
+## 类比与总结
+
+SKU 算法就像玩“俄罗斯方块”：属性是方块，用户选的时候得拼对位置，库存是边界，拼错了就 Game Over。核心是**数据结构 + 动态匹配**，从笛卡尔积到路径选择，再到优化，每一步都在考验你的代码功底。
+
+写到这儿，我都想给自己点个奶茶庆祝了（珍珠+少冰+三分糖，SKU 完美！）。希望这篇博客能帮你在电商项目里游刃有余。有什么疑问？评论区聊聊呗！✌️
+
+---

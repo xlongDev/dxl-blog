@@ -1,0 +1,11 @@
+/**
+ * 主样式入口文件
+ * 使用模块化CSS结构，提高可维护性
+ */
+
+@import "../styles/scrollbar.css";
+@import "../styles/index.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

@@ -1,0 +1,98 @@
+/* 排版样式 */
+
+/* 链接样式 */
+.prose a {
+  color: rgb(37, 99, 235);
+  transition-property: color;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+.prose a:hover {
+  color: rgb(29, 78, 216);
+}
+
+@media (prefers-color-scheme: dark) {
+  .prose a {
+    color: rgb(96, 165, 250);
+  }
+
+  .prose a:hover {
+    color: rgb(147, 197, 253);
+  }
+}
+
+/* 标题样式 */
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+  font-weight: 700;
+  scroll-margin-top: 5rem;
+}
+
+/* 列表样式 */
+.prose ul,
+.prose ol {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* 引用样式 */
+.prose blockquote {
+  font-style: italic;
+  border-left-width: 4px;
+  padding-left: 1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: rgb(75, 85, 99);
+  border-color: rgb(229, 231, 235);
+}
+
+@media (prefers-color-scheme: dark) {
+  .prose blockquote {
+    color: rgb(209, 213, 219);
+    border-color: rgb(55, 65, 81);
+  }
+}
+
+/* 表格样式 */
+.prose table {
+  width: 100%;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* 表头样式 */
+.prose table th {
+  background-color: rgb(243, 244, 246);
+  padding: 0.5rem;
+  font-weight: 600;
+}
+
+@media (prefers-color-scheme: dark) {
+  .prose table th {
+    background-color: rgb(31, 41, 55);
+  }
+}
+
+/* 表格单元格样式 */
+.prose table td {
+  padding: 0.5rem;
+  border-top-width: 1px;
+  border-color: rgb(229, 231, 235);
+}
+
+@media (prefers-color-scheme: dark) {
+  .prose table td {
+    border-color: rgb(55, 65, 81);
+  }
+}
+
+/* 图片样式 */
+.prose img {
+  border-radius: 0.5rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}

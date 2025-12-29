@@ -1,0 +1,1030 @@
+---
+type: "Post"
+title: "一步一步实现一个专业的前端组件库"
+date: "2023-12-11"
+description: "从零到一打造一个专业的前端组件库，深入原理、实用实践、幽默解读，带你走进组件库开发的奇妙世界！涵盖架构设计、技术选型、核心组件实现、样式系统、测试、文档、性能优化与发布全流程。"
+keywords: "前端组件库, React, Vue, Web Components, TypeScript, 组件设计, UI 开发, 样式系统, 无障碍, 性能优化, Storybook, npm 发布"
+author: "晓龙"
+image: "/images/hero/component-library.jpg"
+tags: ["前端开发", "组件库", "React", "TypeScript", "UI 设计", "性能优化"]
+category: "前端工程化"
+---
+
+前端开发的江湖里，组件库就像是一把精心打造的“倚天剑”，既能让你在项目中游刃有余，又能让用户界面赏心悦目。Ant Design 的严谨、Material-UI 的优雅、Chakra UI 的灵活……这些优秀的组件库早已成为前端开发者的“武林秘籍”。但你有没有想过，亲手打造一个属于自己的组件库，是一件多么热血沸腾的事情？😎
+
+这篇博客将带你从零到一，手把手打造一个专业的前端组件库。我们会深入原理，剖析设计思路，分享实用技巧，还要夹杂一点程序员专属的“冷幽默”。无论你是想为公司定制一个内部组件库，还是准备在 GitHub 上“秀肌肉”，这篇文章都会是你的一盏明灯。准备好你的代码编辑器，我们开始这场“组件库打造之旅”吧！🚀
+
+## 为什么需要一个组件库？
+
+在动手写代码之前，我们先来聊聊“为什么”。组件库可不是简单的“按钮打包机”，它更像是团队的“设计语言契约”，定义了项目的视觉风格、交互逻辑和开发规范。以下是几个常见的场景：
+
+- **统一风格**：避免每个开发者的按钮都像“毕加索的抽象画”，让 UI 保持一致。  
+- **提升效率**：不用每次都从零开始写一个弹窗，省下的时间可以多刷几条 X 上的程序员梗。  
+- **跨项目复用**：一个组件库可以服务多个项目，减少重复造轮子，像“代码界的乐高”。  
+- **便于维护**：改一处，全局生效，比到处修 CSS 省心多了。  
+- **品牌赋能**：通过定制化的组件库，强化品牌视觉识别，让用户记住你的产品。
+
+举个例子，我曾为一个电商团队开发过一个 React 组件库，统一了按钮、卡片和表单的样式。结果呢？设计师笑得合不拢嘴，开发效率提升了 30%，上线后用户反馈“界面终于不像是拼凑的了”。😏
+
+> *小Tips：如果你还在靠“复制粘贴大法”复用 UI 代码，建议停下来想想：时间成本和维护成本可能会让你在未来的某个深夜，抱着键盘默默流泪。*
+
+好了，理论铺垫够了，接下来进入正题：如何一步步打造一个组件库？以下是我们的“武林秘籍”目录：
+
+1. **规划组件库的架构**：明确目标，绘制蓝图。  
+2. **技术选型与工具链**：选择合适的框架和工具。  
+3. **实现核心组件**：从按钮到复杂组件，逐一攻克。  
+4. **样式系统与主题化**：让组件库既好看又灵活。  
+5. **类型安全与 TypeScript**：让代码更健壮。  
+6. **无障碍支持（a11y）**：让组件对所有用户友好。  
+7. **性能优化**：让组件库跑得更快。  
+8. **测试与文档**：保证质量，方便使用。  
+9. **打包与发布**：让组件库走向世界。  
+10. **最佳实践与经验分享**：避坑指南与高级技巧。
+
+## 1. 规划组件库的架构
+
+一个好的组件库，就像一栋精心设计的大厦，地基得打得稳稳当当。规划阶段的核心是明确你的组件库要解决什么问题，以及它的使用场景。
+
+### 1.1 定义目标与范围
+
+先问自己几个灵魂拷问：
+- 这个组件库是给公司内部项目用的，还是开源给全世界的开发者？
+- 支持哪些框架？React、Vue、Svelte，还是框架无关的 Web Components？
+- 需要支持哪些高级功能？主题切换、无障碍访问（a11y）、国际化（i18n）、RTL（从右到左语言）？
+- 预算是多少？人力、时间和技术债务都要考虑。
+
+以我自己的经验为例，我曾为一个中型团队打造过一个 React 组件库，目标是“轻量、易用、主题可定制”。我们决定先实现 10 个核心组件（按钮、输入框、弹窗、卡片等），再根据反馈扩展。结果证明，先从“小而美”入手，远比一开始追求“大而全”靠谱。
+
+> *小Tips：不要一开始就想造一个“宇宙最强组件库”，从小处着手，迭代完善。否则，你可能会被需求淹没，像掉进了代码的黑洞，找不到出路。*
+
+### 1.2 设计组件的 API
+
+组件的 API 设计决定了它的易用性。一个好的 API 应该直观、灵活，且遵循“最小惊讶原则”。以按钮组件为例，一个合理的 API 可能是这样的：
+
+```tsx
+<Button
+  variant="primary"
+  size="medium"
+  disabled={false}
+  loading={false}
+  icon={<IconStar />}
+  onClick={() => console.log("点我干嘛？")}
+>
+  点击我
+</Button>
+```
+
+这个 API 提供了：
+- `variant`：控制样式（主按钮、辅助按钮等）。
+- `size`：控制尺寸（大、中、小）。
+- `disabled`：禁用状态。
+- `loading`：加载状态。
+- `icon`：支持图标。
+- `onClick`：点击事件。
+
+这样的设计既简单又强大，开发者一看就知道怎么用。
+
+> *小Tips：API 设计时，尽量让开发者“猜”就能猜到用法。比如，`size="large"` 总比 `dimension="big"` 更直观，少点“脑筋急转弯”的感觉。*
+
+### 1.3 目录结构规划
+
+一个清晰的目录结构，能让你的组件库维护起来像喝下午茶一样轻松。以下是一个推荐的目录结构：
+
+```
+my-component-lib/
+├── src/
+│   ├── components/
+│   │   ├── Button/
+│   │   │   ├── Button.tsx
+│   │   │   ├── Button.types.ts
+│   │   │   ├── Button.test.tsx
+│   │   │   ├── Button.stories.tsx
+│   │   │   ├── Button.css
+│   │   │   └── index.ts
+│   │   ├── Input/
+│   │   ├── Modal/
+│   │   └── Card/
+│   ├── styles/
+│   │   ├── themes/
+│   │   │   ├── light.css
+│   │   │   └── dark.css
+│   │   └── global.css
+│   ├── utils/
+│   │   ├── cn.ts
+│   │   └── hooks/
+│   ├── hooks/
+│   │   └── useTheme.ts
+│   └── index.ts
+├── docs/
+│   ├── introduction.md
+│   └── components/
+├── tests/
+├── scripts/
+│   └── build.ts
+├── package.json
+├── tsconfig.json
+├── rollup.config.js
+└── README.md
+```
+
+每个组件一个独立文件夹，包含实现、类型、测试、Storybook 故事和样式文件，条理清晰，扩展方便。
+
+> *小Tips：用 `index.ts` 统一导出组件，比如 `export { default } from './Button'`，让用户导入时更简洁，像点外卖一样省心。*
+
+### 1.4 命名规范
+
+命名是组件库的“门面”，好的命名能减少沟通成本。推荐以下规则：
+- **组件名**：用 PascalCase，如 `Button`、`DatePicker`。
+- **Prop 名**：用 camelCase，如 `variant`、`onClick`。
+- **样式类**：用 BEM 或 kebab-case，如 `.btn--primary` 或 `btn-primary`。
+- **文件组织**：与组件名保持一致，如 `Button.tsx`、`Button.types.ts`。
+
+> *小Tips：命名时想想用户会不会骂你。如果一个 prop 叫 `buttonStyleMode`，估计会被吐槽“谁起的这么拗口的名字”。*
+
+## 2. 技术选型与工具链
+
+打造组件库就像烹饪一桌满汉全席，选对食材和厨具至关重要。以下是我们需要考虑的技术栈。
+
+### 2.1 框架选择
+
+React 是目前最主流的选择，生态丰富，社区活跃，适合大多数场景。如果你团队用 Vue 或 Svelte，也可以根据需求选择。甚至可以考虑 Web Components，做到框架无关，但需要额外处理浏览器兼容性和性能优化。
+
+我个人推荐 React + TypeScript 的组合，既能享受 React 的灵活性，又能通过 TypeScript 提升代码健壮性。如果是开源项目，React 的普及度还能吸引更多贡献者。
+
+> *小Tips：如果你选 Web Components，建议用 Lit 或 Stencil 这样的库，省得手写 DOM 操作，累到怀疑人生。*
+
+### 2.2 构建工具
+
+推荐以下构建工具：
+- **Vite**：开发体验丝滑，启动速度快，适合快速迭代。
+- **Turbopack**：Next.js 团队的新作，号称“Webpack 终结者”，适合追求极致性能。
+- **Rollup**：打包组件库的标配，支持 Tree Shaking，生成更小的 bundle。
+- **esbuild**：速度超快，适合小型组件库。
+
+一个典型的 `rollup.config.js` 配置如下：
+
+```js
+import typescript from "@rollup/plugin-typescript";
+import postcss from "rollup-plugin-postcss";
+import { terser } from "rollup-plugin-terser";
+
+export default {
+  input: "src/index.ts",
+  output: [
+    {
+      file: "dist/index.esm.js",
+      format: "esm",
+      sourcemap: true,
+    },
+    {
+      file: "dist/index.cjs.js",
+      format: "cjs",
+      sourcemap: true,
+    },
+  ],
+  plugins: [
+    typescript({ tsconfig: "./tsconfig.json" }),
+    postcss({
+      extract: "index.css",
+      minimize: true,
+    }),
+    terser(), // 压缩代码
+  ],
+  external: ["react", "react-dom"], // 避免打包 React
+};
+```
+
+> *小Tips：为 ESM 和 CJS 生成两份输出，兼容不同模块系统。别忘了加 `sourcemap`，方便用户调试时不抓狂。*
+
+### 2.3 样式方案
+
+样式方案决定了组件库的灵活性和维护成本。以下是几种常见选择：
+- **CSS-in-JS**：如 Emotion 或 Styled-Components，适合动态样式和主题化。
+- **CSS Modules**：隔离性好，适合小型组件库。
+- **Tailwind CSS**：开发速度快，但需要额外配置以支持 Tree Shaking。
+- **Sass/Less**：传统但可靠，适合大型项目。
+- **CSS 变量**：原生支持，简单高效，适合主题切换。
+
+我倾向于用 Emotion + CSS 变量的组合，既能享受 CSS-in-JS 的动态能力，又能利用 CSS 变量的浏览器原生支持，减少运行时开销。
+
+> *小Tips：无论选哪种方案，都要确保样式隔离，避免组件样式像病毒一样污染全局 CSS。*
+
+### 2.4 其他工具
+
+- **TypeScript**：提升类型安全，减少运行时错误。
+- **Storybook**：用于组件文档和展示，开发者的“试衣间”。
+- **Jest + React Testing Library**：单元测试标配。
+- **ESLint + Prettier**：统一代码风格，减少“格式大战”。
+- **Husky + lint-staged**：在 Git 提交时自动格式化和检查代码。
+
+> *小Tips：配置好 ESLint 和 Prettier 后，强制团队遵守规则。否则，你可能会看到代码缩进像现代艺术，头痛欲裂。*
+
+## 3. 实现核心组件
+
+理论讲完了，接下来撸起袖子写代码！我们从简单的按钮开始，逐步挑战复杂组件。
+
+### 3.1 按钮组件的实现
+
+按钮是组件库的“门面担当”，需要支持：
+- 不同样式（主按钮、辅助按钮、幽灵按钮）。
+- 不同尺寸（大、中、小）。
+- 禁用和加载状态。
+- 图标支持。
+- 点击事件。
+
+以下是一个完整的实现：
+
+```tsx
+// Button.tsx
+import { forwardRef, ButtonHTMLAttributes, ReactNode } from "react";
+import cn from "classnames";
+import "./Button.css";
+
+export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "primary" | "secondary" | "ghost";
+  size?: "small" | "medium" | "large";
+  loading?: boolean;
+  icon?: ReactNode;
+}
+
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  (
+    {
+      variant = "primary",
+      size = "medium",
+      loading = false,
+      icon,
+      className,
+      children,
+      disabled,
+      ...props
+    },
+    ref
+  ) => {
+    return (
+      <button
+        ref={ref}
+        className={cn(
+          "btn",
+          `btn--${variant}`,
+          `btn--${size}`,
+          { "btn--loading": loading, disabled: disabled || loading },
+          className
+        )}
+        disabled={disabled || loading}
+        {...props}
+      >
+        {loading && <span className="btn__spinner" />}
+        {icon && <span className="btn__icon">{icon}</span>}
+        {children}
+      </button>
+    );
+  }
+);
+
+Button.displayName = "Button";
+
+export default Button;
+```
+
+样式：
+
+```css
+/* Button.css */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  gap: 8px;
+}
+
+.btn--primary {
+  background-color: #007bff;
+  color: white;
+  border: none;
+}
+
+.btn--secondary {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+}
+
+.btn--ghost {
+  background: transparent;
+  border: 1px solid #007bff;
+  color: #007bff;
+}
+
+.btn--small {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.btn--medium {
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+.btn--large {
+  padding: 12px 24px;
+  font-size: 16px;
+}
+
+.btn--loading::before {
+  content: "";
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.btn.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn__icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+```
+
+> *小Tips：用 `forwardRef` 支持 ref 传递，方便父组件控制按钮的 DOM 节点，比如聚焦或触发动画。*
+
+### 3.2 输入框组件
+
+输入框是另一个常见组件，需要支持：
+- 不同类型（文本、密码、数字等）。
+- 前后缀图标。
+- 错误状态。
+- 无障碍支持。
+
+实现如下：
+
+```tsx
+// Input.tsx
+import { forwardRef, InputHTMLAttributes, ReactNode } from "react";
+import cn from "classnames";
+import "./Input.css";
+
+export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+  prefix?: ReactNode;
+  suffix?: ReactNode;
+  error?: boolean;
+}
+
+const Input = forwardRef<HTMLInputElement, InputProps>(
+  ({ prefix, suffix, error, className, ...props }, ref) => {
+    return (
+      <div className={cn("input-wrapper", { "input--error": error })}>
+        {prefix && <span className="input__prefix">{prefix}</span>}
+        <input
+          ref={ref}
+          className={cn("input", className)}
+          aria-invalid={error}
+          {...props}
+        />
+        {suffix && <span className="input__suffix">{suffix}</span>}
+      </div>
+    );
+  }
+);
+
+Input.displayName = "Input";
+
+export default Input;
+```
+
+样式：
+
+```css
+/* Input.css */
+.input-wrapper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 0 8px;
+  transition: border-color 0.2s;
+}
+
+.input {
+  border: none;
+  outline: none;
+  flex: 1;
+  padding: 8px;
+  font-size: 14px;
+}
+
+.input__prefix,
+.input__suffix {
+  display: inline-flex;
+  align-items: center;
+  color: #6c757d;
+}
+
+.input--error {
+  border-color: #dc3545;
+}
+
+.input-wrapper:focus-within {
+  border-color: #007bff;
+}
+```
+
+> *小Tips：用 `aria-invalid` 确保错误状态对屏幕阅读器可见，提升无障碍体验。*
+
+### 3.3 复杂组件：Modal
+
+按钮和输入框是开胃菜，现在我们挑战一个复杂组件：Modal 弹窗。Modal 需要处理：
+- 打开/关闭状态。
+- 点击遮罩关闭。
+- 键盘交互（Esc 关闭）。
+- 动画效果。
+- 无障碍支持。
+
+实现如下：
+
+```tsx
+// Modal.tsx
+import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
+import cn from "classnames";
+import "./Modal.css";
+
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+  className?: string;
+  title?: string;
+}
+
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, className, title }) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    if (isOpen) {
+      document.addEventListener("keydown", handleEscape);
+      document.body.style.overflow = "hidden";
+      modalRef.current?.focus();
+    }
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = "";
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div className="modal-overlay" onClick={onClose}>
+      <div
+        className={cn("modal-content", className)}
+        onClick={(e) => e.stopPropagation()}
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? "modal-title" : undefined}
+        tabIndex={-1}
+      >
+        {title && (
+          <h2 id="modal-title" className="modal-title">
+            {title}
+          </h2>
+        )}
+        {children}
+      </div>
+    </div>,
+    document.body
+  );
+};
+
+export default Modal;
+```
+
+样式：
+
+```css
+/* Modal.css */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 100%;
+  animation: slideIn 0.3s ease-out;
+  outline: none;
+}
+
+.modal-title {
+  margin: 0 0 16px;
+  font-size: 18px;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+```
+
+> *小Tips：用 `createPortal` 将 Modal 渲染到 `document.body`，避免被父组件的样式或层级影响。别忘了加 `tabIndex` 和 `focus`，确保键盘用户能操作。*
+
+## 4. 样式系统与主题化
+
+一个现代组件库必须支持主题切换，用户可能想要“暗黑模式”或“品牌色定制”。我们可以用 CSS 变量、Emotion 或 CSS-in-JS 实现。
+
+### 4.1 使用 CSS 变量
+
+CSS 变量简单高效，适合大多数场景：
+
+```css
+/* themes.css */
+:root {
+  --primary-color: #007bff;
+  --secondary-color: #6c757d;
+  --text-color: #333;
+  --background-color: #fff;
+}
+
+[data-theme="dark"] {
+  --primary-color: #66b0ff;
+  --secondary-color: #adb5bd;
+  --text-color: #fff;
+  --background-color: #333;
+}
+```
+
+在组件中使用：
+
+```css
+.btn--primary {
+  background-color: var(--primary-color);
+  color: var(--text-color);
+}
+
+.modal-content {
+  background-color: var(--background-color);
+}
+```
+
+动态切换主题：
+
+```tsx
+// useTheme.ts
+import { useEffect } from "react";
+
+export const useTheme = (theme: "light" | "dark") => {
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
+};
+```
+
+> *小Tips：用 `[data-theme]` 切换主题，结合 `useEffect` 动态设置 `document.documentElement.dataset.theme`，实现无缝切换。*
+
+### 4.2 使用 Emotion
+
+如果需要更动态的样式，可以用 Emotion 的 `ThemeProvider`：
+
+```tsx
+// theme.ts
+export const themes = {
+  light: {
+    primary: "#007bff",
+    secondary: "#6c757d",
+    text: "#333",
+    background: "#fff",
+  },
+  dark: {
+    primary: "#66b0ff",
+    secondary: "#adb5bd",
+    text: "#fff",
+    background: "#333",
+  },
+};
+
+// ThemeProvider.tsx
+import { ThemeProvider as EmotionThemeProvider } from "@emotion/react";
+import { ReactNode } from "react";
+
+interface ThemeProviderProps {
+  theme: "light" | "dark";
+  children: ReactNode;
+}
+
+export const ThemeProvider = ({ theme, children }: ThemeProviderProps) => {
+  return <EmotionThemeProvider theme={themes[theme]}>{children}</EmotionThemeProvider>;
+};
+
+// Button.tsx
+import { css } from "@emotion/react";
+import { useTheme } from "@emotion/react";
+
+const Button = ({ variant = "primary", children, ...props }) => {
+  const theme = useTheme();
+  return (
+    <button
+      css={css`
+        background: ${theme[variant]};
+        color: ${theme.text};
+        padding: 8px 16px;
+        border-radius: 4px;
+        border: none;
+      `}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+};
+```
+
+> *小Tips：Emotion 的 `css` prop 让样式写起来像写 JSX 一样爽，但要注意性能，避免过多动态样式导致重渲染。*
+
+### 4.3 主题扩展性
+
+为了让用户自定义主题，可以提供一个 `customTheme` 接口：
+
+```tsx
+// theme.ts
+export interface Theme {
+  primary: string;
+  secondary: string;
+  text: string;
+  background: string;
+}
+
+export const extendTheme = (custom: Partial<Theme>): Theme => ({
+  ...themes.light,
+  ...custom,
+});
+```
+
+用户可以这样自定义：
+
+```tsx
+const myTheme = extendTheme({
+  primary: "#ff5733",
+  text: "#000",
+});
+
+<ThemeProvider theme={myTheme}>
+  <Button variant="primary">Custom Button</Button>
+</ThemeProvider>;
+```
+
+> *小Tips：提供主题扩展接口，让用户像调色盘一样自由搭配颜色，提升组件库的灵活性。*
+
+## 5. 类型安全与 TypeScript
+
+TypeScript 是现代前端的标配，能让你的组件库更健壮，减少运行时错误。
+
+### 5.1 定义组件类型
+
+为按钮组件定义类型：
+
+```tsx
+// Button.types.ts
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "primary" | "secondary" | "ghost";
+  size?: "small" | "medium" | "large";
+  loading?: boolean;
+  icon?: React.ReactNode;
+}
+```
+
+### 5.2 处理复杂类型
+
+对于 Modal，可能需要更复杂的类型：
+
+```tsx
+// Modal.types.ts
+export interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+  className?: string;
+  title?: string;
+  ariaLabelledBy?: string;
+}
+```
+
+### 5.3 工具类型
+
+可以用 TypeScript 的工具类型提升代码复用性，比如：
+
+```tsx
+// types.ts
+export type Variant = "primary" | "secondary" | "ghost";
+export type Size = "small" | "medium" | "large";
+
+export interface BaseComponentProps {
+  className?: string;
+  style?: React.CSSProperties;
+}
+```
+
+然后在组件中复用：
+
+```tsx
+interface ButtonProps extends BaseComponentProps, React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: Variant;
+  size?: Size;
+}
+```
+
+> *小Tips：用 `React.FC` 定义组件类型，能自动推导 `children` 类型，省去不少麻烦。*
+
+## 6. 无障碍支持（a11y）
+
+无障碍支持不是锦上添花，而是现代组件库的必备功能。以下是一些关键点：
+
+### 6.1 按钮的无障碍
+
+确保按钮有正确的 ARIA 属性：
+
+```tsx
+<button
+  role="button"
+  aria-disabled={disabled || loading}
+  aria-label={children ? undefined : "Button"}
+  {...props}
+>
+  {children}
+</button>
+```
+
+### 6.2 Modal 的无障碍
+
+Modal 需要：
+- `role="dialog"` 和 `aria-modal="true"`。
+- 自动聚焦到 Modal 内容。
+- 支持键盘导航（Esc 关闭，Tab 切换焦点）。
+
+我们的 Modal 实现已经包含了这些功能，比如 `aria-modal` 和 `tabIndex`。
+
+### 6.3 工具支持
+
+可以用 `eslint-plugin-jsx-a11y` 检查无障碍问题：
+
+```json
+// .eslintrc.json
+{
+  "extends": ["plugin:jsx-a11y/recommended"],
+  "plugins": ["jsx-a11y"]
+}
+```
+
+> *小Tips：测试无障碍时，用屏幕阅读器（如 NVDA 或 VoiceOver）实际体验一遍，确保组件对视障用户友好。*
+
+## 7. 性能优化
+
+一个优秀的组件库，不仅要好用，还要快。以下是一些性能优化的技巧：
+
+### 7.1 减少重渲染
+
+用 `React.memo` 避免不必要的重渲染：
+
+```tsx
+import { memo } from "react";
+
+const Button = memo(({ variant, children, ...props }: ButtonProps) => {
+  return <button className={`btn btn--${variant}`} {...props}>{children}</button>;
+});
+```
+
+### 7.2 按需加载
+
+支持 Tree Shaking，确保用户只加载需要的组件：
+
+```tsx
+// index.ts
+export { default as Button } from "./components/Button";
+export { default as Input } from "./components/Input";
+export { default as Modal } from "./components/Modal";
+```
+
+在 `package.json` 中声明：
+
+```json
+{
+  "sideEffects": false
+}
+```
+
+### 7.3 样式优化
+
+用 CSS 变量或 CSS-in-JS 减少运行时样式计算。避免在组件中写过多内联样式：
+
+```tsx
+// 不好
+<button style={{ background: variant === "primary" ? "#007bff" : "#6c757d" }} />;
+
+// 好
+<button className={`btn btn--${variant}`} />;
+```
+
+> *小Tips：性能优化就像减肥，少吃（少渲染）、多运动（多测试），才能保持组件库的苗条身材。*
+
+## 8. 测试与文档
+
+一个专业的组件库，离不开测试和文档。
+
+### 8.1 测试
+
+推荐使用 Jest + React Testing Library。以下是按钮的测试用例：
+
+```tsx
+// Button.test.tsx
+import { render, screen, fireEvent } from "@testing-library/react";
+import Button from "./Button";
+
+describe("Button", () => {
+  it("renders correctly", () => {
+    render(<Button>Click me</Button>);
+    expect(screen.getByText("Click me")).toBeInTheDocument();
+  });
+
+  it("handles click events", () => {
+    const handleClick = jest.fn();
+    render(<Button onClick={handleClick}>Click me</Button>);
+    fireEvent.click(screen.getByText("Click me"));
+    expect(handleClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows loading state", () => {
+    render(<Button loading>Click me</Button>);
+    expect(screen.getByRole("button")).toHaveClass("btn--loading");
+  });
+});
+```
+
+> *小Tips：测试时尽量模拟用户行为，比如点击、输入，而不是直接调用内部方法。*
+
+### 8.2 文档
+
+Storybook 是组件文档的最佳选择。以下是一个按钮的 Story：
+
+```tsx
+// Button.stories.tsx
+import Button from "./Button";
+import { IconStar } from "./icons";
+
+export default {
+  title: "Components/Button",
+  component: Button,
+  argTypes: {
+    variant: {
+      control: { type: "select", options: ["primary", "secondary", "ghost"] },
+    },
+    size: {
+      control: { type: "select", options: ["small", "medium", "large"] },
+    },
+  },
+};
+
+export const Primary = () => <Button variant="primary">Primary Button</Button>;
+export const Secondary = () => <Button variant="secondary">Secondary Button</Button>;
+export const WithIcon = () => (
+  <Button variant="primary" icon={<IconStar />}>
+    Star Button
+  </Button>
+);
+```
+
+> *小Tips：用 Storybook 的 Controls 插件，让用户在文档中动态调整 prop，体验感拉满。*
+
+### 8.3 自动化文档
+
+可以用 `react-docgen` 或 `docusaurus` 自动生成 API 文档：
+
+```json
+// package.json
+{
+  "scripts": {
+    "docs": "react-docgen src/components --out docs/api"
+  }
+}
+```
+
+> *小Tips：自动化文档能省不少时间，但要定期检查生成结果，避免文档和代码“两张皮”。*
+
+## 9. 打包与发布
+
+组件库开发完了，接下来是打包和发布。
+
+### 9.1 打包
+
+用 Rollup 打包，确保输出 ESM 和 CJS 模块。别忘了生成类型声明文件：
+
+```json
+// package.json
+{
+  "scripts": {
+    "build": "rollup -c && tsc --emitDeclarationOnly"
+  },
+  "types": "dist/index.d.ts",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.esm.js",
+  "files": ["dist"]
+}
+```
+
+### 9.2 优化包大小
+
+- **Tree Shaking**：确保 `sideEffects: false`。
+- **压缩**：用 `terser` 或 `esbuild` 压缩代码。
+- **分包**：将大组件（如 DatePicker）单独打包：
+
+```tsx
+// index.ts
+export { default as DatePicker } from "./components/DatePicker";
+```
+
+用户可以按需导入：
+
+```tsx
+import { DatePicker } from "my-component-lib/date-picker";
+```
+
+### 9.3 发布到 npm
+
+确保 `package.json` 配置正确：
+
+```json
+{
+  "name": "@your-org/my-component-lib",
+  "version": "1.0.0",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  }
+}
+```
+
+运行 `npm publish`，你的组件库就上线啦！🎉
+
+> *小Tips：发布前用 `npm pack` 测试打包结果，确保用户拿到的是正确的内容。别忘了写个详细的 README，像写情书一样用心。*
+
+## 10. 最佳实践与经验分享
+
+最后，分享一些我在开发组件库时的经验教训：
+
+- **保持简单**：不要一开始就追求“大而全”，先把核心组件做好。
+- **注重 a11y**：无障碍支持不是可选的，比如确保按钮有 `aria-label`。
+- **版本管理**：用 SemVer 规范版本号，避免用户升级时一脸懵逼。
+- **性能优先**：用 `React.memo` 和 Tree Shaking 让组件库轻量高效。
+- **社区反馈**：如果是开源项目，积极响应 issue 和 PR，用户会爱上你的。
+- **持续迭代**：组件库不是“一锤子买卖”，要根据用户反馈不断优化。
+
+我曾踩过一个坑：一开始没做无障碍支持，结果被用户吐槽“键盘用户完全用不了”。后来花了两周补齐 a11y，痛定思痛，从此把无障碍列为必备功能。
+
+> *小Tips：开发组件库就像谈恋爱，倾听用户需求比一味炫技更重要。用户反馈是你最好的“导师”。*
+
+## 结语
+
+打造一个前端组件库，就像酿一坛好酒，需要时间、耐心和对细节的极致追求。从规划架构到实现组件，从样式系统到性能优化，从测试文档到发布上线，每一步都充满了挑战和乐趣。这个过程不仅能提升你的技术能力，还能让你更深刻地理解前端开发的本质。
+
+希望这篇博客能为你点亮一盏灯，指引你在组件库开发的路上越走越远。如果你有任何疑问，或者想分享你的组件库开发经验，欢迎在评论区或 X 上 @我！让我们一起在前端的江湖里，打造更多“神兵利器”！⚔️
+
+---

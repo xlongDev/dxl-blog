@@ -1,0 +1,232 @@
+---
+type: "Post"
+title: "聊聊 Rollup.js：前端打包的优雅舞者"
+date: "2023-07-22"
+description: "深入探讨 Rollup.js 的核心原理、使用场景和最佳实践，带你从入门到精通这个轻量又强大的打包工具。"
+keywords: "Rollup.js, JavaScript, 模块打包, Tree Shaking, ES Modules, 前端开发, 打包工具"
+author: "晓龙"
+image: "/images/hero/rollup-hero.jpg"
+tags: ["JavaScript", "前端工具", "模块化"]
+category: "Build-Tools"
+---
+
+说到前端打包工具，大家可能第一时间想到的是 Webpack 那头“全能怪兽”，或者 Vite 那匹“新生代快马”。但今天我们要聊的主角是 **Rollup.js**——一个低调却优雅的家伙。它不像 Webpack 那样包揽一切，也不像 Vite 那样追求极致的开发体验，而是专注于模块打包，尤其是 **ES Modules** 的处理，用一种“少即是多”的哲学在前端圈子里站稳了脚跟。
+
+这篇文章，我会带你从 Rollup 的基本概念聊到它的核心原理，再到一些实用技巧和最佳实践。无论你是刚入门的小白，还是想深入研究打包工具的老司机，这里应该都能给你一些启发。准备好了吗？让我们一起跳进 Rollup 的世界吧！🚀
+
+## Rollup 是什么？一个简短的“自我介绍”
+
+Rollup 是一个 JavaScript 模块打包工具，最初由 Rich Harris（是的，就是 Svelte 的那位大神）创建。它的目标很简单：把你写的模块化代码打包成一个高效的文件，供浏览器或 Node.js 使用。听起来是不是有点像 Webpack？别急，它们其实是两种性格完全不同的“选手”。
+
+如果把 Webpack 比作一个“全能管家”，什么都能干（打包、热更新、代码分割、静态资源处理），那 Rollup 更像是一个“极简主义艺术家”，专心致志地把你的代码“雕刻”得干净利落。它最擅长的，就是基于 **ES Modules**（也就是 `import` 和 `export`）的打包，并且以 **Tree Shaking**（摇树优化）闻名，能帮你把没用到的代码无情地“剪掉”。
+
+简单来说，Rollup 适合这些场景：
+- 你在写一个库（比如 React、Vue 的源码就是用 Rollup 打包的）；
+- 你想要一个体积超小的输出文件；
+- 你喜欢 ES Modules 的清爽语法，不想被 CommonJS 的“历史包袱”拖累。
+
+## Rollup 的核心原理：从“拼图”到“成品”
+
+要真正理解 Rollup，得先搞清楚它是怎么干活的。别担心，我不会直接丢给你一堆源码分析（虽然那也很酷），而是用一个类比来带你走进它的内心世界。
+
+想象一下，你在拼一幅巨大的拼图（你的项目代码）。每块拼图是一个模块（`.js` 文件），通过 `import` 和 `export` 连接在一起。Rollup 的工作，就是把这些零散的拼图拼成一个完整的画，并且把没用到的边角料（未引用的代码）扔进垃圾桶。最终，它还能把这幅画“压扁”成一张薄薄的纸（单一文件），方便携带（部署）。
+
+### 1. 解析与依赖图构建
+Rollup 的第一步是“读懂”你的代码。它会从入口文件（比如 `index.js`）开始，解析所有的 `import` 语句，构建一个 **依赖图**。这个图就像一张地图，告诉 Rollup：“嘿，这个模块依赖那三个模块，而那三个模块又依赖另外五个……”。
+
+举个例子：
+```javascript
+// math.js
+export function add(a, b) {
+  return a + b;
+}
+export function subtract(a, b) {
+  return a - b;
+}
+
+// index.js
+import { add } from './math.js';
+console.log(add(2, 3));
+```
+Rollup 会发现 `index.js` 只用到了 `math.js` 的 `add` 函数，而 `subtract` 完全没被引用。这时候，它就记下来了：嗯，`subtract` 可以丢掉。
+
+### 2. Tree Shaking：摇掉多余的“树叶”
+接下来是 Rollup 的“杀手锏”——Tree Shaking。它会分析依赖图，找出哪些代码是“死代码”（Dead Code），然后毫不留情地删掉。这种优化依赖于 ES Modules 的静态结构，因为 `import` 和 `export` 是静态的，Rollup 能在编译时就知道哪些东西没用。
+
+在上面的例子中，`subtract` 函数会被直接剔除，最终输出大概长这样：
+```javascript
+function add(a, b) {
+  return a + b;
+}
+console.log(add(2, 3));
+```
+是不是干净得让人感动？这就是 Rollup 的魅力。
+
+### 3. 输出阶段：灵活的“裁剪”
+最后，Rollup 会根据你的配置，把代码打包成不同的格式（比如 `esm`、`cjs`、`umd`）。这就像是把拼图画裁剪成不同的形状，方便不同的使用场景。比如：
+- `esm`：给现代浏览器或支持 ES Modules 的环境用；
+- `cjs`：给 Node.js 或老项目用；
+- `umd`：一个“万金油”，哪儿都能跑。
+
+## Rollup vs. Webpack：一场“性格PK”
+说到这里，你可能会问：“那我为啥不用 Webpack 呢？”好问题！其实 Rollup 和 Webpack 就像两个性格迥异的朋友，各有各的擅长领域。
+
+- **Rollup**：轻量、专注、优雅。适合库开发或者小型项目，输出文件小，Tree Shaking 效果一流。但它对动态加载（Code Splitting）和热更新（HMR）的支持没有 Webpack 那么强大。
+- **Webpack**：功能全面，像个“瑞士军刀”。适合复杂的应用开发，支持各种 loader 和 plugin，能处理图片、CSS、字体等资源。但它的配置复杂，输出的 bundle 通常比 Rollup 大。
+
+简单总结：如果你在写一个工具库给别人用，Rollup 是你的好帮手；如果你在搞一个大型 SPA（单页应用），Webpack 可能更适合。
+
+## 实战时间：Rollup 的基本用法
+好了，理论聊够了，咱们来点实际的。假设你想用 Rollup 打包一个简单的项目，步骤如下：
+
+### 1. 安装 Rollup
+```bash
+npm install rollup --save-dev
+```
+
+### 2. 创建项目结构
+```
+project/
+├── src/
+│   ├── index.js
+│   └── math.js
+├── package.json
+└── rollup.config.js
+```
+
+`math.js` 和 `index.js` 还是用上面的例子。
+
+### 3. 配置 Rollup
+新建 `rollup.config.js`：
+```javascript
+export default {
+  input: 'src/index.js', // 入口文件
+  output: {
+    file: 'dist/bundle.js', // 输出文件
+    format: 'iife', // 自执行函数格式，适合浏览器
+    name: 'MyBundle' // 全局变量名
+  }
+};
+```
+
+### 4. 运行打包
+在 `package.json` 加个脚本：
+```json
+"scripts": {
+  "build": "rollup -c"
+}
+```
+然后执行：
+```bash
+npm run build
+```
+
+输出文件 `dist/bundle.js` 会是这样的：
+```javascript
+(function () {
+  'use strict';
+  
+  function add(a, b) {
+    return a + b;
+  }
+  console.log(add(2, 3));
+})();
+```
+
+简单吧？这就是 Rollup 的基本用法。当然，这只是“开胃菜”，接下来我们聊聊怎么让它更强大。
+
+## 插件生态：给 Rollup 插上翅膀
+Rollup 本身很轻量，但它的插件系统让它变得无比灵活。插件就像是给 Rollup 加装的“外挂”，能让它处理 TypeScript、CSS，甚至压缩代码。
+
+### 常用插件举例
+1. **`@rollup/plugin-node-resolve`**  
+   帮 Rollup 解析 `node_modules` 里的依赖。比如你用了 `lodash`，它能正确找到并打包。
+   ```bash
+   npm install @rollup/plugin-node-resolve --save-dev
+   ```
+
+2. **`@rollup/plugin-commonjs`**  
+   把 CommonJS 模块转换成 ES Modules，让 Rollup 能处理 `require`。
+   ```bash
+   npm install @rollup/plugin-commonjs --save-dev
+   ```
+
+3. **`rollup-plugin-terser`**  
+   压缩代码，把输出文件变得更小。
+   ```bash
+   npm install rollup-plugin-terser --save-dev
+   ```
+
+### 配置示例
+升级后的 `rollup.config.js`：
+```javascript
+import resolve from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
+import { terser } from 'rollup-plugin-terser';
+
+export default {
+  input: 'src/index.js',
+  output: {
+    file: 'dist/bundle.js',
+    format: 'iife',
+    name: 'MyBundle',
+    plugins: [terser()] // 压缩输出
+  },
+  plugins: [
+    resolve(), // 解析 node_modules
+    commonjs() // 支持 CommonJS
+  ]
+};
+```
+
+现在，你的 Rollup 不仅优雅，还很“能打”了！💪
+
+## 最佳实践：让 Rollup 发挥最大价值
+用 Rollup 几年了，我总结了一些实用的小技巧，分享给你：
+
+### 1. 多输出格式，覆盖更多场景
+如果你在写一个库，建议同时输出 `esm` 和 `cjs` 格式：
+```javascript
+export default {
+  input: 'src/index.js',
+  output: [
+    { file: 'dist/bundle.esm.js', format: 'esm' },
+    { file: 'dist/bundle.cjs.js', format: 'cjs' }
+  ]
+};
+```
+这样，既支持现代工具链，也兼容老项目。
+
+### 2. 善用 `external` 避免打包冗余
+如果你的代码依赖外部库（比如 React），可以用 `external` 告诉 Rollup 不要打包进去：
+```javascript
+export default {
+  input: 'src/index.js',
+  output: { file: 'dist/bundle.js', format: 'esm' },
+  external: ['react', 'react-dom']
+};
+```
+
+### 3. 动态导入？试试实验性支持
+Rollup 对动态导入（`import()`）的支持还在完善，但可以用插件 `@rollup/plugin-dynamic-import-vars` 来搞定复杂的代码分割场景。
+
+### 4. 调试时开启 Source Map
+加个 `sourcemap: true`，调试起来轻松不少：
+```javascript
+output: {
+  file: 'dist/bundle.js',
+  format: 'iife',
+  sourcemap: true
+}
+```
+
+## 一些“冷知识”和吐槽
+- **冷知识**：Rollup 的名字来源于“卷起来”的意思，挺形象吧？它确实把你的代码“卷”成了一个紧凑的小包。
+- **吐槽**：Rollup 的配置文件写多了，我感觉自己像个裁缝，天天在“裁剪”代码。有时候真想问它：“能不能再聪明点，自己猜猜我要啥格式？” 😂
+
+## 总结：Rollup 的“优雅哲学”
+Rollup 不是万能的，但它在自己的领域里几乎无人能敌。它用最少的配置，换来最干净的输出，这种“极简主义”让我每次用它都觉得心情舒畅。如果你还没试过 Rollup，不妨拿个小项目玩一玩，体验一下它的轻盈与高效。
+
+好了，这篇关于 Rollup 的“长篇大论”就到这儿了。有什么问题或者想法，欢迎留言，咱们一起聊聊！毕竟，前端的世界，就是在不断的折腾中进步的嘛。😎
+
+---

@@ -1,0 +1,28 @@
+/* 引入 Tailwind CSS 的基础样式、组件样式和工具类 */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 骨架屏闪烁动画 */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* 全局字体渲染优化 */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+}
+
+/* 基础字体设置 */
+body {
+  letter-spacing: -0.01em;
+  line-height: 1.65;
+}

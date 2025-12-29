@@ -1,0 +1,319 @@
+---
+type: "Post"
+title: "聊聊 React Fiber 调度调和流程原理"
+date: "2024-10-17"
+description: "深入剖析 React Fiber 的调度与调和流程，从源码层面揭示其工作原理，包含核心概念、实现细节与实例解析。"
+keywords: "React Fiber, 调度, 调和, 虚拟 DOM, 源码解析, React 性能优化, 前端开发"
+author: "晓龙"
+image: "/images/hero/react-fiber.jpg"
+tags: ["React", "前端开发", "JavaScript"]
+category: "React"
+---
+
+在我们开发大型 React 应用时，经常会遇到一个棘手的问题：当状态更新导致大量组件重新渲染时，主线程被长时间占用，造成页面卡顿，用户交互无法及时响应。这个问题在 React 16 之前尤为明显。为了彻底解决这个性能瓶颈，React 团队在 v16 版本中引入了革命性的 Fiber 架构。通过调度（Scheduling）和增量渲染（Incremental Rendering）机制，Fiber 让 React 具备了"智能"调度的能力 —— 它能够将渲染工作分解成小块，按优先级执行，并在必要时中断和恢复。本文将深入探讨 Fiber 架构的工作原理，从实际开发痛点出发，结合源码和典型案例，帮助你真正理解这个强大特性。
+
+## 什么是 React Fiber？
+
+在深入理解 Fiber 之前，我们先回顾下 React 16 之前的架构。早期 React 使用递归的方式（Stack Reconciler）处理虚拟 DOM 的更新，这种方式一旦开始就无法中断，直到整棵组件树都完成更新。在我经手的一个大型电商项目中，当用户在商品列表页快速切换筛选条件时，由于需要同时更新上千个商品组件，经常会出现页面卡死的情况。
+
+Fiber 架构从根本上改变了这一点。它将 React 的更新过程重新设计为基于链表的可中断任务系统。在这个系统中，每个组件不再是简单的虚拟 DOM 节点，而是一个包含更多信息的 Fiber 节点，这些节点通过 child、sibling、return 等属性连接，形成一个灵活的链表结构。这种设计让渲染过程变得可控 —— React 能够在处理完一个节点后保存现场，按需决定是继续处理下一个节点，还是暂停让位给更重要的任务。
+
+### Fiber 核心特性与实践价值
+
+在我们的实际项目中，Fiber 的几个核心特性为性能优化提供了强大支持：
+
+1. **增量渲染**：将耗时的渲染任务切片执行。在我们的后台管理系统中，渲染包含上万条记录的表格时，Fiber 会将这个任务分解成多个小块，每次只处理一部分数据，避免长时间阻塞主线程。
+
+2. **任务优先级调度**：智能分配执行顺序。比如用户在快速输入搜索关键词时，Fiber 会确保输入框的响应优先于搜索结果的更新，保证操作流畅度。
+
+3. **可中断与恢复**：灵活让出执行权。在处理大量数据可视化更新时，如果用户进行了交互操作，Fiber 能够立即暂停当前更新，处理完交互后再继续之前的工作。
+
+4. **错误边界增强**：更精确的错误定位和恢复。在微前端架构中，某个子应用的错误不会导致整个应用崩溃，Fiber 的错误边界机制帮助我们实现了更可靠的错误隔离。
+
+## Fiber 的调度与调和流程
+
+React Fiber 的工作流程主要分为两个阶段：**调度（Scheduling）** 和 **调和（Reconciliation）**，最终通过 **提交（Commit）** 阶段将变更应用到真实 DOM。
+
+### 1. 调度阶段（Scheduling）
+
+调度阶段的目标是确定哪些更新任务需要执行，并为它们分配优先级。React 通过 `Scheduler` 包（独立于 React 核心库）管理任务调度。
+
+#### Scheduler 的核心逻辑
+
+在源码中，调度器位于 `scheduler` 包中，核心文件如 `scheduler/src/Scheduler.js`。以下是调度流程的关键点：
+
+- **任务优先级**：React 使用 `Lane` 模型表示优先级，例如同步任务（Sync Lane）、交互任务（Interactive Lane）和低优先级任务（Default Lane）。
+- **时间分片（Time Slicing）**：调度器根据浏览器帧时间（通常 16ms）分配任务执行时间，避免阻塞主线程。
+
+```javascript
+// 源码片段：Scheduler 的 performWorkUntilDeadline
+function performWorkUntilDeadline() {
+  const currentTime = getCurrentTime();
+  let hasMoreWork = true;
+  while (hasMoreWork && !shouldYieldToHost()) {
+    hasMoreWork = workLoop(currentTime);
+  }
+  if (hasMoreWork) {
+    scheduleCallback(performWorkUntilDeadline);
+  }
+}
+```
+
+在这个循环中，`shouldYieldToHost` 会检查当前帧是否还有剩余时间。如果时间耗尽，任务会被暂停并推迟到下一帧。
+
+#### 示例：优先级调度
+
+假设一个输入框的 `onChange` 事件触发了状态更新，同时一个低优先级的动画也在运行。React 会优先处理用户输入（高优先级），而动画更新（低优先级）会被推迟。
+
+```javascript
+function App() {
+  const [text, setText] = useState("");
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    // 低优先级任务
+    const id = setInterval(() => setCount((c) => c + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <div>
+      <input value={text} onChange={(e) => setText(e.target.value)} />
+      <p>Count: {count}</p>
+    </div>
+  );
+}
+```
+
+在 Fiber 中，`setText` 的更新会被赋予高优先级，而 `setCount` 的更新则可能被延迟到下一帧。
+
+### 2. 调和阶段（Reconciliation）
+
+调和阶段是 React 根据组件状态和 props 生成新的 Fiber 树的过程。这一阶段分为 **render 阶段** 和 **commit 阶段**。
+
+#### Render 阶段
+
+在 `react-reconciler` 包中，`workLoopSync` 和 `workLoopConcurrent` 是调和的核心函数。它们会遍历 Fiber 树，执行以下步骤：
+
+1. **构建 Fiber 节点**：为每个组件创建或更新 Fiber 对象。
+2. **Diff 算法**：比较新旧 Fiber 树，标记需要更新的节点（effectTag）。
+3. **副作用收集**：将 DOM 操作（如插入、删除）记录到 Fiber 的 effect list 中。
+
+```javascript
+// 源码片段：performUnitOfWork
+function performUnitOfWork(fiber) {
+  if (!fiber.return && fiber.child) {
+    // 开始处理子节点
+    return fiber.child;
+  }
+  // 完成当前节点，寻找下一个兄弟节点或返回父节点
+  while (fiber) {
+    if (fiber.sibling) return fiber.sibling;
+    fiber = fiber.return;
+  }
+  return null;
+}
+```
+
+#### Diff 算法的优化
+
+React 的 Diff 算法在 Fiber 中得到了增强：
+
+- **单链表遍历**：通过 `child` 和 `sibling` 属性遍历子节点，避免递归带来的栈溢出。
+- **key 的作用**：借助 `key` 属性快速定位需要更新的节点。
+
+例如，假设有一个列表组件：
+
+```javascript
+function List() {
+  const [items, setItems] = useState(["A", "B", "C"]);
+  return (
+    <ul>
+      {items.map((item) => (
+        <li key={item}>{item}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+如果将 `items` 更新为 `["A", "C", "B"]`，React 会通过 `key` 识别出只需要调整顺序，而无需重新渲染所有节点。
+
+#### 示例：条件渲染的调和
+
+考虑以下代码：
+
+```javascript
+function ToggleComponent({ show }) {
+  return show ? <h1>Hello</h1> : <p>Goodbye</p>;
+}
+```
+
+当 `show` 从 `true` 变为 `false` 时，React 会：
+
+1. 标记 `<h1>` 的 Fiber 节点为删除（`Deletion` effectTag）。
+2. 创建 `<p>` 的新 Fiber 节点并标记为插入（`Placement` effectTag）。
+3. 将这些副作用记录到 effect list 中。
+
+### 3. 提交阶段（Commit）
+
+提交阶段将 render 阶段生成的副作用应用到真实 DOM。这一阶段是同步的，无法中断，确保 DOM 更新的一致性。
+
+#### 源码解析：commitRoot
+
+在 `react-reconciler/src/ReactFiberWorkLoop.js` 中，`commitRoot` 函数负责提交变更：
+
+```javascript
+function commitRoot(root) {
+  const finishedWork = root.finishedWork;
+  if (finishedWork === null) return;
+  // 提交副作用
+  commitMutationEffects(finishedWork);
+  // 更新 Fiber 树
+  root.current = finishedWork;
+}
+```
+
+#### 示例：DOM 更新
+
+对于前面的 `ToggleComponent`，提交阶段会：
+
+1. 从 DOM 中移除 `<h1>`。
+2. 将 `<p>` 插入 DOM。
+3. 更新 `current` Fiber 树为新的 Fiber 树。
+
+## Fiber 的性能优势
+
+### 实战中的性能优化实践
+
+在我们的一个大型后台管理系统中，Fiber 的性能优势体现得尤为明显。以下是几个典型的优化案例：
+
+#### 1. 虚拟列表与时间分片
+
+当需要展示包含上万条记录的表格数据时，我们结合虚拟列表和 Fiber 的时间分片特性，实现了流畅的用户体验：
+
+```javascript
+function VirtualTable({ data, itemHeight = 40 }) {
+  const [visibleRange, setVisibleRange] = useState({ start: 0, end: 20 });
+  const containerRef = useRef(null);
+
+  const onScroll = useCallback(() => {
+    const { scrollTop, clientHeight } = containerRef.current;
+    const start = Math.floor(scrollTop / itemHeight);
+    const end = Math.min(
+      start + Math.ceil(clientHeight / itemHeight),
+      data.length
+    );
+
+    // 利用 Fiber 的时间分片，避免频繁更新导致的卡顿
+    setVisibleRange({ start, end });
+  }, [data.length, itemHeight]);
+
+  return (
+    <div
+      ref={containerRef}
+      style={{ height: "400px", overflow: "auto" }}
+      onScroll={onScroll}
+    >
+      <div
+        style={{
+          height: `${data.length * itemHeight}px`,
+          position: "relative",
+        }}
+      >
+        {data.slice(visibleRange.start, visibleRange.end).map((row, index) => (
+          <div
+            key={row.id}
+            style={{
+              position: "absolute",
+              top: `${(index + visibleRange.start) * itemHeight}px`,
+              height: `${itemHeight}px`,
+            }}
+          >
+            {row.content}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+#### 2. 并发渲染与用户交互
+
+在处理复杂的数据可视化场景时，我们充分利用了 Fiber 的并发特性。比如在一个实时数据监控面板中：
+
+```javascript
+function DataMonitor({ data, onFilter }) {
+  const [filterText, setFilterText] = useState("");
+  const [filteredData, setFilteredData] = useState(data);
+
+  // 使用 useDeferredValue 让数据过滤的优先级低于用户输入
+  const deferredText = useDeferredValue(filterText);
+
+  useEffect(() => {
+    // 复杂的数据过滤逻辑
+    const filtered = data.filter((item) =>
+      item.name.toLowerCase().includes(deferredText.toLowerCase())
+    );
+    setFilteredData(filtered);
+    onFilter(filtered);
+  }, [deferredText, data, onFilter]);
+
+  return (
+    <div>
+      <input
+        type="text"
+        value={filterText}
+        onChange={(e) => setFilterText(e.target.value)}
+        placeholder="实时过滤数据..."
+      />
+      <DataVisualization data={filteredData} />
+    </div>
+  );
+}
+```
+
+这种设计确保了即使在处理大量数据时，用户的输入响应也不会受到影响。Fiber 会自动调度数据过滤的优先级，在用户停止输入后才进行复杂的计算和渲染更新。
+
+## 源码中的关键数据结构
+
+### Fiber 节点
+
+每个 Fiber 节点是一个对象，包含以下关键属性：
+
+```javascript
+const fiber = {
+  tag: HostComponent, // 节点类型（如 DOM 元素、类组件）
+  key: null, // 用于 Diff 的标识
+  stateNode: null, // 对应的真实 DOM 或组件实例
+  return: null, // 父节点
+  child: null, // 第一个子节点
+  sibling: null, // 下一个兄弟节点
+  effectTag: NoEffect, // 副作用标记
+  nextEffect: null, // 下一个副作用节点
+  memoizedState: null, // 保存的状态
+  memoizedProps: null, // 保存的 props
+  updateQueue: null, // 更新队列
+};
+```
+
+### Lane 模型
+
+`Lane` 是 React 用于表示优先级的位运算模型。例如：
+
+```javascript
+const SyncLane = 0b0001;
+const InputContinuousLane = 0b0010;
+const DefaultLane = 0b0100;
+```
+
+通过位运算，React 可以高效判断任务优先级并合并更新。
+
+## 总结
+
+React Fiber 的调度与调和流程是其性能优化的核心。通过将渲染任务拆分为可中断的单元，并结合优先级调度和高效的 Diff 算法，Fiber 实现了对复杂应用的精细控制。从源码层面看，Fiber 的设计体现了模块化、可扩展和高性能的特点。
+
+希望本文的深度解析和实例能帮助你更好地理解 React Fiber 的工作原理。如果你有更多问题或想探讨某个细节，欢迎留言交流！
+
+---
