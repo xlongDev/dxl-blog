@@ -55,7 +55,7 @@
       "maxDuration": 10
     },
     "app/blog/**/*": {
-      "memory": 3008,
+      "memory": 1024,
       "maxDuration": 15
     }
   },
